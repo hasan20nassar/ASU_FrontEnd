@@ -1,0 +1,1000 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(0.98 0.002 0);
+  --foreground: oklch(0.15 0.01 15);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.01 15);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 15);
+  --primary: oklch(0.35 0.12 25);
+  --primary-foreground: oklch(0.98 0.005 25);
+  --secondary: oklch(0.96 0.005 25);
+  --secondary-foreground: oklch(0.35 0.12 25);
+  --muted: oklch(0.95 0.005 30);
+  --muted-foreground: oklch(0.45 0.02 15);
+  --accent: oklch(0.45 0.14 25);
+  --accent-foreground: oklch(0.98 0.005 25);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.90 0.01 25);
+  --input: oklch(0.92 0.005 25);
+  --ring: oklch(0.35 0.12 25);
+  --chart-1: oklch(0.35 0.12 25);
+  --chart-2: oklch(0.55 0.10 45);
+  --chart-3: oklch(0.45 0.08 200);
+  --chart-4: oklch(0.65 0.12 85);
+  --chart-5: oklch(0.55 0.14 320);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.98 0.002 0);
+  --sidebar-foreground: oklch(0.15 0.01 15);
+  --sidebar-primary: oklch(0.35 0.12 25);
+  --sidebar-primary-foreground: oklch(0.98 0.005 25);
+  --sidebar-accent: oklch(0.96 0.005 25);
+  --sidebar-accent-foreground: oklch(0.35 0.12 25);
+  --sidebar-border: oklch(0.90 0.01 25);
+  --sidebar-ring: oklch(0.35 0.12 25);
+}
+
+.dark {
+  --background: oklch(0.15 0.015 25);
+  --foreground: oklch(0.95 0.005 25);
+  --card: oklch(0.18 0.015 25);
+  --card-foreground: oklch(0.95 0.005 25);
+  --popover: oklch(0.18 0.015 25);
+  --popover-foreground: oklch(0.95 0.005 25);
+  --primary: oklch(0.55 0.14 25);
+  --primary-foreground: oklch(0.98 0.005 25);
+  --secondary: oklch(0.25 0.02 25);
+  --secondary-foreground: oklch(0.95 0.005 25);
+  --muted: oklch(0.25 0.02 25);
+  --muted-foreground: oklch(0.65 0.02 25);
+  --accent: oklch(0.45 0.12 25);
+  --accent-foreground: oklch(0.98 0.005 25);
+  --destructive: oklch(0.45 0.18 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.28 0.02 25);
+  --input: oklch(0.25 0.02 25);
+  --ring: oklch(0.55 0.14 25);
+  --chart-1: oklch(0.55 0.14 25);
+  --chart-2: oklch(0.60 0.12 45);
+  --chart-3: oklch(0.55 0.10 200);
+  --chart-4: oklch(0.70 0.14 85);
+  --chart-5: oklch(0.60 0.16 320);
+  --sidebar: oklch(0.18 0.015 25);
+  --sidebar-foreground: oklch(0.95 0.005 25);
+  --sidebar-primary: oklch(0.55 0.14 25);
+  --sidebar-primary-foreground: oklch(0.98 0.005 25);
+  --sidebar-accent: oklch(0.25 0.02 25);
+  --sidebar-accent-foreground: oklch(0.95 0.005 25);
+  --sidebar-border: oklch(0.28 0.02 25);
+  --sidebar-ring: oklch(0.55 0.14 25);
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), 'Inter', 'Inter Fallback', system-ui, sans-serif;
+  --font-serif: 'Cairo', sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --font-tajawal: 'Almarai', sans-serif;
+  --font-markazi: 'Almarai', sans-serif;
+  --font-cairo: 'Cairo', sans-serif;
+  --font-almarai: 'Almarai', sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ================================
+     Custom Breakpoints for Large Screens
+     (beyond Tailwind's default 2xl = 1536px)
+     ================================ */
+  --breakpoint-3xl: 1920px;  /* Full HD / Large TVs */
+  --breakpoint-4xl: 2560px;  /* 2K / 4K / Ultra-wide */
+
+  /* ================================
+     Responsive Container Sizes
+     ================================ */
+  --container-responsive: min(100% - 2rem, 80rem);     /* Default: max-w-7xl with padding */
+  --container-2xl: min(100% - 2rem, 96rem);            /* 1536px+ screens */
+  --container-3xl: min(100% - 3rem, 112rem);           /* 1920px+ screens */
+  --container-4xl: min(100% - 4rem, 140rem);           /* 2560px+ screens */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  html[dir="rtl"],
+  html[dir="rtl"] body,
+  html[dir="rtl"] select,
+  html[dir="rtl"] button,
+  html[dir="rtl"] input,
+  html[dir="rtl"] textarea {
+    --font-sans: 'Almarai', sans-serif !important;
+    --font-serif: 'Cairo', sans-serif !important;
+    --font-tajawal: 'Almarai', sans-serif !important;
+    --font-markazi: 'Almarai', sans-serif !important;
+    --font-inter: 'Almarai', sans-serif !important;
+    font-family: 'Almarai', sans-serif !important;
+  }
+  
+  html[dir="rtl"] h1,
+  html[dir="rtl"] h2,
+  html[dir="rtl"] h3,
+  html[dir="rtl"] h4,
+  html[dir="rtl"] h5,
+  html[dir="rtl"] h6,
+  html[dir="rtl"] h1 *,
+  html[dir="rtl"] h2 *,
+  html[dir="rtl"] h3 *,
+  html[dir="rtl"] h4 *,
+  html[dir="rtl"] h5 *,
+  html[dir="rtl"] h6 *,
+  html[dir="rtl"] .heading-font,
+  html[dir="rtl"] [class*="title"],
+  html[dir="rtl"] [class*="heading"] {
+    --font-sans: 'Cairo', sans-serif !important;
+    --font-serif: 'Cairo', sans-serif !important;
+    --font-tajawal: 'Cairo', sans-serif !important;
+    --font-markazi: 'Cairo', sans-serif !important;
+    --font-inter: 'Cairo', sans-serif !important;
+    font-family: 'Cairo', sans-serif !important;
+  }
+  
+  html[dir="ltr"] {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Body texts and articles should use Almarai */
+  html[dir="rtl"] p,
+  html[dir="rtl"] article,
+  html[dir="rtl"] .prose,
+  html[dir="rtl"] .prose p,
+  html[dir="rtl"] .prose li,
+  html[dir="rtl"] .prose ol,
+  html[dir="rtl"] .prose ul,
+  html[dir="rtl"] .body-text,
+  html[dir="rtl"] .article-content,
+  html[dir="rtl"] .article-text,
+  html[dir="rtl"] .lead {
+    --font-sans: 'Almarai', sans-serif !important;
+    --font-serif: 'Almarai', sans-serif !important;
+    --font-tajawal: 'Almarai', sans-serif !important;
+    --font-markazi: 'Almarai', sans-serif !important;
+    --font-inter: 'Almarai', sans-serif !important;
+    font-family: 'Almarai', sans-serif !important;
+  }
+
+  /* ================================
+     Screen size optimization for large and extra-large displays
+     Standard professional responsive scaling
+     ================================ */
+
+  /* 2xl: Large Desktops (1536px+) */
+  @media (min-width: 1536px) {
+    html {
+      font-size: 17.5px;
+    }
+  }
+
+  /* 1440p Monitors */
+  @media (min-width: 1440px) {
+    html {
+      font-size: 17px;
+    }
+  }
+
+  /* Large Monitors (1600px) */
+  @media (min-width: 1600px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
+  /* 3xl: Full HD / Large TVs (1920px+) */
+  @media (min-width: 1920px) {
+    html {
+      font-size: 19px;
+    }
+  }
+
+  /* 4xl: 2K / 4K screens (2560px+) */
+  @media (min-width: 2560px) {
+    html {
+      font-size: 22px;
+    }
+  }
+
+  /* 5K+ Ultra wide / professional displays */
+  @media (min-width: 3440px) {
+    html {
+      font-size: 26px;
+    }
+  }
+}
+
+/* ================================
+   Global Responsive Container System
+   Professional standard for all screen sizes
+   Usage: replace max-w-7xl containers with .section-container
+   ================================ */
+
+.section-container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;       /* 16px mobile */
+  max-width: 80rem;            /* 1280px — default (xl) */
+}
+
+@media (min-width: 640px) {
+  .section-container {
+    padding-inline: 1.5rem;   /* 24px sm+ */
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-container {
+    padding-inline: 2rem;     /* 32px lg+ */
+  }
+}
+
+@media (min-width: 1536px) {
+  .section-container {
+    max-width: 96rem;          /* 1536px — 2xl */
+    padding-inline: 2.5rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  .section-container {
+    max-width: 112rem;         /* 1792px — 3xl / Full HD */
+    padding-inline: 3rem;
+  }
+}
+
+@media (min-width: 2560px) {
+  .section-container {
+    max-width: 140rem;         /* 2240px — 4xl / 2K-4K */
+    padding-inline: 4rem;
+  }
+}
+
+/* ================================
+   Department Staff Section
+   ================================ */
+
+
+.department-staff-section {
+  padding: 3rem 0 4rem;
+  background: linear-gradient(180deg, transparent 0%, var(--muted) 30%, var(--muted) 70%, transparent 100%);
+}
+
+.department-staff-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.department-staff-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  margin-bottom: 1rem;
+}
+
+.department-staff-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
+}
+
+.department-staff-subtitle {
+  font-size: 1rem;
+  color: var(--muted-foreground);
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+/* --- Head Card --- */
+.department-head-card {
+  max-width: 56rem;
+  margin: 0 auto 3rem;
+  border-radius: 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 10px 30px -5px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.department-head-card:hover {
+  box-shadow:
+    0 8px 25px -5px rgba(0, 0, 0, 0.1),
+    0 20px 50px -10px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.department-head-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .department-head-inner {
+    flex-direction: row;
+    padding: 2.5rem;
+    gap: 2.5rem;
+  }
+}
+
+[dir="rtl"] .department-head-inner {
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  [dir="rtl"] .department-head-inner {
+    flex-direction: row-reverse;
+  }
+}
+
+.department-head-image-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.department-head-image-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--primary);
+  box-shadow: 0 0 0 4px var(--background), 0 0 0 6px var(--primary);
+}
+
+@media (min-width: 768px) {
+  .department-head-image-container {
+    width: 220px;
+    height: 220px;
+  }
+}
+
+.department-head-image {
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.department-head-card:hover .department-head-image {
+  transform: scale(1.05);
+}
+
+.department-head-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 1rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: var(--primary-foreground);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.department-head-info {
+  flex: 1;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .department-head-info {
+    text-align: start;
+  }
+}
+
+.department-head-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 0.25rem;
+}
+
+.department-head-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.department-head-dept {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin-bottom: 1rem;
+}
+
+.department-head-desc {
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+
+.department-head-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.department-head-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--muted);
+  width: fit-content;
+}
+
+@media (max-width: 767px) {
+  .department-head-meta {
+    align-items: center;
+  }
+}
+
+/* --- Staff Marquee --- */
+.staff-marquee-wrapper {
+  margin-top: 2rem;
+}
+
+.staff-marquee-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.staff-marquee-container {
+  position: relative;
+  overflow: hidden;
+  padding: 1rem 0;
+}
+
+.staff-marquee-fade-left,
+.staff-marquee-fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.staff-marquee-fade-left {
+  left: 0;
+  background: linear-gradient(to right, var(--muted), transparent);
+}
+
+.staff-marquee-fade-right {
+  right: 0;
+  background: linear-gradient(to left, var(--muted), transparent);
+}
+
+.staff-marquee-track {
+  display: flex;
+  gap: 1.5rem;
+  animation: marquee-scroll 35s linear infinite;
+  width: max-content;
+}
+
+.staff-marquee-container:hover .staff-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+[dir="rtl"] .staff-marquee-track {
+  animation: marquee-scroll-rtl 35s linear infinite;
+}
+
+@keyframes marquee-scroll-rtl {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(50%);
+  }
+}
+
+/* --- Staff Card --- */
+.staff-card {
+  flex-shrink: 0;
+  width: 260px;
+  border-radius: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.staff-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.staff-card-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+
+.staff-card-image {
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.staff-card:hover .staff-card-image {
+  transform: scale(1.08);
+}
+
+.staff-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  align-items: flex-end;
+  padding: 1rem;
+}
+
+.staff-card:hover .staff-card-overlay {
+  opacity: 1;
+}
+
+.staff-card-overlay-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.staff-card-overlay-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.7rem;
+}
+
+.staff-card-content {
+  padding: 1rem 1.125rem 1.25rem;
+}
+
+.staff-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 0.125rem;
+}
+
+.staff-card-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.125rem;
+}
+
+.staff-card-dept {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-bottom: 0.5rem;
+}
+
+.staff-card-desc {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ================================
+   Top Students Section
+   ================================ */
+
+.top-students-section {
+  padding: 3rem 0 4rem;
+}
+
+.top-students-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.top-students-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.top-students-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
+}
+
+.top-students-subtitle {
+  font-size: 1rem;
+  color: var(--muted-foreground);
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+/* Mobile list */
+.top-students-list-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .top-students-list-mobile {
+    display: none;
+  }
+}
+
+/* Desktop podium */
+.top-students-podium-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .top-students-podium-desktop {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .top-students-podium-desktop {
+    gap: 2rem;
+  }
+}
+
+.top-students-podium-item {
+  flex: 1;
+  max-width: 320px;
+}
+
+.top-students-podium-center {
+  transform: scale(1.06);
+  z-index: 1;
+}
+
+.top-students-podium-side {
+  opacity: 0.95;
+}
+
+/* --- Student Card --- */
+.top-student-card {
+  position: relative;
+  border-radius: 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  text-align: center;
+  padding: 2rem 1.5rem 1.75rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+  max-width: 320px;
+}
+
+.top-student-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Gold Card */
+.top-student-card-gold {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(175deg, rgba(245, 158, 11, 0.06) 0%, var(--card) 40%);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);
+}
+
+.top-student-card-gold:hover {
+  box-shadow: 0 12px 40px rgba(245, 158, 11, 0.15);
+}
+
+/* Silver Card */
+.top-student-card-silver {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: linear-gradient(175deg, rgba(148, 163, 184, 0.06) 0%, var(--card) 40%);
+  box-shadow: 0 4px 20px rgba(148, 163, 184, 0.08);
+}
+
+.top-student-card-silver:hover {
+  box-shadow: 0 12px 40px rgba(148, 163, 184, 0.15);
+}
+
+/* Bronze Card */
+.top-student-card-bronze {
+  border-color: rgba(180, 83, 9, 0.2);
+  background: linear-gradient(175deg, rgba(180, 83, 9, 0.05) 0%, var(--card) 40%);
+  box-shadow: 0 4px 20px rgba(180, 83, 9, 0.06);
+}
+
+.top-student-card-bronze:hover {
+  box-shadow: 0 12px 40px rgba(180, 83, 9, 0.12);
+}
+
+/* --- Medal Badge --- */
+.top-student-medal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  z-index: 1;
+}
+
+[dir="rtl"] .top-student-medal {
+  right: auto;
+  left: 1rem;
+}
+
+.top-student-medal-icon {
+  font-size: 1rem;
+}
+
+.top-student-medal-gold {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+}
+
+.top-student-medal-silver {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  color: #475569;
+}
+
+.top-student-medal-bronze {
+  background: linear-gradient(135deg, #fed7aa, #fdba74);
+  color: #7c2d12;
+}
+
+/* --- Student Image --- */
+.top-student-image-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.top-student-image-ring {
+  padding: 4px;
+  border-radius: 50%;
+}
+
+.top-student-medal-gold-ring {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b);
+}
+
+.top-student-medal-silver-ring {
+  background: linear-gradient(135deg, #94a3b8, #cbd5e1, #94a3b8);
+}
+
+.top-student-medal-bronze-ring {
+  background: linear-gradient(135deg, #b45309, #d97706, #b45309);
+}
+
+.top-student-image-container {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--background);
+}
+
+@media (min-width: 768px) {
+  .top-student-image-container {
+    width: 130px;
+    height: 130px;
+  }
+}
+
+.top-student-image {
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.top-student-card:hover .top-student-image {
+  transform: scale(1.08);
+}
+
+/* --- Student Info --- */
+.top-student-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.top-student-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+}
+
+.top-student-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.top-student-detail-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+/* --- GPA Display --- */
+.top-student-gpa-wrapper {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--muted);
+}
+
+.top-student-gpa-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+}
+
+.top-student-gpa-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+}
+
+.top-student-gpa-max {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.top-student-gpa-bar-bg {
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.top-student-gpa-bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 1s ease;
+}
+
+.top-student-medal-gold-bar {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.top-student-medal-silver-bar {
+  background: linear-gradient(90deg, #94a3b8, #cbd5e1);
+}
+
+.top-student-medal-bronze-bar {
+  background: linear-gradient(90deg, #b45309, #d97706);
+}
+
+/* ================================
+   Leaflet Map RTL Fixes
+   ================================ */
+html[dir="rtl"] .leaflet-container a.leaflet-popup-close-button,
+[dir="rtl"] .leaflet-container a.leaflet-popup-close-button {
+  right: auto !important;
+  left: 0 !important;
+  padding: 4px 0 0 6px !important;
+}
+
+html[dir="rtl"] .leaflet-container .leaflet-popup-content,
+[dir="rtl"] .leaflet-container .leaflet-popup-content {
+  margin: 13px 20px 13px 24px !important;
+}
