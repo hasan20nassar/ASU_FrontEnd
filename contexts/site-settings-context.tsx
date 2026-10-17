@@ -138,9 +138,8 @@ const STORAGE_KEY = "asu_site_settings_v9";
 const SETTINGS_EVENT = "asu_site_settings_updated";
 
 function getApiBaseUrl(): string {
-  if (typeof window === "undefined") return "http://127.0.0.1:8000";
-  const hostname = window.location.hostname || "127.0.0.1";
-  return `http://${hostname}:8000`;
+  const url = process.env.NEXT_PUBLIC_API_URL || (typeof window !== "undefined" && window.location.hostname === "localhost" ? "http://127.0.0.1:8000" : "");
+  return url.replace(/\/+$/, "");
 }
 
 export function getMergedContactFields(parsedFields?: Record<string, any>): Record<string, ContactFieldItem> {

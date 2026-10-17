@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@ta
 import { OpenAPI, ApiError } from "@/lib/api";
 
 // Set base URL of the Django backend API
-OpenAPI.BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+OpenAPI.BASE = (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
 
 const handleGlobalApiError = (error: unknown) => {
   if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
