@@ -67,7 +67,7 @@ export default function TermsPage() {
               {isArabic ? "الشروط والأحكام" : "Terms and Conditions"}
             </h1>
             <p className="mt-4 text-muted-foreground italic">
-              {isArabic ? "آخر تحديث: مارس 2024" : "Last Updated: March 2024"}
+              {isArabic ? "آخر تحديث: مارس 2026" : "Last Updated: March 2026"}
             </p>
           </div>
         </section>
@@ -77,7 +77,7 @@ export default function TermsPage() {
           <div className="mx-auto max-w-4xl">
             <div className="grid gap-12 text-start">
               {terms.map((term, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -106,7 +106,7 @@ export default function TermsPage() {
                 {isArabic ? "القانون الواجب التطبيق" : "Governing Law"}
               </h3>
               <p className="text-muted-foreground mx-auto max-w-xl">
-                {isArabic 
+                {isArabic
                   ? "تخضع هذه الشروط والأحكام وتفسر وفقاً لقوانين الجمهورية العربية السورية. أي نزاعات تنشأ تخضع حصرياً لاختصاص المحاكم السورية المعنية."
                   : "These terms and conditions are governed by and construed in accordance with the laws of the Syrian Arab Republic. Any disputes arising shall be subject exclusively to the jurisdiction of the relevant Syrian courts."}
               </p>

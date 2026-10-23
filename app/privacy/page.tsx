@@ -67,7 +67,7 @@ export default function PrivacyPage() {
               {isArabic ? "سياسة الخصوصية" : "Privacy Policy"}
             </h1>
             <p className="mt-4 text-muted-foreground italic">
-              {isArabic ? "آخر تحديث: مارس 2024" : "Last Updated: March 2024"}
+              {isArabic ? "آخر تحديث: مارس 2026" : "Last Updated: March 2026"}
             </p>
           </div>
         </section>
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
           <div className="mx-auto max-w-4xl">
             <div className="grid gap-12 text-start">
               {sections.map((section, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -106,7 +106,7 @@ export default function PrivacyPage() {
                 {isArabic ? "هل لديك استفسارات؟" : "Have Questions?"}
               </h3>
               <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-                {isArabic 
+                {isArabic
                   ? "إذا كان لديك أي أسئلة حول سياسة الخصوصية الخاصة بنا، فلا تتردد في التواصل مع فريق تكنولوجيا المعلومات بالجامعة."
                   : "If you have any questions about our privacy policy, please feel free to reach out to the University's IT team."}
               </p>
