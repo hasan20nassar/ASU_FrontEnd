@@ -53,20 +53,27 @@ interface FooterProps {
 export function Footer({ primaryColor, accentColor }: FooterProps = {}) {
   const { language, t } = useLanguage();
   const isArabic = language === "ar";
-  const { settings } = useSiteSettings();
+  const { settings, isPagePublished } = useSiteSettings();
   const { data: backendFaculties } = useFaculties();
-  const faculties = backendFaculties || [];
+  const rawFaculties = backendFaculties || [];
+  const faculties = rawFaculties.filter((f) =>
+    isPagePublished(`/academics/${f.slug}`)
+  );
+  const isAcademicsPublished = isPagePublished("/academics");
 
   const quickLinks = [
+    { href: "/", label: t("nav.home") },
     { href: "/about", label: t("nav.about") },
     { href: "/about/directory", label: t("nav.directory") },
+    { href: "/about/map", label: t("nav.map") },
     { href: "/academics", label: t("nav.academics") },
     { href: "/admissions", label: t("nav.admissions") },
     { href: "/campus-life", label: t("nav.campusLife") },
+    { href: "/library", label: isArabic ? "المكتبة" : "Library" },
     { href: "/research", label: t("nav.research") },
     { href: "/news", label: t("nav.news") },
     { href: "/contact", label: t("nav.contact") },
-  ];
+  ].filter((link) => isPagePublished(link.href));
 
   // Helper to resolve icon component for each platform key
   const getSocialIcon = (key: string) => {
@@ -159,32 +166,34 @@ export function Footer({ primaryColor, accentColor }: FooterProps = {}) {
           </div>
 
           {/* Faculties */}
-          <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">
-              {t("nav.academics")}
-            </h3>
-            <ul className="space-y-2">
-              {faculties.slice(0, 5).map((faculty) => (
-                <li key={faculty.id}>
+          {isAcademicsPublished && (
+            <div>
+              <h3 className="mb-4 text-sm font-semibold text-foreground">
+                {t("nav.academics")}
+              </h3>
+              <ul className="space-y-2">
+                {faculties.slice(0, 5).map((faculty) => (
+                  <li key={faculty.id}>
+                    <Link
+                      href={`/academics/${faculty.slug}`}
+                      className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                    >
+                      {isArabic ? faculty.nameAr : faculty.nameEn}
+                    </Link>
+                  </li>
+                ))}
+                <li>
                   <Link
-                    href={`/academics/${faculty.slug}`}
-                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                    href="/academics"
+                    className="text-sm font-medium text-primary hover:underline"
+                    style={primaryColor ? { color: primaryColor } : undefined}
                   >
-                    {isArabic ? faculty.nameAr : faculty.nameEn}
+                    {t("common.viewAll")}
                   </Link>
                 </li>
-              ))}
-              <li>
-                <Link
-                  href="/academics"
-                  className="text-sm font-medium text-primary hover:underline"
-                  style={primaryColor ? { color: primaryColor } : undefined}
-                >
-                  {t("common.viewAll")}
-                </Link>
-              </li>
-            </ul>
-          </div>
+              </ul>
+            </div>
+          )}
 
           {/* Contact Info */}
           <div>
@@ -308,15 +317,21 @@ export function Footer({ primaryColor, accentColor }: FooterProps = {}) {
               . {t("footer.rights")}.
             </p>
             <div className="flex gap-4 text-sm text-muted-foreground">
-              <Link href="/privacy" className="hover:text-primary">
-                {isArabic ? "سياسة الخصوصية" : "Privacy Policy"}
-              </Link>
-              <Link href="/terms" className="hover:text-primary">
-                {isArabic ? "الشروط والأحكام" : "Terms of Service"}
-              </Link>
-              <Link href="/developer" className="hover:text-primary">
-                {t("footer.developer")}
-              </Link>
+              {isPagePublished("/privacy") && (
+                <Link href="/privacy" className="hover:text-primary">
+                  {isArabic ? "سياسة الخصوصية" : "Privacy Policy"}
+                </Link>
+              )}
+              {isPagePublished("/terms") && (
+                <Link href="/terms" className="hover:text-primary">
+                  {isArabic ? "الشروط والأحكام" : "Terms of Service"}
+                </Link>
+              )}
+              {isPagePublished("/developer") && (
+                <Link href="/developer" className="hover:text-primary">
+                  {t("footer.developer")}
+                </Link>
+              )}
             </div>
           </div>
         </div>

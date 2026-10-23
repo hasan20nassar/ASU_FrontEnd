@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 export interface SocialLinkItem {
   key: "facebook" | "linkedin" | "youtube" | "instagram" | "telegram" | "twitter";
@@ -18,6 +18,23 @@ export interface ContactFieldItem {
   enabled: boolean;
 }
 
+export const DEFAULT_PUBLISHED_PAGES: Record<string, boolean> = {
+  home: true,
+  about: true,
+  about_directory: true,
+  about_map: true,
+  academics: true,
+  admissions: true,
+  campus_life: true,
+  library: true,
+  research: true,
+  news: true,
+  contact: true,
+  privacy: true,
+  terms: true,
+  developer: true,
+};
+
 export interface SiteSettings {
   email: string;
   phone: string;
@@ -32,6 +49,7 @@ export interface SiteSettings {
   maintenanceMode: boolean;
   showResults: boolean;
   socialLinks: Record<string, SocialLinkItem>;
+  publishedPages: Record<string, boolean>;
 }
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
@@ -123,44 +141,226 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
       enabled: true,
     },
   },
+  publishedPages: { ...DEFAULT_PUBLISHED_PAGES },
 };
 
 interface SiteSettingsContextType {
   settings: SiteSettings;
   updateSettings: (newSettings: Partial<SiteSettings>) => Promise<void>;
   updateSocialLink: (key: string, url: string, enabled: boolean) => Promise<void>;
+  updatePublishedPages: (newPages: Record<string, boolean>) => Promise<boolean>;
+  isPagePublished: (keyOrPath: string) => boolean;
   resetSettings: () => void;
 }
 
 const SiteSettingsContext = createContext<SiteSettingsContextType | undefined>(undefined);
 
-const STORAGE_KEY = "asu_site_settings_v9";
+const STORAGE_KEY = "asu_site_settings_v10";
 const SETTINGS_EVENT = "asu_site_settings_updated";
 
 function getApiBaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_API_URL || (typeof window !== "undefined" && window.location.hostname === "localhost" ? "http://127.0.0.1:8000" : "");
+  const url =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== "undefined" && window.location.hostname === "localhost"
+      ? "http://127.0.0.1:8000"
+      : "");
   return url.replace(/\/+$/, "");
 }
 
-export function getMergedContactFields(parsedFields?: Record<string, any>): Record<string, ContactFieldItem> {
+export function getMergedContactFields(
+  parsedFields?: Record<string, any>
+): Record<string, ContactFieldItem> {
   const merged = { ...DEFAULT_SITE_SETTINGS.contactFields };
   if (parsedFields && typeof parsedFields === "object") {
     Object.keys(DEFAULT_SITE_SETTINGS.contactFields).forEach((key) => {
       if (parsedFields[key]) {
         const item = parsedFields[key];
-        const defaultItem = DEFAULT_SITE_SETTINGS.contactFields[key as keyof typeof DEFAULT_SITE_SETTINGS.contactFields];
+        const defaultItem =
+          DEFAULT_SITE_SETTINGS.contactFields[
+            key as keyof typeof DEFAULT_SITE_SETTINGS.contactFields
+          ];
         merged[key as keyof typeof DEFAULT_SITE_SETTINGS.contactFields] = {
           ...defaultItem,
           ...item,
           value: item.value !== undefined ? item.value : defaultItem.value,
-          valueAr: item.valueAr ?? item.value ?? defaultItem.valueAr ?? defaultItem.value,
-          valueEn: item.valueEn ?? defaultItem.valueEn ?? item.value ?? defaultItem.value,
+          valueAr:
+            item.valueAr ?? item.value ?? defaultItem.valueAr ?? defaultItem.value,
+          valueEn:
+            item.valueEn ?? defaultItem.valueEn ?? item.value ?? defaultItem.value,
           enabled: item.enabled !== undefined ? item.enabled : defaultItem.enabled,
         };
       }
     });
   }
   return merged;
+}
+
+export function getMergedPublishedPages(
+  parsedPages?: Record<string, any>
+): Record<string, boolean> {
+  const merged: Record<string, boolean> = { ...DEFAULT_PUBLISHED_PAGES };
+  if (parsedPages && typeof parsedPages === "object") {
+    Object.keys(parsedPages).forEach((key) => {
+      merged[key] = Boolean(parsedPages[key]);
+    });
+  }
+  merged.home = true; // Home is always published
+  return merged;
+}
+
+/**
+ * Evaluates whether a given page key or URL path is published,
+ * strictly enforcing parent-child hierarchy rules:
+ * - Home ("/" or "home") is always published.
+ * - Subpages under a parent are unpublished if the parent or the subpage itself is unpublished.
+ */
+export function checkIsPagePublished(
+  publishedPages: Record<string, boolean> | undefined,
+  keyOrPath: string
+): boolean {
+  const pages = publishedPages || DEFAULT_PUBLISHED_PAGES;
+  const raw = (keyOrPath || "").trim();
+
+  if (!raw || raw === "/" || raw === "home") {
+    return true;
+  }
+
+  // Normalize path vs key
+  const cleanPath = raw.startsWith("/") ? raw.replace(/\/+$/, "") || "/" : "";
+
+  const isKeyEnabled = (k: string): boolean => {
+    if (k === "home") return true;
+    return pages[k] !== false;
+  };
+
+  // Direct key check with parent hierarchy
+  if (!cleanPath) {
+    if (raw === "about") return isKeyEnabled("about");
+    if (raw === "about_directory")
+      return isKeyEnabled("about") && isKeyEnabled("about_directory");
+    if (raw === "about_map")
+      return isKeyEnabled("about") && isKeyEnabled("about_map");
+
+    if (raw === "academics") return isKeyEnabled("academics");
+    if (raw.startsWith("faculty:")) {
+      return isKeyEnabled("academics") && isKeyEnabled(raw);
+    }
+    if (raw.startsWith("program:")) {
+      // format: program:<facultySlug>:<programSlug> or program:<programSlug>
+      const parts = raw.split(":");
+      if (parts.length === 3) {
+        const facSlug = parts[1];
+        return (
+          isKeyEnabled("academics") &&
+          isKeyEnabled(`faculty:${facSlug}`) &&
+          isKeyEnabled(raw)
+        );
+      }
+      return isKeyEnabled("academics") && isKeyEnabled(raw);
+    }
+
+    if (raw === "campus_life") return isKeyEnabled("campus_life");
+    if (raw === "library")
+      return isKeyEnabled("campus_life") && isKeyEnabled("library");
+    if (raw === "research")
+      return isKeyEnabled("campus_life") && isKeyEnabled("research");
+
+    return isKeyEnabled(raw);
+  }
+
+  // Path-based evaluation
+  if (cleanPath === "/") return true;
+
+  // Protected / System paths are not public content pages
+  if (
+    cleanPath.startsWith("/dashboard") ||
+    cleanPath.startsWith("/portal") ||
+    cleanPath.startsWith("/login")
+  ) {
+    return true;
+  }
+
+  // 1. About & Subpages
+  if (cleanPath === "/about") {
+    return isKeyEnabled("about");
+  }
+  if (cleanPath === "/about/directory" || cleanPath.startsWith("/about/directory/")) {
+    return isKeyEnabled("about") && isKeyEnabled("about_directory");
+  }
+  if (cleanPath === "/about/map" || cleanPath.startsWith("/about/map/")) {
+    return isKeyEnabled("about") && isKeyEnabled("about_map");
+  }
+
+  // 2. Academics, Faculties & Programs
+  if (cleanPath === "/academics") {
+    return isKeyEnabled("academics");
+  }
+  if (cleanPath.startsWith("/academics/")) {
+    if (!isKeyEnabled("academics")) return false;
+    const segments = cleanPath.replace("/academics/", "").split("/").filter(Boolean);
+    const facultySlug = segments[0];
+    const programSlug = segments[1];
+    if (facultySlug && !isKeyEnabled(`faculty:${facultySlug}`)) {
+      return false;
+    }
+    if (facultySlug && programSlug) {
+      if (
+        !isKeyEnabled(`program:${facultySlug}:${programSlug}`) ||
+        !isKeyEnabled(`program:${programSlug}`)
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (cleanPath.startsWith("/faculties/")) {
+    if (!isKeyEnabled("academics")) return false;
+    const segments = cleanPath.replace("/faculties/", "").split("/").filter(Boolean);
+    const facultySlug = segments[0];
+    if (facultySlug && !isKeyEnabled(`faculty:${facultySlug}`)) {
+      return false;
+    }
+    return true;
+  }
+
+  // 3. Admissions
+  if (cleanPath === "/admissions" || cleanPath.startsWith("/admissions/")) {
+    return isKeyEnabled("admissions");
+  }
+
+  // 4. Campus Life & Subpages (Library, Research)
+  if (cleanPath === "/campus-life" || cleanPath.startsWith("/campus-life/")) {
+    return isKeyEnabled("campus_life");
+  }
+  if (cleanPath === "/library" || cleanPath.startsWith("/library/")) {
+    return isKeyEnabled("campus_life") && isKeyEnabled("library");
+  }
+  if (cleanPath === "/research" || cleanPath.startsWith("/research/")) {
+    return isKeyEnabled("campus_life") && isKeyEnabled("research");
+  }
+
+  // 5. News
+  if (cleanPath === "/news" || cleanPath.startsWith("/news/")) {
+    return isKeyEnabled("news");
+  }
+
+  // 6. Contact
+  if (cleanPath === "/contact" || cleanPath.startsWith("/contact/")) {
+    return isKeyEnabled("contact");
+  }
+
+  // 7. Footer Legal & Info Pages
+  if (cleanPath === "/privacy" || cleanPath.startsWith("/privacy/")) {
+    return isKeyEnabled("privacy");
+  }
+  if (cleanPath === "/terms" || cleanPath.startsWith("/terms/")) {
+    return isKeyEnabled("terms");
+  }
+  if (cleanPath === "/developer" || cleanPath.startsWith("/developer/")) {
+    return isKeyEnabled("developer");
+  }
+
+  return true;
 }
 
 function getStoredSettings(): SiteSettings {
@@ -185,12 +385,14 @@ function getStoredSettings(): SiteSettings {
     }
 
     const mergedContactFields = getMergedContactFields(parsed.contactFields);
+    const mergedPublishedPages = getMergedPublishedPages(parsed.publishedPages);
 
     return {
       ...DEFAULT_SITE_SETTINGS,
       ...parsed,
       contactFields: mergedContactFields,
       socialLinks: mergedSocialLinks,
+      publishedPages: mergedPublishedPages,
     };
   } catch (err) {
     console.error("Failed to parse site settings from localStorage:", err);
@@ -200,8 +402,11 @@ function getStoredSettings(): SiteSettings {
 
 async function fetchFromBackendApi(): Promise<SiteSettings | null> {
   try {
-    const token = typeof window !== "undefined" ? localStorage.getItem("asu_access_token") : "";
-    const headers: Record<string, string> = { "Accept": "application/json" };
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("asu_access_token")
+        : "";
+    const headers: Record<string, string> = { Accept: "application/json" };
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
@@ -229,6 +434,7 @@ async function fetchFromBackendApi(): Promise<SiteSettings | null> {
     }
 
     const mergedContactFields = getMergedContactFields(data.contactFields);
+    const mergedPublishedPages = getMergedPublishedPages(data.publishedPages);
 
     return {
       email: data.email || DEFAULT_SITE_SETTINGS.email,
@@ -236,27 +442,38 @@ async function fetchFromBackendApi(): Promise<SiteSettings | null> {
       address: data.address || DEFAULT_SITE_SETTINGS.address,
       addressEn: data.addressEn || DEFAULT_SITE_SETTINGS.addressEn,
       officeAddress: data.officeAddress || DEFAULT_SITE_SETTINGS.officeAddress,
-      officeAddressEn: data.officeAddressEn || DEFAULT_SITE_SETTINGS.officeAddressEn,
+      officeAddressEn:
+        data.officeAddressEn || DEFAULT_SITE_SETTINGS.officeAddressEn,
       workingHours: data.workingHours || DEFAULT_SITE_SETTINGS.workingHours,
-      workingHoursEn: data.workingHoursEn || DEFAULT_SITE_SETTINGS.workingHoursEn,
+      workingHoursEn:
+        data.workingHoursEn || DEFAULT_SITE_SETTINGS.workingHoursEn,
       contactFields: mergedContactFields,
-      registrationOpen: data.registrationOpen ?? DEFAULT_SITE_SETTINGS.registrationOpen,
-      maintenanceMode: data.maintenanceMode ?? DEFAULT_SITE_SETTINGS.maintenanceMode,
+      registrationOpen:
+        data.registrationOpen ?? DEFAULT_SITE_SETTINGS.registrationOpen,
+      maintenanceMode:
+        data.maintenanceMode ?? DEFAULT_SITE_SETTINGS.maintenanceMode,
       showResults: data.showResults ?? DEFAULT_SITE_SETTINGS.showResults,
       socialLinks: mergedSocialLinks,
+      publishedPages: mergedPublishedPages,
     };
   } catch (err) {
-    console.warn("Notice: Fetching site settings from API failed, using cached settings.", err);
+    console.warn(
+      "Notice: Fetching site settings from API failed, using cached settings.",
+      err
+    );
     return null;
   }
 }
 
 async function saveToBackendApi(updatedState: SiteSettings): Promise<boolean> {
   try {
-    const token = typeof window !== "undefined" ? localStorage.getItem("asu_access_token") : "";
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("asu_access_token")
+        : "";
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "Accept": "application/json",
+      Accept: "application/json",
     };
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
@@ -280,15 +497,21 @@ async function saveToBackendApi(updatedState: SiteSettings): Promise<boolean> {
         maintenanceMode: updatedState.maintenanceMode,
         showResults: updatedState.showResults,
         socialLinks: updatedState.socialLinks,
+        publishedPages: {
+          ...updatedState.publishedPages,
+          home: true,
+        },
       }),
     });
 
     if (res.ok) {
-      const data = await res.json();
-      console.log("Site settings successfully saved to backend database:", data);
+      await res.json();
       return true;
     } else {
-      console.error("Backend returned error status when saving site settings:", res.status);
+      console.error(
+        "Backend returned error status when saving site settings:",
+        res.status
+      );
       return false;
     }
   } catch (err) {
@@ -297,10 +520,13 @@ async function saveToBackendApi(updatedState: SiteSettings): Promise<boolean> {
   }
 }
 
-export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
+export function SiteSettingsProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
 
-  // Load settings on mount (cached first, then fresh from Database API)
   useEffect(() => {
     const initialCache = getStoredSettings();
     setSettings(initialCache);
@@ -340,17 +566,21 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
       ...(newSettings.contactFields || {}),
     };
 
+    const updatedPublishedPages = getMergedPublishedPages({
+      ...settings.publishedPages,
+      ...(newSettings.publishedPages || {}),
+    });
+
     const updatedState: SiteSettings = {
       ...settings,
       ...newSettings,
       contactFields: updatedContactFields,
       socialLinks: updatedSocialLinks,
+      publishedPages: updatedPublishedPages,
     };
 
-    // 1. Update local Context state synchronously
     setSettings(updatedState);
 
-    // 2. Cache locally in localStorage and trigger live event
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
@@ -360,12 +590,48 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
       }
     }
 
-    // 3. Save permanently to Backend Database
     await saveToBackendApi(updatedState);
   };
 
-  const updateSocialLink = async (key: string, url: string, enabled: boolean) => {
-    const defaultItem = DEFAULT_SITE_SETTINGS.socialLinks[key] || { key, nameAr: key, nameEn: key, url: "", enabled: true };
+  const updatePublishedPages = async (
+    newPages: Record<string, boolean>
+  ): Promise<boolean> => {
+    const mergedPages = getMergedPublishedPages({
+      ...settings.publishedPages,
+      ...newPages,
+    });
+
+    const updatedState: SiteSettings = {
+      ...settings,
+      publishedPages: mergedPages,
+    };
+
+    setSettings(updatedState);
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
+        window.dispatchEvent(new Event(SETTINGS_EVENT));
+      } catch (err) {
+        console.error("Failed to save publishedPages to localStorage:", err);
+      }
+    }
+
+    return await saveToBackendApi(updatedState);
+  };
+
+  const updateSocialLink = async (
+    key: string,
+    url: string,
+    enabled: boolean
+  ) => {
+    const defaultItem = DEFAULT_SITE_SETTINGS.socialLinks[key] || {
+      key,
+      nameAr: key,
+      nameEn: key,
+      url: "",
+      enabled: true,
+    };
     const currentItem = settings.socialLinks[key] || defaultItem;
 
     const updatedSocialLinks = {
@@ -396,6 +662,13 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
     await saveToBackendApi(updatedState);
   };
 
+  const isPagePublished = useCallback(
+    (keyOrPath: string) => {
+      return checkIsPagePublished(settings.publishedPages, keyOrPath);
+    },
+    [settings.publishedPages]
+  );
+
   const resetSettings = () => {
     setSettings(DEFAULT_SITE_SETTINGS);
     if (typeof window !== "undefined") {
@@ -406,7 +679,14 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
 
   return (
     <SiteSettingsContext.Provider
-      value={{ settings, updateSettings, updateSocialLink, resetSettings }}
+      value={{
+        settings,
+        updateSettings,
+        updateSocialLink,
+        updatePublishedPages,
+        isPagePublished,
+        resetSettings,
+      }}
     >
       {children}
     </SiteSettingsContext.Provider>
@@ -416,7 +696,9 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
 export function useSiteSettings() {
   const context = useContext(SiteSettingsContext);
   if (!context) {
-    throw new Error("useSiteSettings must be used within a SiteSettingsProvider");
+    throw new Error(
+      "useSiteSettings must be used within a SiteSettingsProvider"
+    );
   }
   return context;
 }

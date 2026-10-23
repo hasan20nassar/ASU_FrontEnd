@@ -12,11 +12,12 @@ import {
   FlaskConical,
   Newspaper,
   Phone,
-  FileText,
   Search,
+  MapPin,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/language-context";
+import { useSiteSettings } from "@/contexts/site-settings-context";
 import { useFaculties } from "@/hooks/use-faculties";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -34,8 +35,12 @@ export function CommandMenu({ compact = false, ...props }: DialogProps & { compa
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const { language, t, dir } = useLanguage();
+  const { isPagePublished } = useSiteSettings();
   const { data: backendFaculties } = useFaculties();
-  const faculties = backendFaculties || [];
+  const rawFaculties = backendFaculties || [];
+  const faculties = rawFaculties.filter((f) =>
+    isPagePublished(`/academics/${f.slug}`)
+  );
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -60,13 +65,15 @@ export function CommandMenu({ compact = false, ...props }: DialogProps & { compa
     { href: "/", label: t("nav.home"), icon: Building2 },
     { href: "/about", label: t("nav.about"), icon: Users },
     { href: "/about/directory", label: language === "ar" ? "هيئة التدريس" : "Faculty Directory", icon: Users },
+    { href: "/about/map", label: t("nav.map"), icon: MapPin },
+    { href: "/academics", label: t("nav.academics"), icon: BookOpen },
     { href: "/admissions", label: t("nav.admissions"), icon: GraduationCap },
-    { href: "/library", label: language === "ar" ? "المكتبة المركزية" : "University Library", icon: BookOpen },
     { href: "/campus-life", label: t("nav.campusLife"), icon: TreePine },
+    { href: "/library", label: language === "ar" ? "المكتبة المركزية" : "University Library", icon: BookOpen },
     { href: "/research", label: t("nav.research"), icon: FlaskConical },
     { href: "/news", label: t("nav.news"), icon: Newspaper },
     { href: "/contact", label: t("nav.contact"), icon: Phone },
-  ];
+  ].filter((link) => isPagePublished(link.href));
 
   const portals = [
     { href: "/portal/student", label: t("nav.studentPortal"), icon: UserIcon },
@@ -108,24 +115,28 @@ export function CommandMenu({ compact = false, ...props }: DialogProps & { compa
         <CommandInput placeholder={isArabic ? "اكتب للبحث..." : "Type a command or search..."} />
         <CommandList dir={dir}>
           <CommandEmpty>{isArabic ? "لم يتم العثور على نتائج." : "No results found."}</CommandEmpty>
-          
-          <CommandGroup heading={isArabic ? "الكليات" : "Faculties"}>
-            {faculties.map((faculty) => (
-              <CommandItem
-                key={faculty.id}
-                value={isArabic ? faculty.nameAr : faculty.nameEn}
-                onSelect={() => {
-                  runCommand(() => router.push(`/academics/${faculty.slug}`));
-                }}
-              >
-                <BookOpen className="mr-2 h-4 w-4" />
-                <span>{isArabic ? faculty.nameAr : faculty.nameEn}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
 
-          <CommandSeparator />
-          
+          {faculties.length > 0 && (
+            <>
+              <CommandGroup heading={isArabic ? "الكليات" : "Faculties"}>
+                {faculties.map((faculty) => (
+                  <CommandItem
+                    key={faculty.id}
+                    value={isArabic ? faculty.nameAr : faculty.nameEn}
+                    onSelect={() => {
+                      runCommand(() => router.push(`/academics/${faculty.slug}`));
+                    }}
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    <span>{isArabic ? faculty.nameAr : faculty.nameEn}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+
+              <CommandSeparator />
+            </>
+          )}
+
           <CommandGroup heading={isArabic ? "روابط سريعة" : "Quick Links"}>
             {navLinks.map((link) => (
               <CommandItem
@@ -142,7 +153,7 @@ export function CommandMenu({ compact = false, ...props }: DialogProps & { compa
           </CommandGroup>
 
           <CommandSeparator />
-          
+
           <CommandGroup heading={isArabic ? "البوابات" : "Portals"}>
             {portals.map((portal) => (
               <CommandItem

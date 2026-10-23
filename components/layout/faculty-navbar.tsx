@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
 import { useTheme } from "@/contexts/theme-context";
 import { useAuth, getUserRole, getRoleRedirectPath } from "@/contexts/auth-context";
+import { useSiteSettings } from "@/contexts/site-settings-context";
 import { ASULogo } from "@/components/ui/asu-logo";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -96,6 +97,7 @@ export function FacultyNavbar({
   const { language, setLanguage, dir } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
+  const { isPagePublished } = useSiteSettings();
   const router = useRouter();
   const isArabic = language === "ar";
   const userRole = getUserRole(user);
@@ -630,7 +632,9 @@ export function FacultyNavbar({
                         { href: "/admissions", label: isArabic ? "القبول والتسجيل" : "Admissions", icon: GraduationCap },
                         { href: "/news", label: isArabic ? "الأخبار والإعلانات" : "News & Events", icon: Newspaper },
                         { href: "/contact", label: isArabic ? "اتصل بنا" : "Contact Us", icon: Phone },
-                      ].map((item) => {
+                      ]
+                        .filter((item) => isPagePublished(item.href))
+                        .map((item) => {
                         const Icon = item.icon;
                         return (
                           <Link
@@ -839,43 +843,47 @@ export function FacultyNavbar({
 
           {/* Quick Links */}
           <CommandGroup heading={isArabic ? "روابط سريعة" : "Quick Links"}>
-            <CommandItem
-              onSelect={() => {
-                setSearchOpen(false);
-                router.push("/admissions");
-              }}
-              className="dept-command-item cursor-pointer flex items-center gap-2.5 py-2 rounded-xl transition-all"
-            >
-              <div
-                className="dept-icon-box p-1.5 rounded-lg shrink-0 transition-colors"
-                style={{
-                  backgroundColor: hexToRgba(primaryColor, 0.12),
-                  color: primaryColor,
+            {isPagePublished("/admissions") && (
+              <CommandItem
+                onSelect={() => {
+                  setSearchOpen(false);
+                  router.push("/admissions");
                 }}
+                className="dept-command-item cursor-pointer flex items-center gap-2.5 py-2 rounded-xl transition-all"
               >
-                <DollarSign className="h-4 w-4" />
-              </div>
-              <span className="text-sm font-medium">{isArabic ? "تقديم طلب القبول والتسجيل" : "Apply for Admission"}</span>
-            </CommandItem>
+                <div
+                  className="dept-icon-box p-1.5 rounded-lg shrink-0 transition-colors"
+                  style={{
+                    backgroundColor: hexToRgba(primaryColor, 0.12),
+                    color: primaryColor,
+                  }}
+                >
+                  <DollarSign className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-medium">{isArabic ? "تقديم طلب القبول والتسجيل" : "Apply for Admission"}</span>
+              </CommandItem>
+            )}
 
-            <CommandItem
-              onSelect={() => {
-                setSearchOpen(false);
-                router.push("/academics");
-              }}
-              className="dept-command-item cursor-pointer flex items-center gap-2.5 py-2 rounded-xl transition-all"
-            >
-              <div
-                className="dept-icon-box p-1.5 rounded-lg shrink-0 transition-colors"
-                style={{
-                  backgroundColor: hexToRgba(primaryColor, 0.12),
-                  color: primaryColor,
+            {isPagePublished("/academics") && (
+              <CommandItem
+                onSelect={() => {
+                  setSearchOpen(false);
+                  router.push("/academics");
                 }}
+                className="dept-command-item cursor-pointer flex items-center gap-2.5 py-2 rounded-xl transition-all"
               >
-                <BookOpen className="h-4 w-4" />
-              </div>
-              <span className="text-sm font-medium">{isArabic ? "دليل كافة الكليات" : "All Faculties"}</span>
-            </CommandItem>
+                <div
+                  className="dept-icon-box p-1.5 rounded-lg shrink-0 transition-colors"
+                  style={{
+                    backgroundColor: hexToRgba(primaryColor, 0.12),
+                    color: primaryColor,
+                  }}
+                >
+                  <BookOpen className="h-4 w-4" />
+                </div>
+                <span className="text-sm font-medium">{isArabic ? "دليل كافة الكليات" : "All Faculties"}</span>
+              </CommandItem>
+            )}
 
             <CommandItem
               onSelect={() => {

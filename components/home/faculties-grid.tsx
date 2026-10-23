@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/language-context";
+import { useSiteSettings } from "@/contexts/site-settings-context";
 import { useFaculties } from "@/hooks/use-faculties";
 import { Faculty } from "@/lib/api/models/Faculty";
 import { Button } from "@/components/ui/button";
@@ -170,10 +171,23 @@ function FacultyHomeCard({ faculty }: { faculty: Faculty }) {
 
 export function FacultiesGrid() {
   const { language, t, dir } = useLanguage();
+  const { isPagePublished } = useSiteSettings();
   const Arrow = dir === "rtl" ? ArrowLeft : ArrowRight;
 
   const { data: backendFaculties } = useFaculties();
-  const displayFaculties = backendFaculties || [];
+  const rawFaculties = backendFaculties || [];
+  const displayFaculties = rawFaculties
+    .filter((f) => isPagePublished(`/academics/${f.slug}`))
+    .map((f) => ({
+      ...f,
+      programs: (f.programs || []).filter((p) =>
+        isPagePublished(`/academics/${f.slug}/${p.slug}`)
+      ),
+    }));
+
+  if (!isPagePublished("/academics") || displayFaculties.length === 0) {
+    return null;
+  }
 
   return (
     <section className="bg-muted/30 py-16 sm:py-24">

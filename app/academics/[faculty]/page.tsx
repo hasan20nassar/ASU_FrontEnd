@@ -9,6 +9,7 @@ import { FacultyNavbar } from "@/components/layout/faculty-navbar";
 import { ASULogo } from "@/components/ui/asu-logo";
 import { Footer } from "@/components/layout/footer";
 import { useLanguage } from "@/contexts/language-context";
+import { useSiteSettings } from "@/contexts/site-settings-context";
 import { useFaculties } from "@/hooks/use-faculties";
 import { useNews } from "@/hooks/use-news";
 import { useEvents } from "@/hooks/use-events";
@@ -189,6 +190,7 @@ export default function FacultyPage({
 }) {
   const { faculty: facultySlug } = use(params);
   const { language, dir } = useLanguage();
+  const { isPagePublished } = useSiteSettings();
   const isArabic = language === "ar";
   const Arrow = dir === "rtl" ? ArrowLeft : ArrowRight;
   const BackArrow = dir === "rtl" ? ChevronRight : ChevronLeft;
@@ -199,7 +201,15 @@ export default function FacultyPage({
   const { data: allMembers } = useFacultyMembers();
 
   const displayFaculties = backendFaculties || [];
-  const faculty = displayFaculties.find((f) => f.slug === facultySlug);
+  const rawFaculty = displayFaculties.find((f) => f.slug === facultySlug);
+  const faculty = rawFaculty
+    ? {
+        ...rawFaculty,
+        programs: (rawFaculty.programs || []).filter((p) =>
+          isPagePublished(`/academics/${rawFaculty.slug}/${p.slug}`)
+        ),
+      }
+    : undefined;
 
   if (isLoading) {
     return (

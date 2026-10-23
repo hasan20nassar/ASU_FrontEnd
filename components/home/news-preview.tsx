@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/language-context";
+import { useSiteSettings } from "@/contexts/site-settings-context";
 import { useNews } from "@/hooks/use-news";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -85,9 +86,14 @@ export function NewsPreview() {
   }, [api]);
 
   const total = displayNews.length;
+  const { isPagePublished } = useSiteSettings();
   const ReadMoreArrow = dir === "rtl" ? ArrowLeft : ArrowRight;
   const LeftIcon = dir === "rtl" ? ArrowRight : ArrowLeft;
   const RightIcon = dir === "rtl" ? ArrowLeft : ArrowRight;
+
+  if (!isPagePublished("/news")) {
+    return null;
+  }
 
   return (
     <section className="bg-muted/30 py-16 sm:py-24 overflow-hidden">

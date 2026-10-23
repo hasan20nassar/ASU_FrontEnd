@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useLanguage } from "@/contexts/language-context";
+import { useSiteSettings } from "@/contexts/site-settings-context";
 import { useFaculties } from "@/hooks/use-faculties";
 import { Faculty } from "@/lib/api/models/Faculty";
 import { Button } from "@/components/ui/button";
@@ -225,8 +226,17 @@ function FacultyAcademicsCard({ faculty }: { faculty: Faculty }) {
 
 export default function AcademicsPage() {
   const { language } = useLanguage();
+  const { isPagePublished } = useSiteSettings();
   const { data: backendFaculties } = useFaculties();
-  const displayFaculties = backendFaculties || [];
+  const rawFaculties = backendFaculties || [];
+  const displayFaculties = rawFaculties
+    .filter((f) => isPagePublished(`/academics/${f.slug}`))
+    .map((f) => ({
+      ...f,
+      programs: (f.programs || []).filter((p) =>
+        isPagePublished(`/academics/${f.slug}/${p.slug}`)
+      ),
+    }));
 
   return (
     <div className="flex min-h-screen flex-col">

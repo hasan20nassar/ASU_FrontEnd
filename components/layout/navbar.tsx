@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/language-context";
 import { useTheme } from "@/contexts/theme-context";
 import { useAuth, getUserRole, getRoleRedirectPath } from "@/contexts/auth-context";
+import { useSiteSettings } from "@/contexts/site-settings-context";
 import { useFaculties } from "@/hooks/use-faculties";
 
 import { cn } from "@/lib/utils";
@@ -62,8 +63,13 @@ import { CommandMenu } from "@/components/layout/command-menu";
 export function Navbar() {
   const { language, setLanguage, t, dir } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { isPagePublished } = useSiteSettings();
   const { data: backendFaculties } = useFaculties();
-  const faculties = backendFaculties || [];
+  const rawFaculties = backendFaculties || [];
+  const faculties = rawFaculties.filter((f) =>
+    isPagePublished(`/academics/${f.slug}`)
+  );
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isAcademicsOpen, setIsAcademicsOpen] = useState(false);
@@ -316,13 +322,23 @@ export function Navbar() {
     logout();
   };
 
+  const isAboutPublished = isPagePublished("/about");
+  const isDirectoryPublished = isPagePublished("/about/directory");
+  const isMapPublished = isPagePublished("/about/map");
+  const hasAboutSubpages = isDirectoryPublished || isMapPublished;
+
+  const isAcademicsPublished = isPagePublished("/academics");
+  const isAdmissionsPublished = isPagePublished("/admissions");
+  const isCampusLifePublished = isPagePublished("/campus-life");
+  const isNewsPublished = isPagePublished("/news");
+  const isContactPublished = isPagePublished("/contact");
 
   const navLinks = [
     { href: "/", label: t("nav.home"), icon: Building2 },
     { href: "/admissions", label: t("nav.admissions"), icon: GraduationCap },
     { href: "/news", label: t("nav.news"), icon: Newspaper },
     { href: "/contact", label: t("nav.contact"), icon: Phone },
-  ];
+  ].filter((link) => isPagePublished(link.href));
 
   const campusLifeLinks = [
     { href: "/campus-life", label: t("nav.campusLife"), icon: TreePine },
@@ -332,7 +348,11 @@ export function Navbar() {
       icon: BookOpen,
     },
     { href: "/research", label: t("nav.research"), icon: FlaskConical },
-  ];
+  ].filter((link) => isPagePublished(link.href));
+
+  const campusLifeSubLinks = campusLifeLinks.filter(
+    (link) => link.href !== "/campus-life"
+  );
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -353,233 +373,271 @@ export function Navbar() {
               {t("nav.home")}
             </Button>
           </Link>
+
           {/* About Dropdown */}
-          <div
-            ref={aboutContainerRef}
-            className="inline-flex h-9 items-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
-            onMouseEnter={handleAboutMouseEnter}
-            onMouseLeave={handleAboutMouseLeave}
-          >
-            <Link
-              href="/about"
-              className="flex h-full items-center ps-3 pe-1 text-sm font-medium tracking-tight focus-visible:outline-none"
+          {isAboutPublished && (
+            <div
+              ref={aboutContainerRef}
+              className="inline-flex h-9 items-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
+              onMouseEnter={hasAboutSubpages ? handleAboutMouseEnter : undefined}
+              onMouseLeave={hasAboutSubpages ? handleAboutMouseLeave : undefined}
             >
-              {t("nav.about")}
-            </Link>
-            <DropdownMenu
-              open={isAboutOpen}
-              onOpenChange={setIsAboutOpen}
-              modal={false}
-              dir={dir}
-            >
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex h-full items-center pe-3 ps-1 focus-visible:outline-none"
-                >
-                  <ChevronDown
-                    className={cn(
-                      "h-3 w-3 transition-transform duration-200",
-                      isAboutOpen && "rotate-180",
-                    )}
-                  />
-                  <span className="sr-only">Toggle About Submenu</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                sideOffset={8}
-                className="w-56 p-1"
-                onMouseEnter={handleAboutContentMouseEnter}
-                onMouseLeave={handleAboutContentMouseLeave}
-                onPointerDownOutside={(event) => {
-                  if (
-                    aboutContainerRef.current?.contains(event.target as Node)
-                  ) {
-                    event.preventDefault();
-                  }
-                }}
+              <Link
+                href="/about"
+                className={cn(
+                  "flex h-full items-center ps-3 text-sm font-medium tracking-tight focus-visible:outline-none",
+                  hasAboutSubpages ? "pe-1" : "pe-3"
+                )}
               >
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/about/directory"
-                    className="w-full text-start cursor-pointer font-medium"
-                    onClick={() => setIsAboutOpen(false)}
+                {t("nav.about")}
+              </Link>
+              {hasAboutSubpages && (
+                <DropdownMenu
+                  open={isAboutOpen}
+                  onOpenChange={setIsAboutOpen}
+                  modal={false}
+                  dir={dir}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-full items-center pe-3 ps-1 focus-visible:outline-none"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          "h-3 w-3 transition-transform duration-200",
+                          isAboutOpen && "rotate-180",
+                        )}
+                      />
+                      <span className="sr-only">Toggle About Submenu</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="center"
+                    sideOffset={8}
+                    className="w-56 p-1"
+                    onMouseEnter={handleAboutContentMouseEnter}
+                    onMouseLeave={handleAboutContentMouseLeave}
+                    onPointerDownOutside={(event) => {
+                      if (
+                        aboutContainerRef.current?.contains(event.target as Node)
+                      ) {
+                        event.preventDefault();
+                      }
+                    }}
                   >
-                    {t("nav.directory")}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/about/map"
-                    className="w-full text-start cursor-pointer font-medium"
-                    onClick={() => setIsAboutOpen(false)}
-                  >
-                    {t("nav.map")}
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                    {isDirectoryPublished && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/about/directory"
+                          className="w-full text-start cursor-pointer font-medium"
+                          onClick={() => setIsAboutOpen(false)}
+                        >
+                          {t("nav.directory")}
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {isMapPublished && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/about/map"
+                          className="w-full text-start cursor-pointer font-medium"
+                          onClick={() => setIsAboutOpen(false)}
+                        >
+                          {t("nav.map")}
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          )}
 
           {/* Academics Dropdown */}
-          <div
-            ref={academicsContainerRef}
-            className="inline-flex h-9 items-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
-            onMouseEnter={handleAcademicsMouseEnter}
-            onMouseLeave={handleAcademicsMouseLeave}
-          >
-            <Link
-              href="/academics"
-              className="flex h-full items-center ps-3 pe-1 text-sm font-medium tracking-tight focus-visible:outline-none"
+          {isAcademicsPublished && (
+            <div
+              ref={academicsContainerRef}
+              className="inline-flex h-9 items-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
+              onMouseEnter={faculties.length > 0 ? handleAcademicsMouseEnter : undefined}
+              onMouseLeave={faculties.length > 0 ? handleAcademicsMouseLeave : undefined}
             >
-              {t("nav.academics")}
-            </Link>
-            <DropdownMenu
-              open={isAcademicsOpen}
-              onOpenChange={setIsAcademicsOpen}
-              modal={false}
-              dir={dir}
-            >
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex h-full items-center pe-3 ps-1 focus-visible:outline-none"
-                >
-                  <ChevronDown
-                    className={cn(
-                      "h-3 w-3 transition-transform duration-200",
-                      isAcademicsOpen && "rotate-180",
-                    )}
-                  />
-                  <span className="sr-only">Toggle Academics Submenu</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                sideOffset={8}
-                className="w-56 p-1"
-                onMouseEnter={handleAcademicsContentMouseEnter}
-                onMouseLeave={handleAcademicsContentMouseLeave}
-                onPointerDownOutside={(event) => {
-                  if (
-                    academicsContainerRef.current?.contains(
-                      event.target as Node,
-                    )
-                  ) {
-                    event.preventDefault();
-                  }
-                }}
+              <Link
+                href="/academics"
+                className={cn(
+                  "flex h-full items-center ps-3 text-sm font-medium tracking-tight focus-visible:outline-none",
+                  faculties.length > 0 ? "pe-1" : "pe-3"
+                )}
               >
-                {faculties.map((faculty) => (
-                  <DropdownMenuItem key={faculty.id} asChild>
-                    <Link
-                      href={`/academics/${faculty.slug}`}
-                      className="w-full text-start cursor-pointer font-medium"
-                      onClick={() => setIsAcademicsOpen(false)}
+                {t("nav.academics")}
+              </Link>
+              {faculties.length > 0 && (
+                <DropdownMenu
+                  open={isAcademicsOpen}
+                  onOpenChange={setIsAcademicsOpen}
+                  modal={false}
+                  dir={dir}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-full items-center pe-3 ps-1 focus-visible:outline-none"
                     >
-                      {language === "ar" ? faculty.nameAr : faculty.nameEn}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                      <ChevronDown
+                        className={cn(
+                          "h-3 w-3 transition-transform duration-200",
+                          isAcademicsOpen && "rotate-180",
+                        )}
+                      />
+                      <span className="sr-only">Toggle Academics Submenu</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="center"
+                    sideOffset={8}
+                    className="w-56 p-1"
+                    onMouseEnter={handleAcademicsContentMouseEnter}
+                    onMouseLeave={handleAcademicsContentMouseLeave}
+                    onPointerDownOutside={(event) => {
+                      if (
+                        academicsContainerRef.current?.contains(
+                          event.target as Node,
+                        )
+                      ) {
+                        event.preventDefault();
+                      }
+                    }}
+                  >
+                    {faculties.map((faculty) => (
+                      <DropdownMenuItem key={faculty.id} asChild>
+                        <Link
+                          href={`/academics/${faculty.slug}`}
+                          className="w-full text-start cursor-pointer font-medium"
+                          onClick={() => setIsAcademicsOpen(false)}
+                        >
+                          {language === "ar" ? faculty.nameAr : faculty.nameEn}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          )}
 
-          <Link href="/admissions">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-2 text-sm font-medium tracking-tight"
-            >
-              {t("nav.admissions")}
-            </Button>
-          </Link>
+          {isAdmissionsPublished && (
+            <Link href="/admissions">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-2 text-sm font-medium tracking-tight"
+              >
+                {t("nav.admissions")}
+              </Button>
+            </Link>
+          )}
 
           {/* Campus Life Dropdown */}
-          <div
-            ref={campusLifeContainerRef}
-            className="inline-flex h-9 items-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
-            onMouseEnter={handleCampusLifeMouseEnter}
-            onMouseLeave={handleCampusLifeMouseLeave}
-          >
-            <Link
-              href="/campus-life"
-              className="flex h-full items-center ps-3 pe-1 text-sm font-medium tracking-tight focus-visible:outline-none"
+          {isCampusLifePublished && (
+            <div
+              ref={campusLifeContainerRef}
+              className="inline-flex h-9 items-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
+              onMouseEnter={
+                campusLifeSubLinks.length > 0
+                  ? handleCampusLifeMouseEnter
+                  : undefined
+              }
+              onMouseLeave={
+                campusLifeSubLinks.length > 0
+                  ? handleCampusLifeMouseLeave
+                  : undefined
+              }
             >
-              {t("nav.campusLife")}
-            </Link>
-            <DropdownMenu
-              open={isCampusLifeOpen}
-              onOpenChange={setIsCampusLifeOpen}
-              modal={false}
-              dir={dir}
-            >
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="flex h-full items-center pe-3 ps-1 focus-visible:outline-none"
-                >
-                  <ChevronDown
-                    className={cn(
-                      "h-3 w-3 transition-transform duration-200",
-                      isCampusLifeOpen && "rotate-180",
-                    )}
-                  />
-                  <span className="sr-only">Toggle Campus Life Submenu</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                sideOffset={8}
-                className="w-56 p-1"
-                onMouseEnter={handleCampusLifeContentMouseEnter}
-                onMouseLeave={handleCampusLifeContentMouseLeave}
-                onPointerDownOutside={(event) => {
-                  if (
-                    campusLifeContainerRef.current?.contains(
-                      event.target as Node,
-                    )
-                  ) {
-                    event.preventDefault();
-                  }
-                }}
+              <Link
+                href="/campus-life"
+                className={cn(
+                  "flex h-full items-center ps-3 text-sm font-medium tracking-tight focus-visible:outline-none",
+                  campusLifeSubLinks.length > 0 ? "pe-1" : "pe-3"
+                )}
               >
-                {campusLifeLinks
-                  .filter((link) => link.href !== "/campus-life")
-                  .map((link) => (
-                    <DropdownMenuItem key={link.href} asChild>
-                      <Link
-                        href={link.href}
-                        className="w-full text-start cursor-pointer font-medium"
-                        onClick={() => setIsCampusLifeOpen(false)}
-                      >
-                        {link.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                {t("nav.campusLife")}
+              </Link>
+              {campusLifeSubLinks.length > 0 && (
+                <DropdownMenu
+                  open={isCampusLifeOpen}
+                  onOpenChange={setIsCampusLifeOpen}
+                  modal={false}
+                  dir={dir}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-full items-center pe-3 ps-1 focus-visible:outline-none"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          "h-3 w-3 transition-transform duration-200",
+                          isCampusLifeOpen && "rotate-180",
+                        )}
+                      />
+                      <span className="sr-only">Toggle Campus Life Submenu</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="center"
+                    sideOffset={8}
+                    className="w-56 p-1"
+                    onMouseEnter={handleCampusLifeContentMouseEnter}
+                    onMouseLeave={handleCampusLifeContentMouseLeave}
+                    onPointerDownOutside={(event) => {
+                      if (
+                        campusLifeContainerRef.current?.contains(
+                          event.target as Node,
+                        )
+                      ) {
+                        event.preventDefault();
+                      }
+                    }}
+                  >
+                    {campusLifeSubLinks.map((link) => (
+                      <DropdownMenuItem key={link.href} asChild>
+                        <Link
+                          href={link.href}
+                          className="w-full text-start cursor-pointer font-medium"
+                          onClick={() => setIsCampusLifeOpen(false)}
+                        >
+                          {link.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          )}
 
-          <Link href="/news">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-2 text-sm font-medium tracking-tight"
-            >
-              {t("nav.news")}
-            </Button>
-          </Link>
-          <Link href="/contact">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-2 text-sm font-medium tracking-tight"
-            >
-              {t("nav.contact")}
-            </Button>
-          </Link>
+          {isNewsPublished && (
+            <Link href="/news">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-2 text-sm font-medium tracking-tight"
+              >
+                {t("nav.news")}
+              </Button>
+            </Link>
+          )}
+          {isContactPublished && (
+            <Link href="/contact">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-2 text-sm font-medium tracking-tight"
+              >
+                {t("nav.contact")}
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Right Side Actions */}
@@ -812,95 +870,102 @@ export function Navbar() {
                   <CommandMenu />
                 </div>
                 <div className="mt-4 flex flex-col gap-1">
-                  {navLinks.slice(0, 1).map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 font-medium"
+                  {navLinks
+                    .filter((link) => link.href === "/")
+                    .map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <link.icon className="h-5 w-5 text-primary" />
-                        {link.label}
-                      </Button>
-                    </Link>
-                  ))}
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start gap-3 font-medium"
+                        >
+                          <link.icon className="h-5 w-5 text-primary" />
+                          {link.label}
+                        </Button>
+                      </Link>
+                    ))}
 
                   {/* Mobile About Collapsible */}
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between gap-3 font-medium"
-                      >
-                        <span className="flex items-center gap-3">
-                          <Users className="h-5 w-5 text-primary" />
-                          {t("nav.about")}
-                        </span>
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="ps-10 space-y-1 py-1">
-                      <Link
-                        href="/about"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
+                  {isAboutPublished && (
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-muted-foreground font-normal"
+                          className="w-full justify-between gap-3 font-medium"
                         >
-                          {t("about.history")}
+                          <span className="flex items-center gap-3">
+                            <Users className="h-5 w-5 text-primary" />
+                            {t("nav.about")}
+                          </span>
+                          <ChevronDown className="h-4 w-4" />
                         </Button>
-                      </Link>
-                      <Link
-                        href="/about/directory"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-muted-foreground font-normal"
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="ps-10 space-y-1 py-1">
+                        <Link
+                          href="/about"
+                          onClick={() => setIsMobileMenuOpen(false)}
                         >
-                          {t("nav.directory")}
-                        </Button>
-                      </Link>
-                      <Link
-                        href="/about/map"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-muted-foreground font-normal"
-                        >
-                          {t("nav.map")}
-                        </Button>
-                      </Link>
-                    </CollapsibleContent>
-                  </Collapsible>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-muted-foreground font-normal"
+                          >
+                            {t("about.history")}
+                          </Button>
+                        </Link>
+                        {isDirectoryPublished && (
+                          <Link
+                            href="/about/directory"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-muted-foreground font-normal"
+                            >
+                              {t("nav.directory")}
+                            </Button>
+                          </Link>
+                        )}
+                        {isMapPublished && (
+                          <Link
+                            href="/about/map"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-muted-foreground font-normal"
+                            >
+                              {t("nav.map")}
+                            </Button>
+                          </Link>
+                        )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
                   {/* Mobile Academics Collapsible */}
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between gap-3 font-medium"
-                      >
-                        <span className="flex items-center gap-3">
-                          <BookOpen className="h-5 w-5 text-primary" />
-                          {t("nav.academics")}
-                        </span>
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="ps-10 space-y-1 py-1">
-                      {faculties.map((faculty) => (
+                  {isAcademicsPublished && (
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-between gap-3 font-medium"
+                        >
+                          <span className="flex items-center gap-3">
+                            <BookOpen className="h-5 w-5 text-primary" />
+                            {t("nav.academics")}
+                          </span>
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="ps-10 space-y-1 py-1">
                         <Link
-                          key={faculty.id}
-                          href={`/academics/${faculty.slug}`}
+                          href="/academics"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           <Button
@@ -908,63 +973,82 @@ export function Navbar() {
                             size="sm"
                             className="w-full justify-start text-muted-foreground font-normal"
                           >
-                            {language === "ar"
-                              ? faculty.nameAr
-                              : faculty.nameEn}
+                            {t("common.viewAll")}
                           </Button>
                         </Link>
-                      ))}
-                    </CollapsibleContent>
-                  </Collapsible>
+                        {faculties.map((faculty) => (
+                          <Link
+                            key={faculty.id}
+                            href={`/academics/${faculty.slug}`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-muted-foreground font-normal"
+                            >
+                              {language === "ar"
+                                ? faculty.nameAr
+                                : faculty.nameEn}
+                            </Button>
+                          </Link>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
                   {/* Mobile Campus Life Collapsible */}
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between gap-3 font-medium"
-                      >
-                        <span className="flex items-center gap-3">
-                          <TreePine className="h-5 w-5 text-primary" />
-                          {t("nav.campusLife")}
-                        </span>
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="ps-10 space-y-1 py-1">
-                      {campusLifeLinks.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
+                  {isCampusLifePublished && (
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-between gap-3 font-medium"
                         >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-muted-foreground font-normal"
+                          <span className="flex items-center gap-3">
+                            <TreePine className="h-5 w-5 text-primary" />
+                            {t("nav.campusLife")}
+                          </span>
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="ps-10 space-y-1 py-1">
+                        {campusLifeLinks.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
                           >
-                            {link.label}
-                          </Button>
-                        </Link>
-                      ))}
-                    </CollapsibleContent>
-                  </Collapsible>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-muted-foreground font-normal"
+                            >
+                              {link.label}
+                            </Button>
+                          </Link>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
-                  {navLinks.slice(1).map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 font-medium"
+                  {navLinks
+                    .filter((link) => link.href !== "/")
+                    .map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <link.icon className="h-5 w-5 text-primary" />
-                        {link.label}
-                      </Button>
-                    </Link>
-                  ))}
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start gap-3 font-medium"
+                        >
+                          <link.icon className="h-5 w-5 text-primary" />
+                          {link.label}
+                        </Button>
+                      </Link>
+                    ))}
 
                   {/* Mobile Portals/Login */}
                   <div className="my-4 border-t" />

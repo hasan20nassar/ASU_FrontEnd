@@ -37,6 +37,7 @@ import {
   BookMarked,
   Microscope,
   Sparkles,
+  Layers,
 } from "lucide-react";
 import { ASULogo } from "@/components/ui/asu-logo";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,11 @@ export function DashboardSidebar() {
           title: language === "ar" ? "لوحة التحكم" : "Dashboard",
           href: "/dashboard",
           icon: LayoutDashboard,
+        },
+        {
+          title: language === "ar" ? "مدير الصفحات" : "Pages Manager",
+          href: "/dashboard/pages-manager",
+          icon: Layers,
         },
       ],
     },
