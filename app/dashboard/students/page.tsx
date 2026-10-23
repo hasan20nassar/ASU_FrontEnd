@@ -101,6 +101,8 @@ export default function StudentsManagement() {
   // Modal State
   const [isOpenAddEdit, setIsOpenAddEdit] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
 
   // Form states
   const [formNameAr, setFormNameAr] = useState("");
@@ -170,47 +172,65 @@ export default function StudentsManagement() {
     setIsOpenAddEdit(true);
   };
 
-  const handleDelete = async (id: number, name: string) => {
-    if (
-      !confirm(
-        isArabic
-          ? `هل أنت متأكد من حذف حساب الطالب ${name}؟`
-          : `Are you sure you want to delete student ${name}?`
-      )
-    )
-      return;
+  const handleOpenDelete = (student: Student) => {
+    setStudentToDelete(student);
+    setIsDeleteOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!studentToDelete) return;
     try {
-      await deleteStudentMutation.mutateAsync(id);
+      await deleteStudentMutation.mutateAsync(studentToDelete.id);
       toast.success(
         isArabic
-          ? `تم حذف حساب الطالب ${name} بنجاح`
-          : `Student ${name} deleted successfully`
+          ? `تم حذف سجل الطالب ${studentToDelete.nameAr} بنجاح`
+          : `Student ${studentToDelete.nameEn} deleted successfully`
       );
-      setSelectedStudentIds((prev) => prev.filter((i) => i !== id));
+      setSelectedStudentIds((prev) => prev.filter((i) => i !== studentToDelete.id));
+      setIsDeleteOpen(false);
+      setStudentToDelete(null);
     } catch (err) {
-      toast.error(isArabic ? "حدث خطأ أثناء الحذف" : "An error occurred while deleting");
+      toast.error(isArabic ? "حدث خطأ أثناء حذف الطالب" : "An error occurred while deleting student");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formNameAr || !formNameEn || !formStudentId || !formGpa || !formFacultyId) {
-      toast.error(isArabic ? "يرجى ملء جميع الحقول المطلوبة" : "Please fill in all required fields");
+
+    if (!formNameAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم الطالب بالعربية" : "Please enter the student's Arabic name");
+      return;
+    }
+    if (!formNameEn?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم الطالب بالإنجليزية" : "Please enter the student's English name");
+      return;
+    }
+    if (!formStudentId?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الرقم الجامعي للطالب" : "Please enter the student ID");
+      return;
+    }
+    if (!formGpa?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال المعدل التراكمي" : "Please enter the cumulative GPA");
       return;
     }
 
-    if (!formProgramId) {
+    const gpaVal = parseFloat(formGpa.trim());
+    if (isNaN(gpaVal) || gpaVal < 0 || gpaVal > 4.0) {
+      toast.error(isArabic ? "المعدل التراكمي يجب أن يكون رقماً بين 0.00 و 4.00" : "Cumulative GPA must be a number between 0.00 and 4.00");
+      return;
+    }
+
+    if (!formFacultyId?.trim() || formFacultyId === "none") {
+      toast.error(isArabic ? "يرجى اختيار الكلية التابع لها الطالب" : "Please select the student's faculty");
+      return;
+    }
+
+    if (!formProgramId?.trim() || formProgramId === "none") {
       toast.error(
         isArabic
-          ? "يجب اختيار القسم/التخصص الأكاديمي للطالب"
-          : "Please select an academic program/department for the student"
+          ? "يرجى اختيار القسم الأكاديمي للطالب"
+          : "Please select an academic department for the student"
       );
-      return;
-    }
-
-    const gpaVal = parseFloat(formGpa);
-    if (isNaN(gpaVal) || gpaVal < 0 || gpaVal > 4) {
-      toast.error(isArabic ? "المعدل يجب أن يكون بين 0.00 و 4.00" : "GPA must be between 0.00 and 4.00");
       return;
     }
 
@@ -218,13 +238,13 @@ export default function StudentsManagement() {
     const programIdNum = Number(formProgramId);
 
     const payload: Partial<Student> = {
-      nameAr: formNameAr,
-      nameEn: formNameEn,
-      studentId: formStudentId,
+      nameAr: formNameAr.trim(),
+      nameEn: formNameEn.trim(),
+      studentId: formStudentId.trim(),
       faculty: facultyIdNum,
       program: programIdNum,
-      gpa: formGpa,
-      email: `${formStudentId.toLowerCase()}@asu.edu.sy`,
+      gpa: formGpa.trim(),
+      email: `${formStudentId.trim().toLowerCase()}@asu.edu.sy`,
       totalCredits: 130,
       completedCredits: 80,
       isTop: gpaVal >= 3.5,
@@ -248,7 +268,7 @@ export default function StudentsManagement() {
       }
       setIsOpenAddEdit(false);
     } catch (err: any) {
-      const msg = err?.message || err?.detail || (isArabic ? "حدث خطأ أثناء الحفظ" : "An error occurred while saving");
+      const msg = err?.message || err?.detail || (isArabic ? "حدث خطأ أثناء حفظ بيانات الطالب" : "An error occurred while saving student");
       toast.error(msg);
     }
   };
@@ -256,8 +276,12 @@ export default function StudentsManagement() {
   // Handle Bulk Transfer
   const handleBulkTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bulkTargetProgramId || selectedStudentIds.length === 0) {
-      toast.error(isArabic ? "يرجى اختيار القسم المراد النقل إليه" : "Please select target department");
+    if (!bulkTargetProgramId?.trim() || bulkTargetProgramId === "none") {
+      toast.error(isArabic ? "يرجى اختيار القسم الأكاديمي المراد النقل إليه" : "Please select the target academic department");
+      return;
+    }
+    if (selectedStudentIds.length === 0) {
+      toast.error(isArabic ? "لم يتم تحديد أي طلاب لإجراء النقل" : "No students selected for transfer");
       return;
     }
 
@@ -274,7 +298,7 @@ export default function StudentsManagement() {
       setSelectedStudentIds([]);
       setIsBulkOpen(false);
     } catch (err: any) {
-      toast.error(err?.message || (isArabic ? "فشل النقل الجماعي" : "Bulk transfer failed"));
+      toast.error(err?.message || (isArabic ? "فشل تنفيذ النقل الأكاديمي" : "Academic transfer failed"));
     }
   };
 
@@ -496,13 +520,8 @@ export default function StudentsManagement() {
                       <TableHead className="text-start font-bold">{isArabic ? "الرقم الجامعي" : "Student ID"}</TableHead>
                       <TableHead className="text-start font-bold">{isArabic ? "الكلية" : "Faculty"}</TableHead>
                       <TableHead className="text-start font-bold">{isArabic ? "القسم / التخصص" : "Department"}</TableHead>
-                      <TableHead className="text-center font-bold">{isArabic ? "الطالب" : "Student"}</TableHead>
-                      <TableHead className="text-center font-bold">{isArabic ? "الرقم الجامعي" : "Student ID"}</TableHead>
-                      <TableHead className="text-center font-bold">{isArabic ? "الكلية" : "Faculty"}</TableHead>
-                      <TableHead className="text-center font-bold">{isArabic ? "القسم / التخصص" : "Department"}</TableHead>
                       <TableHead className="text-center font-bold">{isArabic ? "المعدل" : "GPA"}</TableHead>
                       <TableHead className="text-end font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
-                      <TableHead className="text-center font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -543,28 +562,28 @@ export default function StudentsManagement() {
                                 </Avatar>
                                 <div className="flex flex-col">
                                   <span className="font-bold text-sm">
-                                    {isArabic ? student.nameAr : student.nameEn}
+                                    {(isArabic ? student.nameAr : student.nameEn) || "N/A"}
                                   </span>
-                                  <span className="text-xs text-muted-foreground">{student.email}</span>
+                                  <span className="text-xs text-muted-foreground">{student.email || "N/A"}</span>
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell className="text-sm tabular-nums font-mono text-muted-foreground">
-                              {student.studentId}
+                              {student.studentId || "N/A"}
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline" className="font-medium bg-muted/30">
                                 {isArabic
-                                  ? student.facultyNameAr || faculty?.nameAr || "-"
-                                  : student.facultyNameEn || faculty?.nameEn || "-"}
+                                  ? student.facultyNameAr || faculty?.nameAr || "N/A"
+                                  : student.facultyNameEn || faculty?.nameEn || "N/A"}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               <Badge variant="secondary" className="font-semibold text-primary border-primary/20">
                                 <BookOpen className="h-3 w-3 me-1" />
                                 {isArabic
-                                  ? student.programNameAr || program?.nameAr || "-"
-                                  : student.programNameEn || program?.nameEn || "-"}
+                                  ? student.programNameAr || program?.nameAr || "N/A"
+                                  : student.programNameEn || program?.nameEn || "N/A"}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center font-bold tabular-nums">
@@ -602,10 +621,10 @@ export default function StudentsManagement() {
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
-                                    className="gap-2 text-destructive font-bold"
-                                    onClick={() => handleDelete(student.id, isArabic ? student.nameAr : student.nameEn)}
+                                    className="gap-2 text-destructive font-bold cursor-pointer"
+                                    onClick={() => handleOpenDelete(student)}
                                   >
-                                    <Trash2 className="h-4 w-4" /> {isArabic ? "حذف الطالب" : "Delete"}
+                                    <Trash2 className="h-4 w-4" /> {isArabic ? "حذف الطالب" : "Delete Student"}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -632,7 +651,7 @@ export default function StudentsManagement() {
                   {isArabic ? "لا توجد نتائج مطابقة لبحثك" : "No results match your search"}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                   {filteredStudents.map((student) => {
                     const faculty = displayFaculties.find((f) => f.id === student.faculty);
                     const program = displayPrograms.find((p) => p.id === student.program);
@@ -642,20 +661,20 @@ export default function StudentsManagement() {
                     return (
                       <Card
                         key={student.id}
-                        className={`border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group ${isSelected ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30" : "border-border/80"
+                        className={`border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group min-w-0 w-full ${isSelected ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30" : "border-border/80"
                           }`}
                       >
-                        <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                        <CardContent className="p-5 flex flex-col justify-between h-full space-y-4 min-w-0">
                           {/* Top Header with Checkbox, Avatar & Actions */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
+                          <div className="flex items-start justify-between gap-3 min-w-0">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
                               <Checkbox
                                 checked={isSelected}
                                 onCheckedChange={() => toggleSelectOne(student.id)}
                                 aria-label={`Select student ${student.nameEn}`}
-                                className="mt-0.5"
+                                className="mt-0.5 shrink-0"
                               />
-                              <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
+                              <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm shrink-0">
                                 <AvatarImage
                                   src={student.image || "/images/students/default.png"}
                                   alt={student.nameEn}
@@ -664,17 +683,17 @@ export default function StudentsManagement() {
                                   {student.nameEn?.[0] || "S"}
                                 </AvatarFallback>
                               </Avatar>
-                              <div>
-                                <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors truncate">
                                   {isArabic ? student.nameAr : student.nameEn}
                                 </h3>
-                                <p className="text-xs font-mono text-muted-foreground">{student.studentId}</p>
+                                <p className="text-xs font-mono text-muted-foreground truncate">{student.studentId}</p>
                               </div>
                             </div>
 
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 -me-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 -me-2 shrink-0">
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -696,36 +715,40 @@ export default function StudentsManagement() {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  className="gap-2 text-destructive font-bold"
-                                  onClick={() => handleDelete(student.id, isArabic ? student.nameAr : student.nameEn)}
+                                  className="gap-2 text-destructive font-bold cursor-pointer"
+                                  onClick={() => handleOpenDelete(student)}
                                 >
-                                  <Trash2 className="h-4 w-4" /> {isArabic ? "حذف الطالب" : "Delete"}
+                                  <Trash2 className="h-4 w-4" /> {isArabic ? "حذف الطالب" : "Delete Student"}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
 
                           {/* Faculty & Department */}
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <Badge variant="secondary" className="font-semibold text-xs text-primary border-primary/20">
-                                <BookOpen className="h-3 w-3 me-1" />
-                                {isArabic
-                                  ? student.programNameAr || program?.nameAr || "-"
-                                  : student.programNameEn || program?.nameEn || "-"}
+                          <div className="space-y-1.5 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <Badge variant="secondary" className="font-semibold text-xs text-primary border-primary/20 max-w-full truncate">
+                                <BookOpen className="h-3 w-3 me-1 shrink-0" />
+                                <span className="truncate">
+                                  {isArabic
+                                    ? student.programNameAr || program?.nameAr || "-"
+                                    : student.programNameEn || program?.nameEn || "-"}
+                                </span>
                               </Badge>
-                              <Badge variant="outline" className="text-xs text-muted-foreground">
-                                {isArabic
-                                  ? student.facultyNameAr || faculty?.nameAr || "-"
-                                  : student.facultyNameEn || faculty?.nameEn || "-"}
+                              <Badge variant="outline" className="text-xs text-muted-foreground max-w-full truncate">
+                                <span className="truncate">
+                                  {isArabic
+                                    ? student.facultyNameAr || faculty?.nameAr || "-"
+                                    : student.facultyNameEn || faculty?.nameEn || "-"}
+                                </span>
                               </Badge>
                             </div>
                           </div>
 
                           {/* Details: Email & GPA */}
-                          <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
-                            <span className="truncate max-w-[180px]">{student.email || "-"}</span>
-                            <div className="flex items-center gap-1.5">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3 min-w-0 gap-2">
+                            <span className="truncate flex-1 font-mono">{student.email || "-"}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
                               <span className="text-[11px] font-semibold text-muted-foreground">
                                 {isArabic ? "المعدل:" : "GPA:"}
                               </span>
@@ -741,11 +764,11 @@ export default function StudentsManagement() {
                           </div>
 
                           {/* Card Footer Actions */}
-                          <div className="flex items-center justify-end gap-2 pt-2 border-t mt-auto">
+                          <div className="flex items-center justify-end gap-2 pt-2 border-t mt-auto min-w-0">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 text-xs font-semibold gap-1 text-muted-foreground hover:text-foreground"
+                              className="h-8 text-xs font-semibold gap-1 text-muted-foreground hover:text-foreground shrink-0"
                               onClick={() =>
                                 toast.info(
                                   isArabic
@@ -760,7 +783,7 @@ export default function StudentsManagement() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-8 text-xs font-semibold gap-1.5"
+                              className="h-8 text-xs font-semibold gap-1.5 shrink-0"
                               onClick={() => handleOpenEdit(student)}
                             >
                               <Edit className="h-3.5 w-3.5" />
@@ -785,16 +808,16 @@ export default function StudentsManagement() {
             <DialogTitle className="text-start">
               {editingStudent
                 ? isArabic
-                  ? "تعديل بيانات الطالب الأكاديمية"
+                  ? "تعديل بيانات الطالب"
                   : "Edit Student Profile"
                 : isArabic
-                  ? "إضافة وقيد طالب جديد"
+                  ? "إضافة طالب جديد"
                   : "Enroll New Student"}
             </DialogTitle>
             <DialogDescription className="text-start">
               {isArabic
-                ? "حدد بيانات الطالب، الكلية، والقسم الأكاديمي التابع له بدقة."
-                : "Specify student info, faculty, and their academic department."}
+                ? "أدخل بيانات الطالب والكلية والقسم الأكاديمي التابع له بدقة."
+                : "Enter student details, faculty, and academic department accurately."}
             </DialogDescription>
           </DialogHeader>
 
@@ -802,23 +825,23 @@ export default function StudentsManagement() {
             <DialogBody>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nameAr">{isArabic ? "الاسم (بالعربية)" : "Name (Arabic)"}</Label>
+                  <Label htmlFor="nameAr">{isArabic ? "الاسم بالعربية" : "Arabic Name"}</Label>
                   <Input
                     id="nameAr"
                     required
                     value={formNameAr}
                     onChange={(e) => setFormNameAr(e.target.value)}
-                    placeholder="محمد أحمد السعيد"
+                    placeholder={isArabic ? "محمد أحمد السعيد" : "Mohammad Ahmad Al-Saeed"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nameEn">{isArabic ? "الاسم (بالإنجليزية)" : "Name (English)"}</Label>
+                  <Label htmlFor="nameEn">{isArabic ? "الاسم بالإنجليزية" : "English Name"}</Label>
                   <Input
                     id="nameEn"
                     required
                     value={formNameEn}
                     onChange={(e) => setFormNameEn(e.target.value)}
-                    placeholder="Mohammad Ahmad Al-Saeed"
+                    placeholder={isArabic ? "محمد أحمد السعيد" : "Mohammad Ahmad Al-Saeed"}
                   />
                 </div>
               </div>
@@ -835,7 +858,7 @@ export default function StudentsManagement() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="gpa">{isArabic ? "المعدل التراكمي (GPA)" : "GPA"}</Label>
+                  <Label htmlFor="gpa">{isArabic ? "المعدل التراكمي" : "Cumulative GPA"}</Label>
                   <Input
                     id="gpa"
                     type="number"
@@ -869,7 +892,7 @@ export default function StudentsManagement() {
 
               {/* Cascading Select: Academic Department / Program */}
               <div className="space-y-2">
-                <Label htmlFor="program">{isArabic ? "القسم / التخصص الأكاديمي" : "Department / Program"}</Label>
+                <Label htmlFor="program">{isArabic ? "القسم الأكاديمي" : "Academic Department"}</Label>
                 {availableFormPrograms.length === 0 ? (
                   <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-800 text-xs flex items-center justify-between dark:bg-amber-950 dark:border-amber-800 dark:text-amber-200">
                     <div className="flex items-center gap-2">
@@ -928,10 +951,10 @@ export default function StudentsManagement() {
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     {isArabic ? "جاري الحفظ..." : "Saving..."}
                   </>
-                ) : isArabic ? (
-                  "حفظ وتثبيت الطالب"
+                ) : editingStudent ? (
+                  isArabic ? "حفظ التغييرات" : "Save Changes"
                 ) : (
-                  "Save Student"
+                  isArabic ? "إضافة الطالب" : "Add Student"
                 )}
               </Button>
             </DialogFooter>
@@ -949,14 +972,14 @@ export default function StudentsManagement() {
             </DialogTitle>
             <DialogDescription className="text-start">
               {isArabic
-                ? `سيتم نقل (${selectedStudentIds.length}) طلاب محددين إلى القسم المختار في عملية ذرية واحدة.`
-                : `Transfer (${selectedStudentIds.length}) selected students to the target department in a single atomic action.`}
+                ? `سيتم نقل (${selectedStudentIds.length}) طلاب محددين إلى القسم المختار في عملية واحدة.`
+                : `Transfer (${selectedStudentIds.length}) selected students to the target department in a single action.`}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleBulkTransferSubmit} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="bulkTarget">{isArabic ? "القسم / التخصص الجديد" : "Target Department"}</Label>
+              <Label htmlFor="bulkTarget">{isArabic ? "القسم الأكاديمي المستهدف" : "Target Academic Department"}</Label>
               <select
                 id="bulkTarget"
                 required
@@ -968,7 +991,7 @@ export default function StudentsManagement() {
                   const fac = displayFaculties.find((f) => f.id === p.faculty);
                   return (
                     <option key={p.id} value={p.id}>
-                      {isArabic ? `${p.nameAr} (${fac?.nameAr || ""})` : `${p.nameEn} (${fac?.nameEn || ""})`}
+                      {isArabic ? `${p.nameAr} - ${fac?.nameAr || ""}` : `${p.nameEn} - ${fac?.nameEn || ""}`}
                     </option>
                   );
                 })}
@@ -995,13 +1018,45 @@ export default function StudentsManagement() {
                     {isArabic ? "جاري تنفيذ النقل..." : "Transferring..."}
                   </>
                 ) : isArabic ? (
-                  "تنفيذ النقل الجماعي"
+                  "تنفيذ النقل الأكاديمي"
                 ) : (
                   "Execute Transfer"
                 )}
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <DialogContent className="max-w-md" dir={isArabic ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle className="text-start text-xl font-bold text-destructive">
+              {isArabic ? "حذف سجل الطالب" : "Delete Student Record"}
+            </DialogTitle>
+            <DialogDescription className="text-start pt-2">
+              {isArabic
+                ? `هل أنت متأكد من حذف سجل الطالب "${studentToDelete?.nameAr || ""}" (${studentToDelete?.studentId || ""}) نهائياً من قاعدة البيانات؟`
+                : `Are you sure you want to permanently delete the student record for "${studentToDelete?.nameEn || studentToDelete?.nameAr || ""}" (${studentToDelete?.studentId || ""})?`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 pt-4 sm:justify-start">
+            <Button type="button" variant="outline" onClick={() => setIsDeleteOpen(false)}>
+              {isArabic ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleteStudentMutation.isPending}
+              className="font-bold gap-2"
+            >
+              {deleteStudentMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Trash2 className="h-4 w-4" />
+              {isArabic ? "تأكيد الحذف" : "Confirm Delete"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

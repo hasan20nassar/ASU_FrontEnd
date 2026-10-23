@@ -54,6 +54,134 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
 }
 
+function getDefaultFacultyFacilities(slug: string) {
+  const s = (slug || "").toLowerCase();
+  if (s.includes("informatic") || s.includes("comput") || s.includes("it") || s.includes("ce") || s.includes("eng")) {
+    return [
+      {
+        nameAr: "مخبر الذكاء الاصطناعي والحوسبة الفائقة",
+        nameEn: "Artificial Intelligence & HPC Lab",
+        descriptionAr: "مجهز بوحدات معالجة رسومية متطورة (NVIDIA GPU Cluster) لتدريب نماذج التعلم العميق، الرؤية الحاسوبية وتطبيقات الذكاء التوليدي.",
+        descriptionEn: "Equipped with advanced NVIDIA GPU clusters for deep learning, computer vision, and generative AI research.",
+      },
+      {
+        nameAr: "مخبر النظم المدمجة وإنترنت الأشياء (IoT)",
+        nameEn: "Embedded Systems & IoT Lab",
+        descriptionAr: "بيئة تطبيقية متكاملة لبرمجة المتحكمات الدقيقة، المستشعرات الذكية، وأنظمة الأتمتة الصناعية والروبوتات.",
+        descriptionEn: "Integrated hands-on environment for microcontroller programming, smart sensors, industrial automation, and robotics.",
+      },
+      {
+        nameAr: "مخبر الأمن السيبراني والشبكات السحابية",
+        nameEn: "Cybersecurity & Cloud Networks Lab",
+        descriptionAr: "مختبر معزول لاختبار الاختراق الأخلاقي، محاكاة الهجمات والتهديدات السيبرانية، وإدارة البنى التحتية السحابية الموزعة.",
+        descriptionEn: "Isolated environment for ethical hacking, penetration testing, threat simulation, and distributed cloud systems.",
+      },
+      {
+        nameAr: "مخبر هندسة البرمجيات والواقع الافتراضي",
+        nameEn: "Software Engineering & VR Studio",
+        descriptionAr: "محطات عمل عالية الأداء لتصميم النظم البرمجية المعقدة، اختبار الجودة، وبناء بيئات الواقع المعزز والافتراضي.",
+        descriptionEn: "High-performance workstations for large-scale software modeling, automated testing, and immersive VR/AR experiences.",
+      },
+    ];
+  }
+
+  if (s.includes("dent") || s.includes("med") || s.includes("health")) {
+    return [
+      {
+        nameAr: "مخبر المحاكاة ورؤوس الفانتوم السريرية",
+        nameEn: "Phantom Head & Clinical Simulation Lab",
+        descriptionAr: "بيئة محاكاة سريرية متقدمة مزودة برؤوس فانتوم تفاعلية لتدريب الطلاب على المهارات السريرية التشخيصية والعلاجية.",
+        descriptionEn: "Advanced phantom simulator units allowing students to master hands-on clinical and diagnostic skills in a safe environment.",
+      },
+      {
+        nameAr: "مخبر التشريح الرقمي والمحاكاة ثلاثية الأبعاد",
+        nameEn: "Digital Anatomy & 3D Virtual Dissection Lab",
+        descriptionAr: "طاولات تشريح رقمية تفاعلية لعرض التفاصيل المجهرية والتشريحية بدقة فائقة وبشكل تفاعلي ثلاثي الأبعاد.",
+        descriptionEn: "Interactive digital dissection tables enabling students to explore high-resolution 3D anatomical structures.",
+      },
+      {
+        nameAr: "مخبر التعويضات والابتسامة الرقمية (CAD/CAM)",
+        nameEn: "Digital Prosthetics & CAD/CAM Lab",
+        descriptionAr: "أنظمة مسح وتصميم رقمي متطورة وطباعة ثلاثية الأبعاد لإنتاج التركيبات والتعويضات بدقة ميكرونية متقدمة.",
+        descriptionEn: "State-of-the-art 3D scanners, CAD/CAM milling units, and fabrication systems for modern restorative dentistry.",
+      },
+      {
+        nameAr: "مخبر البيولوجيا الجزيئية وعلم الأنسجة",
+        nameEn: "Histology & Molecular Biology Lab",
+        descriptionAr: "مجاهر إلكترونية متصلة بشاشات عرض عالية الدقة ومعدات تحليل الأنسجة والجينات والأبحاث الحيوية.",
+        descriptionEn: "High-resolution digital microscopy and molecular analysis tools for histological and biomedical investigations.",
+      },
+    ];
+  }
+
+  if (s.includes("pharm")) {
+    return [
+      {
+        nameAr: "مخبر الكيمياء الصيدلية وتصميم الدواء",
+        nameEn: "Medicinal Chemistry & Drug Design Lab",
+        descriptionAr: "مجهز بأجهزة قياس الطيف، المحاكاة الجزيئية، والتخليق الكيميائي للمركبات الدوائية المبتكرة.",
+        descriptionEn: "Equipped with spectrophotometers, molecular modeling software, and synthesis tools for novel therapeutic compounds.",
+      },
+      {
+        nameAr: "مخبر الصيدلانيات وتكنولوجيا النانو",
+        nameEn: "Pharmaceutics & Nanotechnology Lab",
+        descriptionAr: "أجهزة متقدمة لتصنيع الأشكال الصيدلانية، اختبارات الذوبان والانحلال، وتطوير نواقل الأدوية النانوية.",
+        descriptionEn: "Advanced equipment for pharmaceutical dosage formulation, dissolution profiling, and nanocarrier research.",
+      },
+      {
+        nameAr: "مخبر المراقبة الدوائية وضبط الجودة (HPLC)",
+        nameEn: "Drug Quality Control & HPLC Lab",
+        descriptionAr: "أجهزة الكروماتوغرافيا السائلة عالية الأداء (HPLC) والمعايرة التحليلية لضمان جودة ونقاوة المستحضرات الطبية.",
+        descriptionEn: "High-Performance Liquid Chromatography (HPLC) units and analytical instrumentation for drug purity verification.",
+      },
+    ];
+  }
+
+  if (s.includes("arch") || s.includes("civil") || s.includes("art")) {
+    return [
+      {
+        nameAr: "استوديو التصميم المعماري ونمذجة BIM",
+        nameEn: "BIM & Architectural Design Studio",
+        descriptionAr: "محطات نمذجة متقدمة وبرمجيات نمذجة معلومات البناء وتوليد الرسوم والواقع الافتراضي للمشاريع الحضرية.",
+        descriptionEn: "Advanced workstations running industry-standard BIM, parametric modeling, and architectural rendering suites.",
+      },
+      {
+        nameAr: "مخبر ميكانيك التربة وفحص المواد الإنشائية",
+        nameEn: "Soil Mechanics & Materials Testing Lab",
+        descriptionAr: "أجهزة قياس قوة الخرسانة، اختبارات الشد والضغط للمواد، وأجهزة الفحص الجيوتقني للتربة.",
+        descriptionEn: "Universal testing machines for concrete and steel tensile/compression tests, plus geotechnical soil equipment.",
+      },
+      {
+        nameAr: "استوديو الطباعة ثلاثية الأبعاد والتصنيع الرقمي",
+        nameEn: "3D Fabrication & Prototyping Lab",
+        descriptionAr: "طابعات ثلاثية الأبعاد، قواطع ليزرية CNC، وأدوات النمذجة المادية السريعة للمجسمات المعمارية.",
+        descriptionEn: "3D printers, laser CNC cutters, and physical prototyping tools for rapid scale architectural model making.",
+      },
+    ];
+  }
+
+  return [
+    {
+      nameAr: "مخبر الأبحاث المتقدمة والدراسات التخصصية",
+      nameEn: "Advanced Research & Studies Lab",
+      descriptionAr: "بيئة بحثية تفاعلية مزودة بأحدث التجهيزات والبرمجيات المتخصصة لدعم أبحاث الطلاب ومشاريع التخرج.",
+      descriptionEn: "Interactive research environment equipped with modern specialized equipment to support graduation research.",
+    },
+    {
+      nameAr: "مخبر الحوسبة والتطبيقات الرقمية",
+      nameEn: "Computing & Digital Applications Lab",
+      descriptionAr: "قاعة حوسبة عالية السرعة مزودة بحزم التحليل الإحصائي وبرمجيات المحاكاة التخصصية.",
+      descriptionEn: "High-speed computing facility loaded with advanced statistical analysis software and specialized simulations.",
+    },
+    {
+      nameAr: "حاضنة الابتكار ومشاريع التخرج",
+      nameEn: "Innovation & Graduation Projects Hub",
+      descriptionAr: "مساحة عمل مشتركة تتيح للفرق الطلابية تطوير نماذجهم التطبيقية وربطها بمتطلبات سوق العمل والمجتمع.",
+      descriptionEn: "Collaborative workspace enabling student teams to develop prototypes and align projects with industry needs.",
+    },
+  ];
+}
+
 export default function FacultyPage({
   params,
 }: {
@@ -115,7 +243,8 @@ export default function FacultyPage({
   const facultyStaff = (allMembers || []).filter(
     (m) => m.faculty === faculty.id || (m as any).facultySlug === faculty.slug
   );
-  const facilities = faculty.facilities || [];
+  const rawFacilities = faculty.facilities || [];
+  const facilities = rawFacilities.length > 0 ? rawFacilities : getDefaultFacultyFacilities(faculty.slug);
 
   // Dean Data
   const deanName = isArabic

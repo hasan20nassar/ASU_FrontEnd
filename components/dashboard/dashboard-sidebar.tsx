@@ -124,11 +124,6 @@ export function DashboardSidebar() {
           href: "/dashboard/campus-life",
           icon: Sparkles,
         },
-        {
-          title: language === "ar" ? "فرص العمل" : "Job Postings",
-          href: "/dashboard/jobs",
-          icon: Briefcase,
-        },
       ],
     },
   ];

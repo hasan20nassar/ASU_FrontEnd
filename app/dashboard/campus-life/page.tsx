@@ -103,35 +103,35 @@ import { toast } from "sonner";
 
 // Common Icon mapping for Housing
 const HOUSING_ICONS = [
-  { label: "سرير (Bed)", value: "Bed", icon: Bed },
-  { label: "مطعم ووجبات (Utensils)", value: "Utensils", icon: Utensils },
-  { label: "واي فاي (Wifi)", value: "Wifi", icon: Wifi },
-  { label: "حافلة ومواصلات (Bus)", value: "Bus", icon: Bus },
-  { label: "أمان وحراسة (Shield)", value: "Shield", icon: Shield },
-  { label: "مبنى سكني (Building)", value: "Building2", icon: Building2 },
-  { label: "مقهى واستراحة (Coffee)", value: "Coffee", icon: Coffee },
+  { labelAr: "سرير", labelEn: "Bed", value: "Bed", icon: Bed },
+  { labelAr: "مطعم ووجبات", labelEn: "Dining & Meals", value: "Utensils", icon: Utensils },
+  { labelAr: "واي فاي وإنترنت", labelEn: "Wi-Fi & Internet", value: "Wifi", icon: Wifi },
+  { labelAr: "حافلة ومواصلات", labelEn: "Transportation", value: "Bus", icon: Bus },
+  { labelAr: "أمان وحراسة", labelEn: "Security & Safety", value: "Shield", icon: Shield },
+  { labelAr: "مبنى سكني", labelEn: "Residential Building", value: "Building2", icon: Building2 },
+  { labelAr: "مقهى واستراحة", labelEn: "Cafe & Lounge", value: "Coffee", icon: Coffee },
 ];
 
 // Common Icon mapping for Clubs
 const CLUB_ICONS = [
-  { label: "موسيقى (Music)", value: "Music", icon: Music },
-  { label: "فنون وتشكيل (Palette)", value: "Palette", icon: Palette },
-  { label: "قراءة وأدب (BookOpen)", value: "BookOpen", icon: BookOpen },
-  { label: "لغات وترجمة (Globe)", value: "Globe", icon: Globe },
-  { label: "ريادة أعمال (Trophy)", value: "Trophy", icon: Trophy },
-  { label: "عمل تطوعي (Heart)", value: "Heart", icon: Heart },
-  { label: "برمجة وتقنية (Code)", value: "Code", icon: Code },
-  { label: "تصوير وإعلام (Camera)", value: "Camera", icon: Camera },
-  { label: "أنشطة عامة (Users)", value: "Users", icon: Users },
+  { labelAr: "موسيقى", labelEn: "Music", value: "Music", icon: Music },
+  { labelAr: "فنون وتشكيل", labelEn: "Arts & Painting", value: "Palette", icon: Palette },
+  { labelAr: "قراءة وأدب", labelEn: "Literature & Reading", value: "BookOpen", icon: BookOpen },
+  { labelAr: "لغات وترجمة", labelEn: "Languages & Translation", value: "Globe", icon: Globe },
+  { labelAr: "ريادة أعمال", labelEn: "Entrepreneurship", value: "Trophy", icon: Trophy },
+  { labelAr: "عمل تطوعي", labelEn: "Volunteering", value: "Heart", icon: Heart },
+  { labelAr: "برمجة وتقنية", labelEn: "Programming & Tech", value: "Code", icon: Code },
+  { labelAr: "تصوير وإعلام", labelEn: "Media & Photography", value: "Camera", icon: Camera },
+  { labelAr: "أنشطة عامة", labelEn: "General Activities", value: "Users", icon: Users },
 ];
 
 // Common Icon mapping for Sports
 const SPORT_ICONS = [
-  { label: "أثقال ورياضة (Dumbbell)", value: "Dumbbell", icon: Dumbbell },
-  { label: "بطولات وكأس (Trophy)", value: "Trophy", icon: Trophy },
-  { label: "نشاط وحركة (Activity)", value: "Activity", icon: Activity },
-  { label: "تصويب وألعاب (Target)", value: "Target", icon: Target },
-  { label: "حماسة وطاقة (Flame)", value: "Flame", icon: Flame },
+  { labelAr: "أثقال ولياقة", labelEn: "Fitness & Gym", value: "Dumbbell", icon: Dumbbell },
+  { labelAr: "بطولات وكؤوس", labelEn: "Championships & Cups", value: "Trophy", icon: Trophy },
+  { labelAr: "نشاط وحركة", labelEn: "Athletics", value: "Activity", icon: Activity },
+  { labelAr: "تصويب وألعاب", labelEn: "Target & Sports", value: "Target", icon: Target },
+  { labelAr: "حماسة وطاقة", labelEn: "Fitness & Energy", value: "Flame", icon: Flame },
 ];
 
 export default function DashboardCampusLifePage() {
@@ -288,8 +288,12 @@ export default function DashboardCampusLifePage() {
 
   const handleSaveHousing = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!housingTitleAr.trim() || !housingDescAr.trim()) {
-      toast.error(isArabic ? "يرجى إدخال عنوان ووصف الميزة" : "Please fill in title and description");
+    if (!housingTitleAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان ميزة السكن بالعربية" : "Please enter the housing amenity title in Arabic");
+      return;
+    }
+    if (!housingDescAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال وصف ميزة السكن بالعربية" : "Please enter the housing amenity description in Arabic");
       return;
     }
 
@@ -357,8 +361,16 @@ export default function DashboardCampusLifePage() {
 
   const handleSaveClub = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clubNameAr.trim() || !clubDescAr.trim()) {
-      toast.error(isArabic ? "يرجى إدخال اسم ووصف النادي" : "Please fill in club name and description");
+    if (!clubNameAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم النادي بالعربية" : "Please enter the club name in Arabic");
+      return;
+    }
+    if (!clubDescAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال وصف النادي بالعربية" : "Please enter the club description in Arabic");
+      return;
+    }
+    if (!clubCategory.trim()) {
+      toast.error(isArabic ? "يرجى إدخال تصنيف النادي" : "Please enter the club category");
       return;
     }
 
@@ -425,7 +437,7 @@ export default function DashboardCampusLifePage() {
   const handleSaveSport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sportNameAr.trim()) {
-      toast.error(isArabic ? "يرجى إدخال اسم النشاط الرياضي" : "Please fill in sport name");
+      toast.error(isArabic ? "يرجى إدخال اسم النشاط الرياضي بالعربية" : "Please enter the sport name in Arabic");
       return;
     }
 
@@ -490,6 +502,15 @@ export default function DashboardCampusLifePage() {
 
   const handleSaveOverview = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ovHousingTitleAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان قسم السكن بالعربية" : "Please enter the housing section title in Arabic");
+      return;
+    }
+    if (!ovSportsTitleAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان قسم الرياضة بالعربية" : "Please enter the sports section title in Arabic");
+      return;
+    }
+
     const payload: CampusLifeOverview = {
       housingTitleAr: ovHousingTitleAr.trim(),
       housingTitleEn: ovHousingTitleEn.trim(),
@@ -714,11 +735,8 @@ export default function DashboardCampusLifePage() {
                     <TableHead className="w-[10%] text-center text-xs font-bold">{isArabic ? "الأيقونة" : "Icon"}</TableHead>
                     <TableHead className="w-[30%] text-xs font-bold">{isArabic ? "عنوان الميزة" : "Title"}</TableHead>
                     <TableHead className="w-[40%] text-xs font-bold">{isArabic ? "الوصف" : "Description"}</TableHead>
-                    <TableHead className="w-[30%] text-center text-xs font-bold">{isArabic ? "عنوان الميزة" : "Title"}</TableHead>
-                    <TableHead className="w-[40%] text-center text-xs font-bold">{isArabic ? "الوصف" : "Description"}</TableHead>
                     <TableHead className="w-[10%] text-center text-xs font-bold">{isArabic ? "الحالة" : "Status"}</TableHead>
                     <TableHead className="w-[10%] text-end text-xs font-bold">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
-                    <TableHead className="w-[10%] text-center text-xs font-bold">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -731,12 +749,12 @@ export default function DashboardCampusLifePage() {
                       </TableCell>
 
                       <TableCell className="align-top py-3 w-[30%] overflow-hidden">
-                        <p className="font-bold text-xs sm:text-sm text-foreground">{item.titleAr}</p>
+                        <p className="font-bold text-xs sm:text-sm text-foreground">{item.titleAr || "N/A"}</p>
                         {item.titleEn && <p className="text-[11px] text-muted-foreground">{item.titleEn}</p>}
                       </TableCell>
 
                       <TableCell className="align-top py-3 w-[40%] overflow-hidden">
-                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{item.descriptionAr}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{item.descriptionAr || "N/A"}</p>
                       </TableCell>
 
                       <TableCell className="align-top py-3 text-center w-[10%]">
@@ -813,10 +831,6 @@ export default function DashboardCampusLifePage() {
                     <TableHead className="w-[34%] text-xs font-bold">{isArabic ? "الوصف" : "Description"}</TableHead>
                     <TableHead className="w-[18%] text-xs font-bold">{isArabic ? "المشرف والتصنيف" : "Supervisor & Category"}</TableHead>
                     <TableHead className="w-[10%] text-end text-xs font-bold">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
-                    <TableHead className="w-[28%] text-center text-xs font-bold">{isArabic ? "اسم النادي" : "Club Name"}</TableHead>
-                    <TableHead className="w-[34%] text-center text-xs font-bold">{isArabic ? "الوصف" : "Description"}</TableHead>
-                    <TableHead className="w-[18%] text-center text-xs font-bold">{isArabic ? "المشرف والتصنيف" : "Supervisor & Category"}</TableHead>
-                    <TableHead className="w-[10%] text-center text-xs font-bold">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -829,12 +843,12 @@ export default function DashboardCampusLifePage() {
                       </TableCell>
 
                       <TableCell className="align-top py-3 w-[28%] overflow-hidden">
-                        <p className="font-bold text-xs sm:text-sm text-foreground">{club.nameAr}</p>
+                        <p className="font-bold text-xs sm:text-sm text-foreground">{club.nameAr || "N/A"}</p>
                         {club.nameEn && <p className="text-[11px] text-muted-foreground">{club.nameEn}</p>}
                       </TableCell>
 
                       <TableCell className="align-top py-3 w-[34%] overflow-hidden">
-                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{club.descriptionAr}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{club.descriptionAr || "N/A"}</p>
                       </TableCell>
 
                       <TableCell className="align-top py-3 w-[18%] overflow-hidden">
@@ -914,11 +928,8 @@ export default function DashboardCampusLifePage() {
                     <TableHead className="w-[10%] text-center text-xs font-bold">{isArabic ? "الأيقونة" : "Icon"}</TableHead>
                     <TableHead className="w-[35%] text-xs font-bold">{isArabic ? "اسم اللعبة / الرياضة" : "Sport Name"}</TableHead>
                     <TableHead className="w-[35%] text-xs font-bold">{isArabic ? "الوصف" : "Description"}</TableHead>
-                    <TableHead className="w-[35%] text-center text-xs font-bold">{isArabic ? "اسم اللعبة / الرياضة" : "Sport Name"}</TableHead>
-                    <TableHead className="w-[35%] text-center text-xs font-bold">{isArabic ? "الوصف" : "Description"}</TableHead>
                     <TableHead className="w-[10%] text-center text-xs font-bold">{isArabic ? "الحالة" : "Status"}</TableHead>
                     <TableHead className="w-[10%] text-end text-xs font-bold">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
-                    <TableHead className="w-[10%] text-center text-xs font-bold">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -931,13 +942,13 @@ export default function DashboardCampusLifePage() {
                       </TableCell>
 
                       <TableCell className="align-top py-3 w-[35%] overflow-hidden">
-                        <p className="font-bold text-xs sm:text-sm text-foreground">{sport.nameAr}</p>
+                        <p className="font-bold text-xs sm:text-sm text-foreground">{sport.nameAr || "N/A"}</p>
                         {sport.nameEn && <p className="text-[11px] text-muted-foreground">{sport.nameEn}</p>}
                       </TableCell>
 
                       <TableCell className="align-top py-3 w-[35%] overflow-hidden">
                         <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                          {sport.descriptionAr || (isArabic ? "نشاط وبطولات دورية" : "Regular tournaments")}
+                          {sport.descriptionAr || "N/A"}
                         </p>
                       </TableCell>
 
@@ -980,9 +991,9 @@ export default function DashboardCampusLifePage() {
           Modal: Housing Feature (Add / Edit)
          ======================================================== */}
       <Dialog open={isHousingModalOpen} onOpenChange={setIsHousingModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <form onSubmit={handleSaveHousing}>
-            <DialogHeader className="text-start">
+            <DialogHeader className="p-6 pb-4 border-b bg-muted/20 text-start">
               <DialogTitle className="text-lg font-bold">
                 {editingHousing
                   ? (isArabic ? "تعديل ميزة السكن" : "Edit Housing Amenity")
@@ -993,10 +1004,10 @@ export default function DashboardCampusLifePage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3.5 py-4 text-xs sm:text-sm">
+            <div className="p-6 space-y-4 text-xs sm:text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isArabic ? "العنوان بالعربية *" : "Title (AR) *"}</Label>
+                  <Label className="text-xs">{isArabic ? "العنوان بالعربية" : "Arabic Title"}</Label>
                   <Input
                     required
                     value={housingTitleAr}
@@ -1006,7 +1017,7 @@ export default function DashboardCampusLifePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isArabic ? "العنوان بالإنجليزية" : "Title (EN)"}</Label>
+                  <Label className="text-xs">{isArabic ? "العنوان بالإنجليزية" : "English Title"}</Label>
                   <Input
                     value={housingTitleEn}
                     onChange={(e) => setHousingTitleEn(e.target.value)}
@@ -1017,7 +1028,7 @@ export default function DashboardCampusLifePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">{isArabic ? "الوصف بالعربية *" : "Description (AR) *"}</Label>
+                <Label className="text-xs">{isArabic ? "الوصف بالعربية" : "Arabic Description"}</Label>
                 <Textarea
                   required
                   rows={2}
@@ -1029,7 +1040,7 @@ export default function DashboardCampusLifePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">{isArabic ? "الوصف بالإنجليزية" : "Description (EN)"}</Label>
+                <Label className="text-xs">{isArabic ? "الوصف بالإنجليزية" : "English Description"}</Label>
                 <Textarea
                   rows={2}
                   value={housingDescEn}
@@ -1049,7 +1060,7 @@ export default function DashboardCampusLifePage() {
                     <SelectContent>
                       {HOUSING_ICONS.map((ic) => (
                         <SelectItem key={ic.value} value={ic.value}>
-                          {ic.label}
+                          {isArabic ? ic.labelAr : ic.labelEn}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1068,12 +1079,12 @@ export default function DashboardCampusLifePage() {
               </div>
 
               <div className="flex items-center justify-between pt-2">
-                <Label className="text-xs">{isArabic ? "تفعيل الظهور في الموقع" : "Active"}</Label>
+                <Label className="text-xs">{isArabic ? "تفعيل الظهور في الموقع" : "Active in Portal"}</Label>
                 <Switch checked={housingIsActive} onCheckedChange={setHousingIsActive} />
               </div>
             </div>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setIsHousingModalOpen(false)}>
                 {isArabic ? "إلغاء" : "Cancel"}
               </Button>
@@ -1089,9 +1100,9 @@ export default function DashboardCampusLifePage() {
           Modal: Student Club (Add / Edit)
          ======================================================== */}
       <Dialog open={isClubModalOpen} onOpenChange={setIsClubModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <form onSubmit={handleSaveClub}>
-            <DialogHeader className="text-start">
+            <DialogHeader className="p-6 pb-4 border-b bg-muted/20 text-start">
               <DialogTitle className="text-lg font-bold">
                 {editingClub
                   ? (isArabic ? "تعديل النادي الطلابي" : "Edit Student Club")
@@ -1102,10 +1113,10 @@ export default function DashboardCampusLifePage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3.5 py-4 text-xs sm:text-sm">
+            <div className="p-6 space-y-4 text-xs sm:text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isArabic ? "اسم النادي بالعربية *" : "Club Name (AR) *"}</Label>
+                  <Label className="text-xs">{isArabic ? "اسم النادي بالعربية" : "Arabic Club Name"}</Label>
                   <Input
                     required
                     value={clubNameAr}
@@ -1115,7 +1126,7 @@ export default function DashboardCampusLifePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isArabic ? "اسم النادي بالإنجليزية" : "Club Name (EN)"}</Label>
+                  <Label className="text-xs">{isArabic ? "اسم النادي بالإنجليزية" : "English Club Name"}</Label>
                   <Input
                     value={clubNameEn}
                     onChange={(e) => setClubNameEn(e.target.value)}
@@ -1126,7 +1137,7 @@ export default function DashboardCampusLifePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">{isArabic ? "الوصف بالعربية *" : "Description (AR) *"}</Label>
+                <Label className="text-xs">{isArabic ? "الوصف بالعربية" : "Arabic Description"}</Label>
                 <Textarea
                   required
                   rows={2}
@@ -1138,7 +1149,7 @@ export default function DashboardCampusLifePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">{isArabic ? "الوصف بالإنجليزية" : "Description (EN)"}</Label>
+                <Label className="text-xs">{isArabic ? "الوصف بالإنجليزية" : "English Description"}</Label>
                 <Textarea
                   rows={2}
                   value={clubDescEn}
@@ -1150,7 +1161,7 @@ export default function DashboardCampusLifePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isArabic ? "المشرف / قائد النادي" : "Supervisor / Leader"}</Label>
+                  <Label className="text-xs">{isArabic ? "المشرف الأكاديمي أو قائد النادي" : "Supervisor or Leader"}</Label>
                   <Input
                     value={clubSupervisor}
                     onChange={(e) => setClubSupervisor(e.target.value)}
@@ -1159,11 +1170,11 @@ export default function DashboardCampusLifePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isArabic ? "التصنيف" : "Category"}</Label>
+                  <Label className="text-xs">{isArabic ? "تصنيف النادي" : "Club Category"}</Label>
                   <Input
                     value={clubCategory}
                     onChange={(e) => setClubCategory(e.target.value)}
-                    placeholder={isArabic ? "فنون، ثقافة، ريادة..." : "Arts, Culture..."}
+                    placeholder={isArabic ? "فنون، ثقافة، ريادة..." : "Arts, Culture, Tech..."}
                     className="h-9 text-xs"
                   />
                 </div>
@@ -1179,7 +1190,7 @@ export default function DashboardCampusLifePage() {
                     <SelectContent>
                       {CLUB_ICONS.map((ic) => (
                         <SelectItem key={ic.value} value={ic.value}>
-                          {ic.label}
+                          {isArabic ? ic.labelAr : ic.labelEn}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1203,7 +1214,7 @@ export default function DashboardCampusLifePage() {
               </div>
             </div>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setIsClubModalOpen(false)}>
                 {isArabic ? "إلغاء" : "Cancel"}
               </Button>
@@ -1219,9 +1230,9 @@ export default function DashboardCampusLifePage() {
           Modal: Sport Activity (Add / Edit)
          ======================================================== */}
       <Dialog open={isSportModalOpen} onOpenChange={setIsSportModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
           <form onSubmit={handleSaveSport}>
-            <DialogHeader className="text-start">
+            <DialogHeader className="p-6 pb-4 border-b bg-muted/20 text-start">
               <DialogTitle className="text-lg font-bold">
                 {editingSport
                   ? (isArabic ? "تعديل النشاط الرياضي" : "Edit Sport Activity")
@@ -1232,10 +1243,10 @@ export default function DashboardCampusLifePage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3.5 py-4 text-xs sm:text-sm">
+            <div className="p-6 space-y-4 text-xs sm:text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isArabic ? "اسم اللعبة / الرياضة بالعربية *" : "Sport Name (AR) *"}</Label>
+                  <Label className="text-xs">{isArabic ? "اسم الرياضة بالعربية" : "Arabic Sport Name"}</Label>
                   <Input
                     required
                     value={sportNameAr}
@@ -1245,7 +1256,7 @@ export default function DashboardCampusLifePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{isArabic ? "اسم اللعبة بالإنجليزية" : "Sport Name (EN)"}</Label>
+                  <Label className="text-xs">{isArabic ? "اسم الرياضة بالإنجليزية" : "English Sport Name"}</Label>
                   <Input
                     value={sportNameEn}
                     onChange={(e) => setSportNameEn(e.target.value)}
@@ -1256,12 +1267,23 @@ export default function DashboardCampusLifePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">{isArabic ? "الوصف بالعربية" : "Description (AR)"}</Label>
+                <Label className="text-xs">{isArabic ? "الوصف بالعربية" : "Arabic Description"}</Label>
                 <Textarea
                   rows={2}
                   value={sportDescAr}
                   onChange={(e) => setSportDescAr(e.target.value)}
                   placeholder={isArabic ? "ملاعب مخصصة وبطولات دورية..." : "Sport description..."}
+                  className="text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isArabic ? "الوصف بالإنجليزية" : "English Description"}</Label>
+                <Textarea
+                  rows={2}
+                  value={sportDescEn}
+                  onChange={(e) => setSportDescEn(e.target.value)}
+                  placeholder="Sport description in English..."
                   className="text-xs"
                 />
               </div>
@@ -1276,7 +1298,7 @@ export default function DashboardCampusLifePage() {
                     <SelectContent>
                       {SPORT_ICONS.map((ic) => (
                         <SelectItem key={ic.value} value={ic.value}>
-                          {ic.label}
+                          {isArabic ? ic.labelAr : ic.labelEn}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1300,7 +1322,7 @@ export default function DashboardCampusLifePage() {
               </div>
             </div>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setIsSportModalOpen(false)}>
                 {isArabic ? "إلغاء" : "Cancel"}
               </Button>
@@ -1316,9 +1338,9 @@ export default function DashboardCampusLifePage() {
           Modal: Overview / Section Banners & Texts
          ======================================================== */}
       <Dialog open={isOverviewModalOpen} onOpenChange={setIsOverviewModalOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <form onSubmit={handleSaveOverview}>
-            <DialogHeader className="text-start">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          <form onSubmit={handleSaveOverview} className="flex flex-col flex-1 min-h-0">
+            <DialogHeader className="p-6 pb-4 border-b bg-muted/20 text-start shrink-0">
               <DialogTitle className="text-lg font-bold">
                 {isArabic ? "تعديل نصوص وبنرات أقسام الحياة الجامعية" : "Edit Section Texts & Banners"}
               </DialogTitle>
@@ -1329,9 +1351,9 @@ export default function DashboardCampusLifePage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-4 text-xs sm:text-sm">
+            <div className="p-6 space-y-4 text-xs sm:text-sm overflow-y-auto flex-1">
               {/* Section 1: Housing Overview */}
-              <div className="p-3.5 bg-muted/30 rounded-xl border border-border space-y-3">
+              <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-3">
                 <h4 className="font-bold text-xs text-primary flex items-center gap-1.5">
                   <Home className="h-4 w-4" />
                   <span>{isArabic ? "إعدادات قسم السكن الجامعي" : "Housing Section Settings"}</span>
@@ -1339,7 +1361,7 @@ export default function DashboardCampusLifePage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-[11px]">{isArabic ? "عنوان السكن (عربي)" : "Title (AR)"}</Label>
+                    <Label className="text-[11px]">{isArabic ? "عنوان قسم السكن بالعربية" : "Housing Title"}</Label>
                     <Input
                       value={ovHousingTitleAr}
                       onChange={(e) => setOvHousingTitleAr(e.target.value)}
@@ -1347,7 +1369,7 @@ export default function DashboardCampusLifePage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px]">{isArabic ? "عنوان السكن (إنجليزي)" : "Title (EN)"}</Label>
+                    <Label className="text-[11px]">{isArabic ? "عنوان قسم السكن بالإنجليزية" : "Housing Title (English)"}</Label>
                     <Input
                       value={ovHousingTitleEn}
                       onChange={(e) => setOvHousingTitleEn(e.target.value)}
@@ -1357,7 +1379,7 @@ export default function DashboardCampusLifePage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-[11px]">{isArabic ? "الوصف التمهيدي للسكن (عربي)" : "Description (AR)"}</Label>
+                  <Label className="text-[11px]">{isArabic ? "الوصف التمهيدي لقسم السكن" : "Housing Overview Description"}</Label>
                   <Textarea
                     rows={2}
                     value={ovHousingDescAr}
@@ -1367,7 +1389,7 @@ export default function DashboardCampusLifePage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-[11px]">{isArabic ? "ملاحظة التقديم على السكن (عربي)" : "Contact / Application Note (AR)"}</Label>
+                  <Label className="text-[11px]">{isArabic ? "ملاحظة التقديم والتواصل للسكن" : "Housing Contact & Application Note"}</Label>
                   <Input
                     value={ovHousingContactNoteAr}
                     onChange={(e) => setOvHousingContactNoteAr(e.target.value)}
@@ -1377,7 +1399,7 @@ export default function DashboardCampusLifePage() {
               </div>
 
               {/* Section 2: Sports Overview */}
-              <div className="p-3.5 bg-muted/30 rounded-xl border border-border space-y-3">
+              <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-3">
                 <h4 className="font-bold text-xs text-amber-600 flex items-center gap-1.5">
                   <Dumbbell className="h-4 w-4" />
                   <span>{isArabic ? "إعدادات قسم الرياضة والبطولات" : "Sports & Championships Settings"}</span>
@@ -1385,7 +1407,7 @@ export default function DashboardCampusLifePage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-[11px]">{isArabic ? "عنوان قسم الرياضة (عربي)" : "Sports Title (AR)"}</Label>
+                    <Label className="text-[11px]">{isArabic ? "عنوان قسم الرياضة" : "Sports Title"}</Label>
                     <Input
                       value={ovSportsTitleAr}
                       onChange={(e) => setOvSportsTitleAr(e.target.value)}
@@ -1393,7 +1415,7 @@ export default function DashboardCampusLifePage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px]">{isArabic ? "عنوان البطولات السنوية (عربي)" : "Championships Title (AR)"}</Label>
+                    <Label className="text-[11px]">{isArabic ? "عنوان البطولات السنوية" : "Annual Championships Title"}</Label>
                     <Input
                       value={ovChampionshipsTitleAr}
                       onChange={(e) => setOvChampionshipsTitleAr(e.target.value)}
@@ -1403,7 +1425,7 @@ export default function DashboardCampusLifePage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-[11px]">{isArabic ? "وصف البطولات السنوية (عربي)" : "Championships Description (AR)"}</Label>
+                  <Label className="text-[11px]">{isArabic ? "وصف البطولات السنوية" : "Annual Championships Description"}</Label>
                   <Textarea
                     rows={2}
                     value={ovChampionshipsDescAr}
@@ -1414,7 +1436,7 @@ export default function DashboardCampusLifePage() {
               </div>
             </div>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2 shrink-0">
               <Button type="button" variant="outline" size="sm" onClick={() => setIsOverviewModalOpen(false)}>
                 {isArabic ? "إلغاء" : "Cancel"}
               </Button>
@@ -1428,24 +1450,24 @@ export default function DashboardCampusLifePage() {
 
       {/* Delete Confirmation Dialog: Housing */}
       <Dialog open={!!deletingHousing} onOpenChange={(open) => !open && setDeletingHousing(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="text-start">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2 text-start">
             <DialogTitle className="text-base font-bold text-destructive flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
               <span>{isArabic ? "تأكيد حذف ميزة السكن" : "Confirm Delete"}</span>
             </DialogTitle>
-            <DialogDescription className="text-xs">
+            <DialogDescription className="text-xs mt-2">
               {isArabic
                 ? `هل أنت متأكد من حذف الميزة "${deletingHousing?.titleAr}"؟ لا يمكن التراجع عن هذا الإجراء.`
                 : "Are you sure you want to delete this amenity?"}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2">
             <Button variant="outline" size="sm" onClick={() => setDeletingHousing(null)}>
               {isArabic ? "إلغاء" : "Cancel"}
             </Button>
             <Button variant="destructive" size="sm" onClick={handleDeleteHousing}>
-              {isArabic ? "حذف نهائي" : "Delete"}
+              {isArabic ? "تأكيد الحذف" : "Confirm Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1453,24 +1475,24 @@ export default function DashboardCampusLifePage() {
 
       {/* Delete Confirmation Dialog: Club */}
       <Dialog open={!!deletingClub} onOpenChange={(open) => !open && setDeletingClub(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="text-start">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2 text-start">
             <DialogTitle className="text-base font-bold text-destructive flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
               <span>{isArabic ? "تأكيد حذف النادي الطلابي" : "Confirm Delete"}</span>
             </DialogTitle>
-            <DialogDescription className="text-xs">
+            <DialogDescription className="text-xs mt-2">
               {isArabic
                 ? `هل أنت متأكد من حذف النادي "${deletingClub?.nameAr}"؟`
-                : "Are you sure you want to delete this club?"}
+                : `Are you sure you want to delete "${deletingClub?.nameEn || deletingClub?.nameAr}"?`}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2">
             <Button variant="outline" size="sm" onClick={() => setDeletingClub(null)}>
               {isArabic ? "إلغاء" : "Cancel"}
             </Button>
             <Button variant="destructive" size="sm" onClick={handleDeleteClub}>
-              {isArabic ? "حذف نهائي" : "Delete"}
+              {isArabic ? "تأكيد الحذف" : "Confirm Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1478,24 +1500,24 @@ export default function DashboardCampusLifePage() {
 
       {/* Delete Confirmation Dialog: Sport */}
       <Dialog open={!!deletingSport} onOpenChange={(open) => !open && setDeletingSport(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="text-start">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2 text-start">
             <DialogTitle className="text-base font-bold text-destructive flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
               <span>{isArabic ? "تأكيد حذف النشاط الرياضي" : "Confirm Delete"}</span>
             </DialogTitle>
-            <DialogDescription className="text-xs">
+            <DialogDescription className="text-xs mt-2">
               {isArabic
                 ? `هل أنت متأكد من حذف الرياضة "${deletingSport?.nameAr}"؟`
-                : "Are you sure you want to delete this sport?"}
+                : `Are you sure you want to delete "${deletingSport?.nameEn || deletingSport?.nameAr}"?`}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2">
             <Button variant="outline" size="sm" onClick={() => setDeletingSport(null)}>
               {isArabic ? "إلغاء" : "Cancel"}
             </Button>
             <Button variant="destructive" size="sm" onClick={handleDeleteSport}>
-              {isArabic ? "حذف نهائي" : "Delete"}
+              {isArabic ? "تأكيد الحذف" : "Confirm Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

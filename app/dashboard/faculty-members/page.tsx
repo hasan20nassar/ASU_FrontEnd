@@ -427,43 +427,65 @@ export default function FacultyMembersManagement() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nameAr || !formData.email) {
-      toast.error(isArabic ? "يرجى تعبئة الحقول الإلزامية (الاسم الكامل والبريد الإلكتروني)" : "Please fill required fields (Name and Email)");
+
+    if (!formData.nameAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الاسم الكامل بالعربية" : "Please enter the full Arabic name");
+      return;
+    }
+    if (!formData.nameEn?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الاسم الكامل بالإنجليزية" : "Please enter the full English name");
+      return;
+    }
+    if (!formData.titleAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الرتبة العلمية بالعربية" : "Please enter the academic title in Arabic");
+      return;
+    }
+    if (!formData.titleEn?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الرتبة العلمية بالإنجليزية" : "Please enter the academic title in English");
+      return;
+    }
+    if (!formData.email?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال البريد الإلكتروني" : "Please enter the email address");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      toast.error(isArabic ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address format");
       return;
     }
 
     try {
       await createMemberMutation.mutateAsync({
-        nameAr: formData.nameAr,
-        nameEn: formData.nameEn || formData.nameAr,
-        titleAr: formData.titleAr,
-        titleEn: formData.titleEn,
+        nameAr: formData.nameAr.trim(),
+        nameEn: formData.nameEn.trim(),
+        titleAr: formData.titleAr.trim(),
+        titleEn: formData.titleEn.trim(),
         faculty: formData.facultyId ? Number(formData.facultyId) : undefined,
         department: formData.departmentId ? Number(formData.departmentId) : undefined,
         departmentAr: formData.departmentAr,
         departmentEn: formData.departmentEn || formData.departmentAr,
-        email: formData.email,
-        officeHours: formData.officeHours,
-        locationAr: formData.locationAr,
-        locationEn: formData.locationEn,
+        email: formData.email.trim(),
+        officeHours: formData.officeHours.trim(),
+        locationAr: formData.locationAr.trim(),
+        locationEn: formData.locationEn.trim(),
         image: formData.image,
         isHead: formData.isHead,
-        bioAr: formData.bioAr,
-        bioEn: formData.bioEn || formData.bioAr,
-        researchAr: formData.researchAr,
-        researchEn: formData.researchEn || formData.researchAr,
+        bioAr: formData.bioAr.trim(),
+        bioEn: formData.bioEn.trim() || formData.bioAr.trim(),
+        researchAr: formData.researchAr.trim(),
+        researchEn: formData.researchEn.trim() || formData.researchAr.trim(),
         educationAr: educationList,
         educationEn: educationList,
         publications: publicationsList,
         officeHourSlots: officeSlotsList,
-        appointmentLocation: formData.appointmentLocation,
+        appointmentLocation: formData.appointmentLocation.trim(),
       });
 
       toast.success(isArabic ? "تم إضافة عضو هيئة التدريس بنجاح!" : "Faculty member added successfully!");
       setIsAddOpen(false);
       resetForm();
     } catch (err) {
-      toast.error(isArabic ? "حدث خطأ أثناء إضافة الأستاذ" : "Failed to add faculty member");
+      toast.error(isArabic ? "حدث خطأ أثناء إضافة عضو هيئة التدريس" : "Failed to add faculty member");
     }
   };
 
@@ -471,37 +493,63 @@ export default function FacultyMembersManagement() {
     e.preventDefault();
     if (!selectedMember) return;
 
+    if (!formData.nameAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الاسم الكامل بالعربية" : "Please enter the full Arabic name");
+      return;
+    }
+    if (!formData.nameEn?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الاسم الكامل بالإنجليزية" : "Please enter the full English name");
+      return;
+    }
+    if (!formData.titleAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الرتبة العلمية بالعربية" : "Please enter the academic title in Arabic");
+      return;
+    }
+    if (!formData.titleEn?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الرتبة العلمية بالإنجليزية" : "Please enter the academic title in English");
+      return;
+    }
+    if (!formData.email?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال البريد الإلكتروني" : "Please enter the email address");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      toast.error(isArabic ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address format");
+      return;
+    }
+
     try {
       await updateMemberMutation.mutateAsync({
         id: selectedMember.id,
         data: {
-          nameAr: formData.nameAr,
-          nameEn: formData.nameEn,
-          titleAr: formData.titleAr,
-          titleEn: formData.titleEn,
+          nameAr: formData.nameAr.trim(),
+          nameEn: formData.nameEn.trim(),
+          titleAr: formData.titleAr.trim(),
+          titleEn: formData.titleEn.trim(),
           faculty: formData.facultyId ? Number(formData.facultyId) : undefined,
           department: formData.departmentId ? Number(formData.departmentId) : undefined,
           departmentAr: formData.departmentAr,
           departmentEn: formData.departmentEn,
-          email: formData.email,
-          officeHours: formData.officeHours,
-          locationAr: formData.locationAr,
-          locationEn: formData.locationEn,
+          email: formData.email.trim(),
+          officeHours: formData.officeHours.trim(),
+          locationAr: formData.locationAr.trim(),
+          locationEn: formData.locationEn.trim(),
           image: formData.image,
           isHead: formData.isHead,
-          bioAr: formData.bioAr,
-          bioEn: formData.bioEn,
-          researchAr: formData.researchAr,
-          researchEn: formData.researchEn,
+          bioAr: formData.bioAr.trim(),
+          bioEn: formData.bioEn.trim(),
+          researchAr: formData.researchAr.trim(),
+          researchEn: formData.researchEn.trim(),
           educationAr: educationList,
           educationEn: educationList,
           publications: publicationsList,
           officeHourSlots: officeSlotsList,
-          appointmentLocation: formData.appointmentLocation,
+          appointmentLocation: formData.appointmentLocation.trim(),
         },
       });
 
-      toast.success(isArabic ? "تم تعديل بيانات الأستاذ ومواعيد الحجز بنجاح!" : "Faculty member & slots updated successfully!");
+      toast.success(isArabic ? "تم تحديث بيانات عضو هيئة التدريس بنجاح!" : "Faculty member updated successfully!");
       setIsEditOpen(false);
       setSelectedMember(null);
     } catch (err) {
@@ -514,7 +562,7 @@ export default function FacultyMembersManagement() {
 
     try {
       await deleteMemberMutation.mutateAsync(selectedMember.id);
-      toast.success(isArabic ? "تمت إزالة عضو الكادر من قاعدة البيانات" : "Faculty member deleted successfully!");
+      toast.success(isArabic ? "تم حذف عضو هيئة التدريس بنجاح" : "Faculty member deleted successfully!");
       setIsDeleteOpen(false);
       setSelectedMember(null);
     } catch (err) {
@@ -626,10 +674,7 @@ export default function FacultyMembersManagement() {
                       <TableHead className="text-start font-bold">{isArabic ? "الاسم" : "Name"}</TableHead>
                       <TableHead className="text-start font-bold">{isArabic ? "الرتبة العلمية" : "Academic Title"}</TableHead>
                       <TableHead className="text-start font-bold">{isArabic ? "القسم" : "Department"}</TableHead>
-                      <TableHead className="text-center font-bold">{isArabic ? "الاسم" : "Name"}</TableHead>
-                      <TableHead className="text-center font-bold">{isArabic ? "الرتبة العلمية" : "Academic Title"}</TableHead>
-                      <TableHead className="text-center font-bold">{isArabic ? "القسم" : "Department"}</TableHead>
-                      <TableHead className="text-center font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
+                      <TableHead className="text-end font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -657,26 +702,26 @@ export default function FacultyMembersManagement() {
                               </Avatar>
                               <div className="flex flex-col text-start">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-sm">{isArabic ? member.nameAr : member.nameEn}</span>
+                                  <span className="font-bold text-sm">{(isArabic ? member.nameAr : member.nameEn) || "N/A"}</span>
                                   {member.isHead && (
                                     <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] px-1.5 py-0">
                                       {isArabic ? "عميد / رئيس قسم" : "Dean / Head"}
                                     </Badge>
                                   )}
                                 </div>
-                                <span className="text-xs text-muted-foreground">{member.email}</span>
+                                <span className="text-xs text-muted-foreground">{member.email || "N/A"}</span>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell className="text-sm font-medium text-start">
-                            {isArabic ? member.titleAr : member.titleEn}
+                            {(isArabic ? member.titleAr : member.titleEn) || "N/A"}
                           </TableCell>
                           <TableCell className="text-start">
                             <div className="flex flex-col gap-1">
                               <Badge variant="secondary" className="font-semibold text-xs text-primary border-primary/20 w-fit">
                                 {isArabic
-                                  ? member.departmentNameAr || member.departmentDetail?.nameAr || member.departmentAr || "-"
-                                  : member.departmentNameEn || member.departmentDetail?.nameEn || member.departmentEn || "-"}
+                                  ? member.departmentNameAr || member.departmentDetail?.nameAr || member.departmentAr || "N/A"
+                                  : member.departmentNameEn || member.departmentDetail?.nameEn || member.departmentEn || "N/A"}
                               </Badge>
                               <span className="text-[11px] text-muted-foreground">
                                 {isArabic
@@ -704,7 +749,7 @@ export default function FacultyMembersManagement() {
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem className="gap-2 text-destructive font-bold cursor-pointer" onClick={() => handleOpenDelete(member)}>
-                                    <Trash2 className="h-4 w-4" /> {isArabic ? "إزاحة من الكادر" : "Remove"}
+                                    <Trash2 className="h-4 w-4" /> {isArabic ? "حذف عضو هيئة التدريس" : "Delete Faculty Member"}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -734,31 +779,31 @@ export default function FacultyMembersManagement() {
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                   {filteredStaff.map((member) => (
-                    <Card key={member.id} className="border border-border/80 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
-                      <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                    <Card key={member.id} className="border border-border/80 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group min-w-0 w-full">
+                      <CardContent className="p-5 flex flex-col justify-between h-full space-y-4 min-w-0">
                         {/* Top Header with Avatar & Actions */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-sm">
+                        <div className="flex items-start justify-between gap-3 min-w-0">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-sm shrink-0">
                               <AvatarImage src={member.image || "/user.png"} alt={member.nameEn} />
                               <AvatarFallback className="bg-primary/10 text-primary font-bold text-base">
                                 {member.nameAr ? member.nameAr[0] : "P"}
                               </AvatarFallback>
                             </Avatar>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors truncate">
                                   {isArabic ? member.nameAr : member.nameEn}
                                 </h3>
                                 {member.isHead && (
-                                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] px-1.5 py-0">
+                                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] px-1.5 py-0 shrink-0">
                                     {isArabic ? "عميد / رئيس" : "Dean"}
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+                              <p className="text-xs font-semibold text-muted-foreground mt-0.5 truncate">
                                 {isArabic ? member.titleAr : member.titleEn}
                               </p>
                             </div>
@@ -766,7 +811,7 @@ export default function FacultyMembersManagement() {
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 -me-2">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 -me-2 shrink-0">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -781,45 +826,49 @@ export default function FacultyMembersManagement() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem className="gap-2 text-destructive font-bold cursor-pointer" onClick={() => handleOpenDelete(member)}>
-                                <Trash2 className="h-4 w-4" /> {isArabic ? "إزاحة من الكادر" : "Remove"}
+                                <Trash2 className="h-4 w-4" /> {isArabic ? "حذف عضو هيئة التدريس" : "Delete Faculty Member"}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
 
                         {/* Faculty & Department */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <Badge variant="secondary" className="font-semibold text-xs text-primary border-primary/20">
-                              {isArabic
-                                ? member.departmentNameAr || member.departmentDetail?.nameAr || member.departmentAr || "-"
-                                : member.departmentNameEn || member.departmentDetail?.nameEn || member.departmentEn || "-"}
+                        <div className="space-y-1.5 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                            <Badge variant="secondary" className="font-semibold text-xs text-primary border-primary/20 max-w-full truncate">
+                              <span className="truncate">
+                                {isArabic
+                                  ? member.departmentNameAr || member.departmentDetail?.nameAr || member.departmentAr || "-"
+                                  : member.departmentNameEn || member.departmentDetail?.nameEn || member.departmentEn || "-"}
+                              </span>
                             </Badge>
-                            <Badge variant="outline" className="text-xs text-muted-foreground">
-                              {isArabic
-                                ? member.facultyNameAr || displayFaculties.find((f) => f.id === member.faculty)?.nameAr || ""
-                                : member.facultyNameEn || displayFaculties.find((f) => f.id === member.faculty)?.nameEn || ""}
+                            <Badge variant="outline" className="text-xs text-muted-foreground max-w-full truncate">
+                              <span className="truncate">
+                                {isArabic
+                                  ? member.facultyNameAr || displayFaculties.find((f) => f.id === member.faculty)?.nameAr || ""
+                                  : member.facultyNameEn || displayFaculties.find((f) => f.id === member.faculty)?.nameEn || ""}
+                              </span>
                             </Badge>
                           </div>
                         </div>
 
                         {/* Details: Email, Location, Slots */}
-                        <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3">
-                          <div className="flex items-center gap-2">
+                        <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
                             <span className="font-mono truncate">{member.email}</span>
                           </div>
 
                           {member.appointmentLocation && (
-                            <div className="flex items-center gap-2 text-primary font-medium">
+                            <div className="flex items-center gap-2 text-primary font-medium min-w-0">
                               <MapPin className="h-3.5 w-3.5 shrink-0" />
                               <span className="truncate">{member.appointmentLocation}</span>
                             </div>
                           )}
 
-                          <div className="flex items-center gap-2 pt-0.5">
+                          <div className="flex items-center gap-2 pt-0.5 min-w-0">
                             <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <span>
+                            <span className="truncate">
                               {Array.isArray(member.officeHourSlots) && member.officeHourSlots.length > 0
                                 ? isArabic
                                   ? `${member.officeHourSlots.length} مواعيد حجز متاحة`
@@ -832,11 +881,11 @@ export default function FacultyMembersManagement() {
                         </div>
 
                         {/* Card Footer Actions */}
-                        <div className="flex items-center justify-between gap-2 pt-2 border-t mt-auto">
+                        <div className="flex items-center justify-between gap-2 pt-2 border-t mt-auto min-w-0">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 text-xs font-semibold text-primary"
+                            className="h-8 text-xs font-semibold text-primary truncate"
                             asChild
                           >
                             <a href={`/about/directory/${member.id}`} target="_blank" rel="noopener noreferrer">
@@ -846,7 +895,7 @@ export default function FacultyMembersManagement() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs font-semibold gap-1.5"
+                            className="h-8 text-xs font-semibold gap-1.5 shrink-0"
                             onClick={() => handleOpenEdit(member)}
                           >
                             <Edit className="h-3.5 w-3.5" />
@@ -904,10 +953,10 @@ export default function FacultyMembersManagement() {
                 <TabsContent value="basic" className="m-0 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="nameAr">{isArabic ? "الاسم الكامل (بالعربية) *" : "Full Name (Arabic) *"}</Label>
+                      <Label htmlFor="nameAr">{isArabic ? "الاسم الكامل بالعربية" : "Full Name in Arabic"}</Label>
                       <Input
                         id="nameAr"
-                        placeholder="مثال: د. أحمد المنصور"
+                        placeholder={isArabic ? "مثال: د. أحمد المنصور" : "e.g. Dr. Ahmed Al-Mansour"}
                         value={formData.nameAr}
                         onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
                         required
@@ -915,22 +964,23 @@ export default function FacultyMembersManagement() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="nameEn">{isArabic ? "الاسم الكامل (بالإنكليزية)" : "Full Name (English)"}</Label>
+                      <Label htmlFor="nameEn">{isArabic ? "الاسم الكامل بالإنجليزية" : "Full Name in English"}</Label>
                       <Input
                         id="nameEn"
-                        placeholder="e.g. Dr. Ahmed Al-Mansour"
+                        placeholder={isArabic ? "مثال: د. أحمد المنصور" : "e.g. Dr. Ahmed Al-Mansour"}
                         value={formData.nameEn}
                         onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="titleAr">{isArabic ? "الرتبة العلمية (عربي) *" : "Academic Title (AR) *"}</Label>
+                      <Label htmlFor="titleAr">{isArabic ? "الرتبة العلمية بالعربية" : "Academic Title in Arabic"}</Label>
                       <Input
                         id="titleAr"
-                        placeholder="مثال: أستاذ مساعد / أستاذ دكتور / مدرس"
+                        placeholder={isArabic ? "مثال: أستاذ دكتور / أستاذ مساعد" : "e.g. Professor / Associate Professor"}
                         value={formData.titleAr}
                         onChange={(e) => setFormData({ ...formData, titleAr: e.target.value })}
                         required
@@ -938,29 +988,30 @@ export default function FacultyMembersManagement() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="titleEn">{isArabic ? "الرتبة العلمية (إنكليزي)" : "Academic Title (EN)"}</Label>
+                      <Label htmlFor="titleEn">{isArabic ? "الرتبة العلمية بالإنجليزية" : "Academic Title in English"}</Label>
                       <Input
                         id="titleEn"
-                        placeholder="e.g. Associate Professor"
+                        placeholder={isArabic ? "مثال: أستاذ مساعد" : "e.g. Associate Professor"}
                         value={formData.titleEn}
                         onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{isArabic ? "الكلية التابع لها" : "Assigned Faculty"}</Label>
+                      <Label>{isArabic ? "الكلية" : "Faculty"}</Label>
                       <Select
                         value={formData.facultyId || "none"}
                         onValueChange={(val) => handleFacultyChangeInForm(val === "none" ? "" : val)}
                       >
                         <SelectTrigger className="bg-background">
-                          <SelectValue placeholder={isArabic ? "اختر الكلية (اختياري)" : "Select Faculty (Optional)"} />
+                          <SelectValue placeholder={isArabic ? "اختر الكلية" : "Select Faculty"} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">
-                            {isArabic ? "-- بدون كلية حالياً (مدرس غير مسند) --" : "-- No Faculty (Unassigned) --"}
+                            {isArabic ? "غير مسند لكلية" : "Unassigned to Faculty"}
                           </SelectItem>
                           {displayFaculties.map((f) => (
                             <SelectItem key={f.id} value={f.id.toString()}>
@@ -972,7 +1023,7 @@ export default function FacultyMembersManagement() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">{isArabic ? "البريد الإلكتروني *" : "Email Address *"}</Label>
+                      <Label htmlFor="email">{isArabic ? "البريد الإلكتروني" : "Email Address"}</Label>
                       <Input
                         id="email"
                         type="email"
@@ -1011,11 +1062,11 @@ export default function FacultyMembersManagement() {
                         onValueChange={(val) => handleDepartmentChangeInForm(val === "none" ? "" : val)}
                       >
                         <SelectTrigger className="bg-background">
-                          <SelectValue placeholder={isArabic ? "اختر القسم الأكاديمي (اختياري)" : "Select Department (Optional)"} />
+                          <SelectValue placeholder={isArabic ? "اختر القسم الأكاديمي" : "Select Academic Department"} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">
-                            {isArabic ? "-- بدون قسم محدد (عضو عام بالكلية) --" : "-- No Specific Dept (General Staff) --"}
+                            {isArabic ? "كادر الكلية العام" : "General Faculty Staff"}
                           </SelectItem>
                           {availablePrograms.map((p) => (
                             <SelectItem key={p.id} value={p.id.toString()}>
@@ -1029,20 +1080,20 @@ export default function FacultyMembersManagement() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="officeHours">{isArabic ? "الساعات المكتبية العامّة" : "General Office Hours"}</Label>
+                      <Label htmlFor="officeHours">{isArabic ? "الساعات المكتبية العامة" : "General Office Hours"}</Label>
                       <Input
                         id="officeHours"
-                        placeholder="Sun, Tue 10:00 AM - 12:00 PM"
+                        placeholder={isArabic ? "الأحد، الثلاثاء 10:00 ص - 12:00 م" : "Sun, Tue 10:00 AM - 12:00 PM"}
                         value={formData.officeHours}
                         onChange={(e) => setFormData({ ...formData, officeHours: e.target.value })}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="locationAr">{isArabic ? "الموقع / المكتب" : "Office Location"}</Label>
+                      <Label htmlFor="locationAr">{isArabic ? "موقع المكتب" : "Office Location"}</Label>
                       <Input
                         id="locationAr"
-                        placeholder="حرم معرة صيدنايا - مبنى الإدارة"
+                        placeholder={isArabic ? "حرم معرة صيدنايا - مبنى الإدارة" : "Maarat Saidnaya Campus - Admin Building"}
                         value={formData.locationAr}
                         onChange={(e) => setFormData({ ...formData, locationAr: e.target.value })}
                       />
@@ -1051,9 +1102,12 @@ export default function FacultyMembersManagement() {
 
                   {/* Image Upload Box */}
                   <div className="space-y-3 pt-2">
-                    <Label className="font-bold flex items-center justify-between">
-                      <span>{isArabic ? "الصورة الشخصية (تحميل ملف بحد أقصى 1 ميغابايت)" : "Profile Picture (Upload file max 1MB)"}</span>
-                    </Label>
+                    <div>
+                      <Label className="font-bold">{isArabic ? "الصورة الشخصية" : "Profile Picture"}</Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {isArabic ? "الحد الأقصى المسموح به للملف هو 1 ميغابايت" : "Maximum allowed file size is 1MB"}
+                      </p>
+                    </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 p-4 border rounded-xl bg-muted/10">
                       <Avatar className="h-20 w-20 border-2 border-primary shadow-sm shrink-0">
@@ -1065,7 +1119,7 @@ export default function FacultyMembersManagement() {
                         <div className="flex items-center gap-3">
                           <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow">
                             <Upload className="h-4 w-4" />
-                            {isArabic ? "تحميل صورة جديدة من الجهاز..." : "Upload Image from Device..."}
+                            {isArabic ? "تحميل صورة جديدة من الجهاز" : "Upload Image from Device"}
                             <input
                               type="file"
                               accept="image/*"
@@ -1085,7 +1139,7 @@ export default function FacultyMembersManagement() {
                       onCheckedChange={(checked) => setFormData({ ...formData, isHead: checked })}
                     />
                     <Label htmlFor="isHead" className="cursor-pointer font-bold">
-                      {isArabic ? "تعيين كـ عميد كلية / رئيس قسم" : "Designate as Dean / Department Head"}
+                      {isArabic ? "تعيين كـ عميد كلية أو رئيس قسم" : "Designate as Dean or Department Head"}
                     </Label>
                   </div>
                 </TabsContent>
@@ -1093,10 +1147,10 @@ export default function FacultyMembersManagement() {
                 {/* Tab 2: Bio & Education */}
                 <TabsContent value="bio" className="m-0 space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="bioAr" className="font-bold">{isArabic ? "السيرة الذاتية والشرح (بالعربية)" : "Biography (Arabic)"}</Label>
+                    <Label htmlFor="bioAr" className="font-bold">{isArabic ? "السيرة الذاتية بالعربية" : "Biography in Arabic"}</Label>
                     <Textarea
                       id="bioAr"
-                      placeholder="نبذة شاملة عن خبرات الأستاذ ومجالات عمله الأكاديمي..."
+                      placeholder={isArabic ? "نبذة شاملة عن خبرات الأستاذ ومجالات عمله الأكاديمي..." : "Comprehensive summary of professor's academic expertise and background..."}
                       value={formData.bioAr}
                       onChange={(e) => setFormData({ ...formData, bioAr: e.target.value })}
                       rows={4}
@@ -1131,20 +1185,20 @@ export default function FacultyMembersManagement() {
                           </button>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pe-8">
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "المؤهل / الشهادة" : "Degree Title"}</Label>
+                              <Label className="text-xs">{isArabic ? "المؤهل العلمي" : "Degree Title"}</Label>
                               <Input
                                 value={edu.degreeAr}
                                 onChange={(e) => handleUpdateEducation(idx, "degreeAr", e.target.value)}
-                                placeholder="دكتوراه في الذكاء الاصطناعي"
+                                placeholder={isArabic ? "دكتوراه في هندسة البرمجيات" : "PhD in Software Engineering"}
                                 className="bg-background"
                               />
                             </div>
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "الجامعة / المؤسسة" : "University / Institution"}</Label>
+                              <Label className="text-xs">{isArabic ? "الجامعة أو المؤسسة" : "University or Institution"}</Label>
                               <Input
                                 value={edu.schoolAr}
                                 onChange={(e) => handleUpdateEducation(idx, "schoolAr", e.target.value)}
-                                placeholder="جامعة دمشق"
+                                placeholder={isArabic ? "جامعة دمشق" : "Damascus University"}
                                 className="bg-background"
                               />
                             </div>
@@ -1167,10 +1221,10 @@ export default function FacultyMembersManagement() {
                 {/* Tab 3: Research & Publications */}
                 <TabsContent value="research" className="m-0 space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="researchAr" className="font-bold">{isArabic ? "الاهتمامات والتوجيهات البحثية" : "Research Interests & Focus"}</Label>
+                    <Label htmlFor="researchAr" className="font-bold">{isArabic ? "الاهتمامات والتوجهات البحثية" : "Research Interests & Focus"}</Label>
                     <Textarea
                       id="researchAr"
-                      placeholder="الأبحاث والحلول الحديثة، مجالات الاهتمام العلمي..."
+                      placeholder={isArabic ? "الأبحاث والحلول الحديثة، مجالات الاهتمام العلمي..." : "Modern research directions, areas of scientific interest..."}
                       value={formData.researchAr}
                       onChange={(e) => setFormData({ ...formData, researchAr: e.target.value })}
                       rows={3}
@@ -1185,7 +1239,7 @@ export default function FacultyMembersManagement() {
                       </div>
                       <Button type="button" variant="outline" size="sm" onClick={handleAddPublication} className="font-bold gap-1 text-xs">
                         <Plus className="h-4 w-4" />
-                        {isArabic ? "إضافة بحث / منشور" : "Add Publication"}
+                        {isArabic ? "إضافة بحث أو منشور" : "Add Publication"}
                       </Button>
                     </div>
 
@@ -1205,25 +1259,25 @@ export default function FacultyMembersManagement() {
                           </button>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pe-8">
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "عنوان الورقة العلمية / البحث" : "Publication Title"}</Label>
+                              <Label className="text-xs">{isArabic ? "عنوان الورقة العلمية أو البحث" : "Publication Title"}</Label>
                               <Input
                                 value={pub.titleAr}
                                 onChange={(e) => handleUpdatePublication(idx, "titleAr", e.target.value)}
-                                placeholder="دراسة تحليلية والتطبيقية..."
+                                placeholder={isArabic ? "دراسة تحليلية وتطبيقية..." : "An Analytical and Applied Study..."}
                                 className="bg-background"
                               />
                             </div>
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "اسم المجلة / الناشر" : "Journal Name"}</Label>
+                              <Label className="text-xs">{isArabic ? "اسم المجلة أو جهة النشر" : "Journal or Publisher Name"}</Label>
                               <Input
                                 value={pub.journalAr}
                                 onChange={(e) => handleUpdatePublication(idx, "journalAr", e.target.value)}
-                                placeholder="مجلة جامعة أنطاكية"
+                                placeholder={isArabic ? "مجلة جامعة أنطاكية للبحوث" : "Antioch University Research Journal"}
                                 className="bg-background"
                               />
                             </div>
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "سنة النشر" : "Year"}</Label>
+                              <Label className="text-xs">{isArabic ? "سنة النشر" : "Publication Year"}</Label>
                               <Input
                                 value={pub.year}
                                 onChange={(e) => handleUpdatePublication(idx, "year", e.target.value)}
@@ -1259,7 +1313,7 @@ export default function FacultyMembersManagement() {
                     <div className="p-4 rounded-xl border bg-primary/5 border-primary/20 space-y-2">
                       <Label htmlFor="addAppointmentLocation" className="text-xs font-bold flex items-center gap-1.5 text-foreground">
                         <MapPin className="h-4 w-4 text-primary" />
-                        {isArabic ? "اسم ورقم القاعة / مكتب المواعيد" : "Appointment Hall / Room & Location"}
+                        {isArabic ? "قاعة أو مكتب المواعيد" : "Appointment Room or Hall Location"}
                       </Label>
                       <Input
                         id="addAppointmentLocation"
@@ -1294,7 +1348,7 @@ export default function FacultyMembersManagement() {
                                 <Input
                                   value={slot.dayAr}
                                   onChange={(e) => handleUpdateOfficeSlot(idx, "dayAr", e.target.value)}
-                                  placeholder="الأحد / الثلاثاء"
+                                  placeholder={isArabic ? "الأحد" : "Sunday"}
                                   className="bg-background h-8 text-xs"
                                 />
                               </div>
@@ -1322,7 +1376,7 @@ export default function FacultyMembersManagement() {
                 </Button>
                 <Button type="submit" disabled={createMemberMutation.isPending} className="font-bold">
                   {createMemberMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isArabic ? "حفظ وإضافة الأستاذ" : "Save & Add Faculty"}
+                  {isArabic ? "إضافة عضو هيئة التدريس" : "Add Faculty Member"}
                 </Button>
               </DialogFooter>
             </Tabs>
@@ -1371,9 +1425,10 @@ export default function FacultyMembersManagement() {
                 <TabsContent value="basic" className="m-0 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-nameAr">{isArabic ? "الاسم الكامل (بالعربية) *" : "Full Name (Arabic) *"}</Label>
+                      <Label htmlFor="edit-nameAr">{isArabic ? "الاسم الكامل بالعربية" : "Full Name in Arabic"}</Label>
                       <Input
                         id="edit-nameAr"
+                        placeholder={isArabic ? "مثال: د. أحمد المنصور" : "e.g. Dr. Ahmed Al-Mansour"}
                         value={formData.nameAr}
                         onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
                         required
@@ -1381,20 +1436,23 @@ export default function FacultyMembersManagement() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="edit-nameEn">{isArabic ? "الاسم الكامل (بالإنكليزية)" : "Full Name (English)"}</Label>
+                      <Label htmlFor="edit-nameEn">{isArabic ? "الاسم الكامل بالإنجليزية" : "Full Name in English"}</Label>
                       <Input
                         id="edit-nameEn"
+                        placeholder={isArabic ? "مثال: د. أحمد المنصور" : "e.g. Dr. Ahmed Al-Mansour"}
                         value={formData.nameEn}
                         onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-titleAr">{isArabic ? "الرتبة العلمية (عربي) *" : "Academic Title (AR) *"}</Label>
+                      <Label htmlFor="edit-titleAr">{isArabic ? "الرتبة العلمية بالعربية" : "Academic Title in Arabic"}</Label>
                       <Input
                         id="edit-titleAr"
+                        placeholder={isArabic ? "مثال: أستاذ دكتور / أستاذ مساعد" : "e.g. Professor / Associate Professor"}
                         value={formData.titleAr}
                         onChange={(e) => setFormData({ ...formData, titleAr: e.target.value })}
                         required
@@ -1402,28 +1460,30 @@ export default function FacultyMembersManagement() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="edit-titleEn">{isArabic ? "الرتبة العلمية (إنكليزي)" : "Academic Title (EN)"}</Label>
+                      <Label htmlFor="edit-titleEn">{isArabic ? "الرتبة العلمية بالإنجليزية" : "Academic Title in English"}</Label>
                       <Input
                         id="edit-titleEn"
+                        placeholder={isArabic ? "مثال: أستاذ مساعد" : "e.g. Associate Professor"}
                         value={formData.titleEn}
                         onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })}
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{isArabic ? "الكلية التابع لها" : "Assigned Faculty"}</Label>
+                      <Label>{isArabic ? "الكلية" : "Faculty"}</Label>
                       <Select
                         value={formData.facultyId || "none"}
                         onValueChange={(val) => handleFacultyChangeInForm(val === "none" ? "" : val)}
                       >
                         <SelectTrigger className="bg-background">
-                          <SelectValue placeholder={isArabic ? "اختر الكلية (اختياري)" : "Select Faculty (Optional)"} />
+                          <SelectValue placeholder={isArabic ? "اختر الكلية" : "Select Faculty"} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">
-                            {isArabic ? "-- بدون كلية حالياً (مدرس غير مسند) --" : "-- No Faculty (Unassigned) --"}
+                            {isArabic ? "غير مسند لكلية" : "Unassigned to Faculty"}
                           </SelectItem>
                           {displayFaculties.map((f) => (
                             <SelectItem key={f.id} value={f.id.toString()}>
@@ -1435,10 +1495,11 @@ export default function FacultyMembersManagement() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="edit-email">{isArabic ? "البريد الإلكتروني *" : "Email Address *"}</Label>
+                      <Label htmlFor="edit-email">{isArabic ? "البريد الإلكتروني" : "Email Address"}</Label>
                       <Input
                         id="edit-email"
                         type="email"
+                        placeholder="name@asu.edu.sy"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
@@ -1473,11 +1534,11 @@ export default function FacultyMembersManagement() {
                         onValueChange={(val) => handleDepartmentChangeInForm(val === "none" ? "" : val)}
                       >
                         <SelectTrigger className="bg-background">
-                          <SelectValue placeholder={isArabic ? "اختر القسم الأكاديمي (اختياري)" : "Select Department (Optional)"} />
+                          <SelectValue placeholder={isArabic ? "اختر القسم الأكاديمي" : "Select Academic Department"} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">
-                            {isArabic ? "-- بدون قسم محدد (عضو عام بالكلية) --" : "-- No Specific Dept (General Staff) --"}
+                            {isArabic ? "كادر الكلية العام" : "General Faculty Staff"}
                           </SelectItem>
                           {availablePrograms.map((p) => (
                             <SelectItem key={p.id} value={p.id.toString()}>
@@ -1494,15 +1555,17 @@ export default function FacultyMembersManagement() {
                       <Label htmlFor="edit-officeHours">{isArabic ? "الساعات المكتبية العامة" : "General Office Hours"}</Label>
                       <Input
                         id="edit-officeHours"
+                        placeholder={isArabic ? "الأحد، الثلاثاء 10:00 ص - 12:00 م" : "Sun, Tue 10:00 AM - 12:00 PM"}
                         value={formData.officeHours}
                         onChange={(e) => setFormData({ ...formData, officeHours: e.target.value })}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="edit-locationAr">{isArabic ? "الموقع / المكتب" : "Office Location"}</Label>
+                      <Label htmlFor="edit-locationAr">{isArabic ? "موقع المكتب" : "Office Location"}</Label>
                       <Input
                         id="edit-locationAr"
+                        placeholder={isArabic ? "حرم معرة صيدنايا - مبنى الإدارة" : "Maarat Saidnaya Campus - Admin Building"}
                         value={formData.locationAr}
                         onChange={(e) => setFormData({ ...formData, locationAr: e.target.value })}
                       />
@@ -1511,9 +1574,12 @@ export default function FacultyMembersManagement() {
 
                   {/* Image Upload Box */}
                   <div className="space-y-3 pt-2">
-                    <Label className="font-bold flex items-center justify-between">
-                      <span>{isArabic ? "الصورة الشخصية (تحميل ملف بحد أقصى 1 ميغابايت)" : "Profile Picture (Upload file max 1MB)"}</span>
-                    </Label>
+                    <div>
+                      <Label className="font-bold">{isArabic ? "الصورة الشخصية" : "Profile Picture"}</Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {isArabic ? "الحد الأقصى المسموح به للملف هو 1 ميغابايت" : "Maximum allowed file size is 1MB"}
+                      </p>
+                    </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 p-4 border rounded-xl bg-muted/10">
                       <Avatar className="h-20 w-20 border-2 border-primary shadow-sm shrink-0">
@@ -1525,7 +1591,7 @@ export default function FacultyMembersManagement() {
                         <div className="flex items-center gap-3">
                           <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow">
                             <Upload className="h-4 w-4" />
-                            {isArabic ? "تغيير الصورة من الجهاز..." : "Upload New Image..."}
+                            {isArabic ? "تغيير الصورة من الجهاز" : "Upload New Image"}
                             <input
                               type="file"
                               accept="image/*"
@@ -1545,7 +1611,7 @@ export default function FacultyMembersManagement() {
                       onCheckedChange={(checked) => setFormData({ ...formData, isHead: checked })}
                     />
                     <Label htmlFor="edit-isHead" className="cursor-pointer font-bold">
-                      {isArabic ? "عميد كلية / رئيس قسم" : "Dean / Department Head"}
+                      {isArabic ? "تعيين كـ عميد كلية أو رئيس قسم" : "Designate as Dean or Department Head"}
                     </Label>
                   </div>
                 </TabsContent>
@@ -1553,9 +1619,10 @@ export default function FacultyMembersManagement() {
                 {/* Tab 2: Bio & Education */}
                 <TabsContent value="bio" className="m-0 space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-bioAr" className="font-bold">{isArabic ? "السيرة الذاتية والشرح (بالعربية)" : "Biography (Arabic)"}</Label>
+                    <Label htmlFor="edit-bioAr" className="font-bold">{isArabic ? "السيرة الذاتية بالعربية" : "Biography in Arabic"}</Label>
                     <Textarea
                       id="edit-bioAr"
+                      placeholder={isArabic ? "نبذة شاملة عن خبرات الأستاذ ومجالات عمله الأكاديمي..." : "Comprehensive summary of professor's academic expertise and background..."}
                       value={formData.bioAr}
                       onChange={(e) => setFormData({ ...formData, bioAr: e.target.value })}
                       rows={4}
@@ -1590,18 +1657,20 @@ export default function FacultyMembersManagement() {
                           </button>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pe-8">
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "المؤهل / الشهادة" : "Degree Title"}</Label>
+                              <Label className="text-xs">{isArabic ? "المؤهل العلمي" : "Degree Title"}</Label>
                               <Input
                                 value={edu.degreeAr}
                                 onChange={(e) => handleUpdateEducation(idx, "degreeAr", e.target.value)}
+                                placeholder={isArabic ? "دكتوراه في هندسة البرمجيات" : "PhD in Software Engineering"}
                                 className="bg-background"
                               />
                             </div>
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "الجامعة / المؤسسة" : "University / Institution"}</Label>
+                              <Label className="text-xs">{isArabic ? "الجامعة أو المؤسسة" : "University or Institution"}</Label>
                               <Input
                                 value={edu.schoolAr}
                                 onChange={(e) => handleUpdateEducation(idx, "schoolAr", e.target.value)}
+                                placeholder={isArabic ? "جامعة دمشق" : "Damascus University"}
                                 className="bg-background"
                               />
                             </div>
@@ -1610,6 +1679,7 @@ export default function FacultyMembersManagement() {
                               <Input
                                 value={edu.year}
                                 onChange={(e) => handleUpdateEducation(idx, "year", e.target.value)}
+                                placeholder="2016"
                                 className="bg-background"
                               />
                             </div>
@@ -1623,9 +1693,10 @@ export default function FacultyMembersManagement() {
                 {/* Tab 3: Research & Publications */}
                 <TabsContent value="research" className="m-0 space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-researchAr" className="font-bold">{isArabic ? "الاهتمامات والتوجيهات البحثية" : "Research Interests & Focus"}</Label>
+                    <Label htmlFor="edit-researchAr" className="font-bold">{isArabic ? "الاهتمامات والتوجهات البحثية" : "Research Interests & Focus"}</Label>
                     <Textarea
                       id="edit-researchAr"
+                      placeholder={isArabic ? "الأبحاث والحلول الحديثة، مجالات الاهتمام العلمي..." : "Modern research directions, areas of scientific interest..."}
                       value={formData.researchAr}
                       onChange={(e) => setFormData({ ...formData, researchAr: e.target.value })}
                       rows={3}
@@ -1640,7 +1711,7 @@ export default function FacultyMembersManagement() {
                       </div>
                       <Button type="button" variant="outline" size="sm" onClick={handleAddPublication} className="font-bold gap-1 text-xs">
                         <Plus className="h-4 w-4" />
-                        {isArabic ? "إضافة بحث / منشور" : "Add Publication"}
+                        {isArabic ? "إضافة بحث أو منشور" : "Add Publication"}
                       </Button>
                     </div>
 
@@ -1660,26 +1731,29 @@ export default function FacultyMembersManagement() {
                           </button>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pe-8">
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "عنوان الورقة العلمية / البحث" : "Publication Title"}</Label>
+                              <Label className="text-xs">{isArabic ? "عنوان الورقة العلمية أو البحث" : "Publication Title"}</Label>
                               <Input
                                 value={pub.titleAr}
                                 onChange={(e) => handleUpdatePublication(idx, "titleAr", e.target.value)}
+                                placeholder={isArabic ? "دراسة تحليلية وتطبيقية..." : "An Analytical and Applied Study..."}
                                 className="bg-background"
                               />
                             </div>
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "اسم المجلة / الناشر" : "Journal Name"}</Label>
+                              <Label className="text-xs">{isArabic ? "اسم المجلة أو جهة النشر" : "Journal or Publisher Name"}</Label>
                               <Input
                                 value={pub.journalAr}
                                 onChange={(e) => handleUpdatePublication(idx, "journalAr", e.target.value)}
+                                placeholder={isArabic ? "مجلة جامعة أنطاكية للبحوث" : "Antioch University Research Journal"}
                                 className="bg-background"
                               />
                             </div>
                             <div className="space-y-1 md:col-span-1">
-                              <Label className="text-xs">{isArabic ? "سنة النشر" : "Year"}</Label>
+                              <Label className="text-xs">{isArabic ? "سنة النشر" : "Publication Year"}</Label>
                               <Input
                                 value={pub.year}
                                 onChange={(e) => handleUpdatePublication(idx, "year", e.target.value)}
+                                placeholder="2024"
                                 className="bg-background"
                               />
                             </div>
@@ -1711,7 +1785,7 @@ export default function FacultyMembersManagement() {
                     <div className="p-4 rounded-xl border bg-primary/5 border-primary/20 space-y-2">
                       <Label htmlFor="editAppointmentLocation" className="text-xs font-bold flex items-center gap-1.5 text-foreground">
                         <MapPin className="h-4 w-4 text-primary" />
-                        {isArabic ? "اسم ورقم القاعة / مكتب المواعيد" : "Appointment Hall / Room & Location"}
+                        {isArabic ? "قاعة أو مكتب المواعيد" : "Appointment Room or Hall Location"}
                       </Label>
                       <Input
                         id="editAppointmentLocation"
@@ -1746,7 +1820,7 @@ export default function FacultyMembersManagement() {
                                 <Input
                                   value={slot.dayAr}
                                   onChange={(e) => handleUpdateOfficeSlot(idx, "dayAr", e.target.value)}
-                                  placeholder="الأحد / الثلاثاء"
+                                  placeholder={isArabic ? "الأحد" : "Sunday"}
                                   className="bg-background h-8 text-xs"
                                 />
                               </div>
@@ -1774,7 +1848,7 @@ export default function FacultyMembersManagement() {
                 </Button>
                 <Button type="submit" disabled={updateMemberMutation.isPending} className="font-bold">
                   {updateMemberMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isArabic ? "حفظ التعديلات الشاملة" : "Save Full Profile"}
+                  {isArabic ? "حفظ التغييرات" : "Save Changes"}
                 </Button>
               </DialogFooter>
             </Tabs>
@@ -1787,12 +1861,12 @@ export default function FacultyMembersManagement() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-destructive">
-              {isArabic ? "إزاحة عضو من الكادر" : "Remove Faculty Member"}
+              {isArabic ? "حذف عضو هيئة التدريس" : "Delete Faculty Member"}
             </DialogTitle>
             <DialogDescription className="pt-2">
               {isArabic
-                ? `هل أنت بالتأكيد من إزالة ${selectedMember?.nameAr || "هذا العضو"} من قاعدة البيانات؟`
-                : `Are you sure you want to remove ${selectedMember?.nameEn || "this member"}?`}
+                ? `هل أنت متأكد من حذف ${selectedMember?.nameAr || "هذا العضو"} من قاعدة البيانات؟`
+                : `Are you sure you want to delete ${selectedMember?.nameEn || selectedMember?.nameAr || "this member"}?`}
             </DialogDescription>
           </DialogHeader>
 
@@ -1808,7 +1882,7 @@ export default function FacultyMembersManagement() {
             >
               {deleteMemberMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               <Trash2 className="h-4 w-4" />
-              {isArabic ? "تأكيد الإزاحة" : "Confirm Delete"}
+              {isArabic ? "تأكيد الحذف" : "Confirm Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

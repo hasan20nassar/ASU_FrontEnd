@@ -167,23 +167,35 @@ export default function AdminsManagementPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nameAr.trim() || !formData.email.trim() || !formData.password.trim()) {
-      toast.error(
-        isArabic
-          ? "يرجى ملء كافة الحقول الأساسية (الاسم بالعربية، البريد، كلمة المرور)"
-          : "Please fill required fields (Arabic Name, Email, Password)"
-      );
+    if (!formData.nameAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الاسم بالعربية" : "Please enter the Arabic name");
+      return;
+    }
+    if (!formData.email?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال البريد الإلكتروني" : "Please enter the email address");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      toast.error(isArabic ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address format");
+      return;
+    }
+    if (!formData.password?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال كلمة المرور" : "Please enter the password");
+      return;
+    }
+    if (formData.password.trim().length < 8) {
+      toast.error(isArabic ? "يجب ألا تقل كلمة المرور عن 8 أحرف" : "Password must be at least 8 characters");
       return;
     }
 
     try {
       await createUserMutation.mutateAsync({
-        nameAr: formData.nameAr,
-        nameEn: formData.nameEn,
-        email: formData.email,
+        nameAr: formData.nameAr.trim(),
+        nameEn: formData.nameEn.trim(),
+        email: formData.email.trim(),
         password: formData.password,
-        phone: formData.phone,
-        bio: formData.bio,
+        phone: formData.phone.trim(),
+        bio: formData.bio.trim(),
         role: "admin",
         avatar: "/user.png",
         isActive: formData.isActive,
@@ -205,12 +217,21 @@ export default function AdminsManagementPage() {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedAdmin || !formData.nameAr.trim() || !formData.email.trim()) {
-      toast.error(
-        isArabic
-          ? "يرجى ملء الحقول الأساسية"
-          : "Please fill required fields"
-      );
+    if (!selectedAdmin) return;
+    if (!formData.nameAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الاسم بالعربية" : "Please enter the Arabic name");
+      return;
+    }
+    if (!formData.email?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال البريد الإلكتروني" : "Please enter the email address");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      toast.error(isArabic ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address format");
+      return;
+    }
+    if (formData.password && formData.password.trim().length < 8) {
+      toast.error(isArabic ? "يجب ألا تقل كلمة المرور عن 8 أحرف" : "Password must be at least 8 characters");
       return;
     }
 
@@ -218,12 +239,12 @@ export default function AdminsManagementPage() {
       await updateUserMutation.mutateAsync({
         id: selectedAdmin.id,
         data: {
-          nameAr: formData.nameAr,
-          nameEn: formData.nameEn,
-          email: formData.email,
-          password: formData.password || undefined,
-          phone: formData.phone,
-          bio: formData.bio || undefined,
+          nameAr: formData.nameAr.trim(),
+          nameEn: formData.nameEn.trim(),
+          email: formData.email.trim(),
+          password: formData.password ? formData.password : undefined,
+          phone: formData.phone.trim(),
+          bio: formData.bio.trim() || undefined,
           role: "admin",
           isActive: formData.isActive,
         },
@@ -389,7 +410,6 @@ export default function AdminsManagementPage() {
                   <TableHead>{isArabic ? "الملاحظات" : "Notes"}</TableHead>
                   <TableHead>{isArabic ? "الحالة" : "Status"}</TableHead>
                   <TableHead className="text-end">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
-                  <TableHead className="text-center">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -439,11 +459,11 @@ export default function AdminsManagementPage() {
                       </TableCell>
 
                       <TableCell className="text-sm font-mono text-muted-foreground">
-                        {admin.phone || "-"}
+                        {admin.phone || "N/A"}
                       </TableCell>
 
                       <TableCell className="text-sm max-w-[220px] truncate text-muted-foreground">
-                        {admin.bio || "-"}
+                        {admin.bio || "N/A"}
                       </TableCell>
 
                       <TableCell>
@@ -512,32 +532,32 @@ export default function AdminsManagementPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredAdmins.map((admin) => (
-                  <Card key={admin.id} className="border border-border/80 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
-                    <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                  <Card key={admin.id} className="border border-border/80 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group min-w-0 w-full">
+                    <CardContent className="p-5 flex flex-col justify-between h-full space-y-4 min-w-0">
                       {/* Top Header with Avatar & Badge */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-12 w-12 border-2 border-red-500/20 shadow-sm">
+                      <div className="flex items-start justify-between gap-3 min-w-0">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <Avatar className="h-12 w-12 border-2 border-red-500/20 shadow-sm shrink-0">
                             <AvatarImage src={admin.avatar} />
                             <AvatarFallback className="bg-red-500/10 text-red-600 font-bold text-sm">
                               {admin.nameAr.slice(0, 2)}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <h3 className="font-bold text-base text-foreground group-hover:text-red-600 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-bold text-base text-foreground group-hover:text-red-600 transition-colors truncate">
                               {admin.nameAr}
                             </h3>
                             {admin.nameEn && (
-                              <p className="text-xs text-muted-foreground">{admin.nameEn}</p>
+                              <p className="text-xs text-muted-foreground truncate">{admin.nameEn}</p>
                             )}
                           </div>
                         </div>
 
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 -me-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 -me-2 shrink-0">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -563,32 +583,32 @@ export default function AdminsManagementPage() {
                       </div>
 
                       {/* Role & Status Badges */}
-                      <div className="flex flex-wrap items-center gap-2 pt-1">
-                        <Badge className="bg-red-500/15 text-red-600 border border-red-500/30 font-bold gap-1 text-xs">
+                      <div className="flex flex-wrap items-center gap-2 pt-1 min-w-0">
+                        <Badge className="bg-red-500/15 text-red-600 border border-red-500/30 font-bold gap-1 text-xs shrink-0">
                           <ShieldCheck className="h-3 w-3" />
                           {isArabic ? "مدير النظام" : "System Admin"}
                         </Badge>
                         {admin.isActive ? (
-                          <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-xs">
+                          <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-xs shrink-0">
                             {isArabic ? "نشط" : "Active"}
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-muted-foreground text-xs">
+                          <Badge variant="outline" className="text-muted-foreground text-xs shrink-0">
                             {isArabic ? "معطل" : "Inactive"}
                           </Badge>
                         )}
                       </div>
 
                       {/* Contact & Bio Info */}
-                      <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3">
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
                           <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
                           <span className="font-mono truncate">{admin.email}</span>
                         </div>
                         {admin.phone && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
                             <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <span className="font-mono dir-ltr">{admin.phone}</span>
+                            <span className="font-mono dir-ltr truncate">{admin.phone}</span>
                           </div>
                         )}
                         {admin.bio && (
@@ -599,11 +619,11 @@ export default function AdminsManagementPage() {
                       </div>
 
                       {/* Card Footer Actions */}
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t mt-auto">
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t mt-auto min-w-0">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 text-xs font-semibold gap-1.5"
+                          className="h-8 text-xs font-semibold gap-1.5 shrink-0"
                           onClick={() => handleOpenEdit(admin)}
                         >
                           <Edit className="h-3.5 w-3.5" />
@@ -638,7 +658,7 @@ export default function AdminsManagementPage() {
             <DialogBody>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الاسم بالعربية *" : "Name (Arabic) *"}</Label>
+                  <Label>{isArabic ? "الاسم بالعربية" : "Arabic Name"}</Label>
                   <Input
                     required
                     placeholder={isArabic ? "م. خالد السالم" : "Khaled Al-Salem"}
@@ -648,7 +668,7 @@ export default function AdminsManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الاسم بالإنجليزية" : "Name (English)"}</Label>
+                  <Label>{isArabic ? "الاسم بالإنجليزية" : "English Name"}</Label>
                   <Input
                     placeholder="Khaled Al-Salem"
                     value={formData.nameEn}
@@ -659,7 +679,7 @@ export default function AdminsManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "البريد الإلكتروني *" : "Email Address *"}</Label>
+                  <Label>{isArabic ? "البريد الإلكتروني" : "Email Address"}</Label>
                   <Input
                     required
                     type="email"
@@ -670,7 +690,7 @@ export default function AdminsManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isArabic ? "كلمة المرور *" : "Password *"}</Label>
+                  <Label>{isArabic ? "كلمة المرور" : "Password"}</Label>
                   <Input
                     required
                     type="password"
@@ -678,6 +698,9 @@ export default function AdminsManagementPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isArabic ? "يجب ألا تقل عن 8 أحرف" : "Must be at least 8 characters"}
+                  </p>
                 </div>
               </div>
 
@@ -753,7 +776,7 @@ export default function AdminsManagementPage() {
             <DialogBody>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الاسم بالعربية *" : "Name (Arabic) *"}</Label>
+                  <Label>{isArabic ? "الاسم بالعربية" : "Arabic Name"}</Label>
                   <Input
                     required
                     value={formData.nameAr}
@@ -762,7 +785,7 @@ export default function AdminsManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الاسم بالإنجليزية" : "Name (English)"}</Label>
+                  <Label>{isArabic ? "الاسم بالإنجليزية" : "English Name"}</Label>
                   <Input
                     value={formData.nameEn}
                     onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
@@ -772,7 +795,7 @@ export default function AdminsManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "البريد الإلكتروني *" : "Email Address *"}</Label>
+                  <Label>{isArabic ? "البريد الإلكتروني" : "Email Address"}</Label>
                   <Input
                     required
                     type="email"
@@ -783,7 +806,7 @@ export default function AdminsManagementPage() {
 
                 <div className="space-y-2">
                   <Label>
-                    {isArabic ? "كلمة المرور (اتركها فارغة للإبقاء عليها)" : "New Password"}
+                    {isArabic ? "كلمة المرور الجديدة" : "New Password"}
                   </Label>
                   <Input
                     type="password"
@@ -791,6 +814,9 @@ export default function AdminsManagementPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isArabic ? "اتركها فارغة للإبقاء على كلمة المرور الحالية" : "Leave blank to keep current password"}
+                  </p>
                 </div>
               </div>
 
@@ -879,7 +905,7 @@ export default function AdminsManagementPage() {
               {deleteUserMutation.isPending && (
                 <Loader2 className="h-4 w-4 me-2 animate-spin" />
               )}
-              {isArabic ? "تأكيد الحذف" : "Delete Account"}
+              {isArabic ? "تأكيد الحذف" : "Confirm Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

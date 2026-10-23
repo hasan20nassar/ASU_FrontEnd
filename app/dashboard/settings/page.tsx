@@ -132,10 +132,16 @@ export default function AccountSettingsPage() {
   // Save profile info
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nameAr) {
-      toast.error(
-        isArabic ? "يرجى كتابة الاسم بالعربية" : "Please enter Arabic name"
-      );
+    if (!nameAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الاسم بالعربية" : "Please enter your Arabic name");
+      return;
+    }
+    if (!email?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال البريد الإلكتروني" : "Please enter your email address");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast.error(isArabic ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address format");
       return;
     }
 
@@ -145,23 +151,23 @@ export default function AccountSettingsPage() {
         await updateUserMutation.mutateAsync({
           id: userProfile.id,
           data: {
-            nameAr,
-            nameEn,
-            email,
-            phone,
+            nameAr: nameAr.trim(),
+            nameEn: nameEn.trim(),
+            email: email.trim(),
+            phone: phone.trim(),
             birthDate: birthDate || undefined,
-            bio: bio || undefined,
+            bio: bio.trim() || undefined,
             avatar,
           },
         });
       } else {
         await createUserMutation.mutateAsync({
-          nameAr: nameAr || user?.first_name || "مدير النظام",
-          nameEn: nameEn || user?.last_name || "",
-          email: email || user?.email || "",
-          phone,
+          nameAr: nameAr.trim() || user?.first_name || "مدير النظام",
+          nameEn: nameEn.trim() || user?.last_name || "",
+          email: email.trim() || user?.email || "",
+          phone: phone.trim(),
           birthDate: birthDate || undefined,
-          bio: bio || undefined,
+          bio: bio.trim() || undefined,
           avatar,
           role: getUserRole(user),
           isActive: true,
@@ -171,9 +177,9 @@ export default function AccountSettingsPage() {
       // Also update Django Auth User
       try {
         await AuthService.authUserPartialUpdate({
-          first_name: nameAr,
-          last_name: nameEn,
-          email: email,
+          first_name: nameAr.trim(),
+          last_name: nameEn.trim(),
+          email: email.trim(),
         });
       } catch (authErr) {
         console.warn("Auth user update notice:", authErr);
@@ -202,24 +208,26 @@ export default function AccountSettingsPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error(
-        isArabic
-          ? "يرجى تعبئة كافة الحقول المطلوبة بما في ذلك كلمة المرور الحالية"
-          : "Please fill in all required fields, including your current password"
-      );
+    if (!currentPassword?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال كلمة المرور الحالية" : "Please enter your current password");
       return;
     }
-
-    if (newPassword.length < 8) {
+    if (!newPassword?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال كلمة المرور الجديدة" : "Please enter the new password");
+      return;
+    }
+    if (newPassword.trim().length < 8) {
       toast.error(
         isArabic
-          ? "كلمة المرور الجديدة يجب أن لا تقل عن 8 أحرف"
+          ? "يجب ألا تقل كلمة المرور الجديدة عن 8 أحرف"
           : "New password must be at least 8 characters long"
       );
       return;
     }
-
+    if (!confirmPassword?.trim()) {
+      toast.error(isArabic ? "يرجى تأكيد كلمة المرور الجديدة" : "Please confirm your new password");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast.error(
         isArabic
@@ -293,7 +301,7 @@ export default function AccountSettingsPage() {
         <Badge variant="outline" className="w-fit text-sm py-1.5 px-3 border-primary/30 bg-primary/5 text-primary font-bold">
           <ShieldCheck className="h-4 w-4 me-1.5" />
           {userProfile?.role === "admin"
-            ? (isArabic ? "مدير النظام (Admin)" : "System Admin")
+            ? (isArabic ? "مدير النظام" : "System Admin")
             : userProfile?.role === "content_manager"
               ? (isArabic ? "مسؤول إدارة المحتوى" : "Content Manager")
               : userProfile?.role === "faculty"
@@ -401,20 +409,20 @@ export default function AccountSettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="nameAr">
-                        {isArabic ? "الاسم الكامل (بالعربية)" : "Full Name (Arabic)"}
+                        {isArabic ? "الاسم الكامل بالعربية" : "Arabic Full Name"}
                       </Label>
                       <Input
                         id="nameAr"
                         required
                         value={nameAr}
                         onChange={(e) => setNameAr(e.target.value)}
-                        placeholder="مثال: د. أحمد المحمد"
+                        placeholder={isArabic ? "مثال: د. أحمد المحمد" : "e.g. Dr. Ahmad Al-Mohammad"}
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="nameEn">
-                        {isArabic ? "الاسم الكامل (بالإنجليزية)" : "Full Name (English)"}
+                        {isArabic ? "الاسم الكامل بالإنجليزية" : "English Full Name"}
                       </Label>
                       <Input
                         id="nameEn"
@@ -458,7 +466,7 @@ export default function AccountSettingsPage() {
                   <div className="space-y-2">
                     <Label htmlFor="birthDate" className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      {isArabic ? "تاريخ الميلاد / العمر" : "Date of Birth / Age"}
+                      {isArabic ? "تاريخ الميلاد" : "Date of Birth"}
                     </Label>
                     <Input
                       id="birthDate"

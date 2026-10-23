@@ -211,18 +211,63 @@ export default function SiteSettingsPage() {
     e.preventDefault();
     if (!isEditMode) return;
 
+    const email = contactFields.email?.value?.trim() || "";
+    const phone = contactFields.phone?.value?.trim() || "";
+    const address = contactFields.address?.valueAr?.trim() || contactFields.address?.value?.trim() || "";
+    const addressEn = contactFields.address?.valueEn?.trim() || "";
+    const officeAddress = contactFields.officeAddress?.valueAr?.trim() || contactFields.officeAddress?.value?.trim() || "";
+    const officeAddressEn = contactFields.officeAddress?.valueEn?.trim() || "";
+    const workingHours = contactFields.workingHours?.valueAr?.trim() || contactFields.workingHours?.value?.trim() || "";
+    const workingHoursEn = contactFields.workingHours?.valueEn?.trim() || "";
+
+    // Field-specific validation
+    if (contactFields.email?.enabled) {
+      if (!email) {
+        toast.error(isArabic ? "يرجى إدخال البريد الإلكتروني الرسمي للجامعة" : "Please enter the official university email");
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast.error(isArabic ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address format");
+        return;
+      }
+    }
+
+    if (contactFields.phone?.enabled && !phone) {
+      toast.error(isArabic ? "يرجى إدخال هاتف الاستعلامات" : "Please enter the inquiries phone number");
+      return;
+    }
+
+    if (contactFields.address?.enabled && !address) {
+      toast.error(isArabic ? "يرجى إدخال عنوان المقر الرئيسي بالعربية" : "Please enter the main campus address in Arabic");
+      return;
+    }
+
+    if (contactFields.officeAddress?.enabled && !officeAddress) {
+      toast.error(isArabic ? "يرجى إدخال عنوان مكتب الجامعة بالعربية" : "Please enter the university office address in Arabic");
+      return;
+    }
+
+    if (contactFields.workingHours?.enabled && !workingHours) {
+      toast.error(isArabic ? "يرجى إدخال ساعات وأوقات العمل الرسمية بالعربية" : "Please enter the official working hours in Arabic");
+      return;
+    }
+
+    for (const key of platformOrder) {
+      const link = socialLinks[key];
+      if (link && link.enabled && !link.url?.trim()) {
+        const platformName = isArabic ? (link.nameAr || key) : (link.nameEn || key);
+        toast.error(
+          isArabic
+            ? `يرجى إدخال رابط منصة ${platformName} أو إلغاء تفعيلها`
+            : `Please enter the URL for ${platformName} or disable it`
+        );
+        return;
+      }
+    }
+
     setIsSaving(true);
 
     try {
-      const email = contactFields.email?.value || "";
-      const phone = contactFields.phone?.value || "";
-      const address = contactFields.address?.valueAr || contactFields.address?.value || "";
-      const addressEn = contactFields.address?.valueEn || "";
-      const officeAddress = contactFields.officeAddress?.valueAr || contactFields.officeAddress?.value || "";
-      const officeAddressEn = contactFields.officeAddress?.valueEn || "";
-      const workingHours = contactFields.workingHours?.valueAr || contactFields.workingHours?.value || "";
-      const workingHoursEn = contactFields.workingHours?.valueEn || "";
-
       await updateSettings({
         email,
         phone,
@@ -460,7 +505,7 @@ export default function SiteSettingsPage() {
                               <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary">
                                 AR
                               </span>
-                              {isArabic ? "النص باللغة العربية" : "Arabic (AR)"}
+                              {isArabic ? "النص بالعربية" : "Arabic Content"}
                             </Label>
                             <Input
                               dir="rtl"
@@ -481,7 +526,7 @@ export default function SiteSettingsPage() {
                               <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-600">
                                 EN
                               </span>
-                              {isArabic ? "النص باللغة الإنجليزية" : "English (EN)"}
+                              {isArabic ? "النص بالإنجليزية" : "English Content"}
                             </Label>
                             <Input
                               dir="ltr"
@@ -662,8 +707,8 @@ export default function SiteSettingsPage() {
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {isArabic
-                    ? "نسخة النظام: ASU-v2.5 (بيئة عمل إنتاجية)"
-                    : "System version: ASU-v2.5 (Production Environment)"}
+                    ? "نسخة النظام: ASU-v2.5 - بيئة عمل إنتاجية معتمدة"
+                    : "System version: ASU-v2.5 - Production Environment"}
                 </p>
               </CardContent>
             </Card>

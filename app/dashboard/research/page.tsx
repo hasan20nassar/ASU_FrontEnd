@@ -99,11 +99,11 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const CENTER_ICONS = [
-  { label: "مجهر (Microscope)", value: "Microscope", icon: Microscope },
-  { label: "مخبر كيميائي (Flask)", value: "FlaskConical", icon: FlaskConical },
-  { label: "كتاب وأبحاث (Book)", value: "BookOpen", icon: BookOpen },
-  { label: "ابتكار وفكرة (Lightbulb)", value: "Lightbulb", icon: Lightbulb },
+const getCenterIcons = (isArabic: boolean) => [
+  { label: isArabic ? "مجهر علمي" : "Microscope", value: "Microscope", icon: Microscope },
+  { label: isArabic ? "مخبر كيميائي" : "Chemical Flask", value: "FlaskConical", icon: FlaskConical },
+  { label: isArabic ? "كتاب وأبحاث" : "Book & Research", value: "BookOpen", icon: BookOpen },
+  { label: isArabic ? "ابتكار وفكرة" : "Lightbulb Idea", value: "Lightbulb", icon: Lightbulb },
 ];
 
 export default function DashboardResearchPage() {
@@ -301,19 +301,44 @@ export default function DashboardResearchPage() {
 
   const handleSavePublication = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pubTitleAr.trim() || !pubAuthorsAr.trim() || !pubJournalAr.trim()) {
-      toast.error(isArabic ? "يرجى تعبئة الحقول الأساسية المطلوبة" : "Please fill out required fields");
+    if (!pubTitleAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان البحث بالعربية" : "Please enter the Arabic publication title");
+      return;
+    }
+    if (!pubTitleEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان البحث بالإنجليزية" : "Please enter the English publication title");
+      return;
+    }
+    if (!pubAuthorsAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال أسماء الباحثين بالعربية" : "Please enter the Arabic authors");
+      return;
+    }
+    if (!pubAuthorsEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال أسماء الباحثين بالإنجليزية" : "Please enter the English authors");
+      return;
+    }
+    if (!pubJournalAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم المجلة أو المؤتمر بالعربية" : "Please enter the Arabic journal/conference name");
+      return;
+    }
+    if (!pubJournalEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم المجلة أو المؤتمر بالإنجليزية" : "Please enter the English journal/conference name");
+      return;
+    }
+    const yearNum = Number(pubYear);
+    if (!pubYear || isNaN(yearNum) || yearNum < 1900 || yearNum > 2099) {
+      toast.error(isArabic ? "يرجى إدخال سنة نشر صحيحة بين 1900 و 2099" : "Please enter a valid publication year between 1900 and 2099");
       return;
     }
 
     const payload: ResearchPublication = {
       titleAr: pubTitleAr.trim(),
-      titleEn: pubTitleEn.trim() || pubTitleAr.trim(),
+      titleEn: pubTitleEn.trim(),
       authorsAr: pubAuthorsAr.trim(),
-      authorsEn: pubAuthorsEn.trim() || pubAuthorsAr.trim(),
+      authorsEn: pubAuthorsEn.trim(),
       journalAr: pubJournalAr.trim(),
-      journalEn: pubJournalEn.trim() || pubJournalAr.trim(),
-      publicationYear: Number(pubYear) || new Date().getFullYear(),
+      journalEn: pubJournalEn.trim(),
+      publicationYear: yearNum,
       researchArea: pubAreaId !== "none" ? Number(pubAreaId) : null,
       center: pubCenterId !== "none" ? Number(pubCenterId) : null,
       faculty: pubFacultyId !== "none" ? Number(pubFacultyId) : null,
@@ -387,16 +412,28 @@ export default function DashboardResearchPage() {
 
   const handleSaveCenter = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!centerTitleAr.trim() || !centerDescAr.trim()) {
-      toast.error(isArabic ? "يرجى تعبئة اسم ووصف المركز" : "Please fill out center title and description");
+    if (!centerTitleAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم المركز بالعربية" : "Please enter the Arabic center name");
+      return;
+    }
+    if (!centerTitleEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم المركز بالإنجليزية" : "Please enter the English center name");
+      return;
+    }
+    if (!centerDescAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال وصف المركز بالعربية" : "Please enter the Arabic center description");
+      return;
+    }
+    if (!centerDescEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال وصف المركز بالإنجليزية" : "Please enter the English center description");
       return;
     }
 
     const payload: ResearchCenter = {
       titleAr: centerTitleAr.trim(),
-      titleEn: centerTitleEn.trim() || centerTitleAr.trim(),
+      titleEn: centerTitleEn.trim(),
       descriptionAr: centerDescAr.trim(),
-      descriptionEn: centerDescEn.trim() || centerDescAr.trim(),
+      descriptionEn: centerDescEn.trim(),
       icon: centerIcon,
       faculty: centerFacultyId !== "none" ? Number(centerFacultyId) : null,
       directorNameAr: centerDirectorAr.trim(),
@@ -455,13 +492,17 @@ export default function DashboardResearchPage() {
   const handleSaveArea = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!areaNameAr.trim()) {
-      toast.error(isArabic ? "يرجى إدخال اسم المجال البحثي" : "Please enter research area name");
+      toast.error(isArabic ? "يرجى إدخال اسم المجال البحثي بالعربية" : "Please enter the Arabic research area name");
+      return;
+    }
+    if (!areaNameEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم المجال البحثي بالإنجليزية" : "Please enter the English research area name");
       return;
     }
 
     const payload: ResearchArea = {
       nameAr: areaNameAr.trim(),
-      nameEn: areaNameEn.trim() || areaNameAr.trim(),
+      nameEn: areaNameEn.trim(),
       descriptionAr: areaDescAr.trim(),
       descriptionEn: areaDescEn.trim(),
       isActive: areaIsActive,
@@ -748,11 +789,6 @@ export default function DashboardResearchPage() {
                     <TableHead className="w-[16%] text-xs font-bold">{isArabic ? "المجلة والسنة" : "Journal & Year"}</TableHead>
                     <TableHead className="w-[14%] text-xs font-bold">{isArabic ? "المجال / المركز" : "Area / Center"}</TableHead>
                     <TableHead className="w-[12%] text-end text-xs font-bold">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
-                    <TableHead className="w-[38%] text-center text-xs font-bold">{isArabic ? "عنوان الورقة العلمية" : "Paper Title"}</TableHead>
-                    <TableHead className="w-[20%] text-center text-xs font-bold">{isArabic ? "الباحثين" : "Authors"}</TableHead>
-                    <TableHead className="w-[16%] text-center text-xs font-bold">{isArabic ? "المجلة والسنة" : "Journal & Year"}</TableHead>
-                    <TableHead className="w-[14%] text-center text-xs font-bold">{isArabic ? "المجال / المركز" : "Area / Center"}</TableHead>
-                    <TableHead className="w-[12%] text-center text-xs font-bold">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -780,7 +816,7 @@ export default function DashboardResearchPage() {
                             )}
                           </div>
                           <p className="font-bold text-xs sm:text-sm text-foreground leading-snug line-clamp-2">
-                            {isArabic ? pub.titleAr : pub.titleEn}
+                            {(isArabic ? pub.titleAr : pub.titleEn) || "N/A"}
                           </p>
                           {pub.doiUrl && (
                             <a
@@ -798,16 +834,16 @@ export default function DashboardResearchPage() {
 
                       <TableCell className="align-top py-3 w-[20%] overflow-hidden">
                         <p className="text-xs text-muted-foreground font-medium line-clamp-2">
-                          {isArabic ? pub.authorsAr : pub.authorsEn}
+                          {(isArabic ? pub.authorsAr : pub.authorsEn) || "N/A"}
                         </p>
                       </TableCell>
 
                       <TableCell className="align-top py-3 w-[16%] overflow-hidden">
                         <p className="text-xs font-semibold text-foreground truncate">
-                          {isArabic ? pub.journalAr : pub.journalEn}
+                          {(isArabic ? pub.journalAr : pub.journalEn) || "N/A"}
                         </p>
                         <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
-                          {pub.publicationYear}
+                          {pub.publicationYear || "N/A"}
                         </p>
                       </TableCell>
 
@@ -817,7 +853,7 @@ export default function DashboardResearchPage() {
                             {isArabic ? pub.researchAreaNameAr : pub.researchAreaNameEn}
                           </Badge>
                         ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
+                          <span className="text-xs text-muted-foreground">N/A</span>
                         )}
                       </TableCell>
 
@@ -985,20 +1021,20 @@ export default function DashboardResearchPage() {
               {/* Title Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">{isArabic ? "عنوان البحث (بالعربية) *" : "Paper Title (Arabic) *"}</Label>
+                  <Label className="text-xs font-bold">{isArabic ? "عنوان البحث بالعربية" : "Arabic Paper Title"}</Label>
                   <Input
                     value={pubTitleAr}
                     onChange={(e) => setPubTitleAr(e.target.value)}
-                    placeholder="مثال: تطبيق الذكاء الاصطناعي في الفحص السريري"
+                    placeholder={isArabic ? "مثال: تطبيق الذكاء الاصطناعي في التشخيص الطبي..." : "e.g. AI Applications in Medical Diagnosis..."}
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">{isArabic ? "عنوان البحث (بالإنجليزية)" : "Paper Title (English)"}</Label>
+                  <Label className="text-xs font-bold">{isArabic ? "عنوان البحث بالإنجليزية" : "English Paper Title"}</Label>
                   <Input
                     value={pubTitleEn}
                     onChange={(e) => setPubTitleEn(e.target.value)}
-                    placeholder="e.g. AI Applications in Clinical Examination"
+                    placeholder={isArabic ? "مثال: AI Applications in Medical Diagnosis" : "e.g. AI Applications in Medical Diagnosis"}
                     dir="ltr"
                   />
                 </div>
@@ -1007,20 +1043,20 @@ export default function DashboardResearchPage() {
               {/* Authors Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">{isArabic ? "أسماء الباحثين (بالعربية) *" : "Authors (Arabic) *"}</Label>
+                  <Label className="text-xs font-bold">{isArabic ? "أسماء الباحثين بالعربية" : "Arabic Authors"}</Label>
                   <Input
                     value={pubAuthorsAr}
                     onChange={(e) => setPubAuthorsAr(e.target.value)}
-                    placeholder="مثال: د. أحمد محمد، أ.د. سمير النجار"
+                    placeholder={isArabic ? "مثال: د. أحمد محمد، أ.د. سمير النجار" : "e.g. Dr. Ahmad Mohammad, Prof. Samir Al-Najjar"}
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">{isArabic ? "أسماء الباحثين (بالإنجليزية)" : "Authors (English)"}</Label>
+                  <Label className="text-xs font-bold">{isArabic ? "أسماء الباحثين بالإنجليزية" : "English Authors"}</Label>
                   <Input
                     value={pubAuthorsEn}
                     onChange={(e) => setPubAuthorsEn(e.target.value)}
-                    placeholder="e.g. Dr. Ahmad Mohammad, Prof. Samir Al-Najjar"
+                    placeholder={isArabic ? "مثال: Dr. Ahmad Mohammad, Prof. Samir Al-Najjar" : "e.g. Dr. Ahmad Mohammad, Prof. Samir Al-Najjar"}
                     dir="ltr"
                   />
                 </div>
@@ -1029,22 +1065,22 @@ export default function DashboardResearchPage() {
               {/* Journal & Year */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-bold">{isArabic ? "اسم المجلة أو المؤتمر الناشر *" : "Journal / Conference *"}</Label>
+                  <Label className="text-xs font-bold">{isArabic ? "المجلة أو المؤتمر الناشر" : "Journal or Conference"}</Label>
                   <Input
                     value={pubJournalAr}
                     onChange={(e) => setPubJournalAr(e.target.value)}
-                    placeholder="مثال: مجلة الهندسة والعلوم التطبيقية"
+                    placeholder={isArabic ? "مثال: مجلة الهندسة والعلوم التطبيقية" : "e.g. Journal of Engineering & Applied Sciences"}
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">{isArabic ? "سنة النشر *" : "Publication Year *"}</Label>
+                  <Label className="text-xs font-bold">{isArabic ? "سنة النشر" : "Publication Year"}</Label>
                   <Input
                     type="number"
                     value={pubYear}
                     onChange={(e) => setPubYear(Number(e.target.value))}
-                    min={1990}
-                    max={2030}
+                    min={1900}
+                    max={2099}
                     required
                   />
                 </div>
@@ -1059,7 +1095,7 @@ export default function DashboardResearchPage() {
                       <SelectValue placeholder={isArabic ? "اختر المجال..." : "Select Area..."} />
                     </SelectTrigger>
                     <SelectContent dir={dir}>
-                      <SelectItem value="none">{isArabic ? "عام (دون تحديد)" : "General"}</SelectItem>
+                      <SelectItem value="none">{isArabic ? "عام دون تخصيص" : "General"}</SelectItem>
                       {areas.map((a) => (
                         <SelectItem key={a.id} value={String(a.id)}>
                           {isArabic ? a.nameAr : a.nameEn}
@@ -1070,13 +1106,13 @@ export default function DashboardResearchPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">{isArabic ? "المركز البحثي التابع له" : "Research Center"}</Label>
+                  <Label className="text-xs font-bold">{isArabic ? "المركز البحثي التابع له" : "Associated Research Center"}</Label>
                   <Select value={pubCenterId} onValueChange={setPubCenterId}>
                     <SelectTrigger className="text-xs">
                       <SelectValue placeholder={isArabic ? "اختر المركز..." : "Select Center..."} />
                     </SelectTrigger>
                     <SelectContent dir={dir}>
-                      <SelectItem value="none">{isArabic ? "غير مخصص لمركز" : "None"}</SelectItem>
+                      <SelectItem value="none">{isArabic ? "غير مخصص لمركز" : "Not Assigned"}</SelectItem>
                       {centers.map((c) => (
                         <SelectItem key={c.id} value={String(c.id)}>
                           {isArabic ? c.titleAr : c.titleEn}
@@ -1093,7 +1129,7 @@ export default function DashboardResearchPage() {
                       <SelectValue placeholder={isArabic ? "اختر الكلية..." : "Select Faculty..."} />
                     </SelectTrigger>
                     <SelectContent dir={dir}>
-                      <SelectItem value="none">{isArabic ? "عام" : "General"}</SelectItem>
+                      <SelectItem value="none">{isArabic ? "عام لجميع الكليات" : "All Faculties"}</SelectItem>
                       {faculties.map((f) => (
                         <SelectItem key={f.id} value={String(f.id)}>
                           {isArabic ? f.nameAr : f.nameEn}
@@ -1117,12 +1153,12 @@ export default function DashboardResearchPage() {
 
               {/* Abstract */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">{isArabic ? "ملخص البحث (Abstract)" : "Research Abstract"}</Label>
+                <Label className="text-xs font-bold">{isArabic ? "ملخص البحث" : "Research Abstract"}</Label>
                 <Textarea
                   rows={3}
                   value={pubAbstractAr}
                   onChange={(e) => setPubAbstractAr(e.target.value)}
-                  placeholder="اكتب ملخص أهداف البحث وأهم النتائج التي توصل إليها..."
+                  placeholder={isArabic ? "اكتب ملخص أهداف البحث وأهم النتائج التي توصل إليها..." : "Write paper abstract, objectives, and key findings..."}
                 />
               </div>
 
@@ -1164,7 +1200,7 @@ export default function DashboardResearchPage() {
                 ) : (
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">
-                      {isArabic ? "رفع الورقة البحثية بصيغة PDF (اختياري، حتى 100 ميغابايت)" : "Upload Paper PDF (Optional, max 100MB)"}
+                      {isArabic ? "ملفات PDF فقط بحجم أقصى 100 ميغابايت" : "PDF files only up to 100MB"}
                     </p>
                     <label className="cursor-pointer inline-block">
                       <Button
@@ -1247,18 +1283,34 @@ export default function DashboardResearchPage() {
           <form onSubmit={handleSaveCenter} className="flex flex-col flex-1 overflow-hidden min-h-0">
             <DialogBody className="p-5 overflow-y-auto space-y-4 flex-1 min-h-0">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">{isArabic ? "اسم المركز (بالعربية) *" : "Title (Arabic) *"}</Label>
-                <Input value={centerTitleAr} onChange={(e) => setCenterTitleAr(e.target.value)} required />
+                <Label className="text-xs font-bold">{isArabic ? "اسم المركز بالعربية" : "Arabic Center Name"}</Label>
+                <Input
+                  value={centerTitleAr}
+                  onChange={(e) => setCenterTitleAr(e.target.value)}
+                  placeholder={isArabic ? "مثال: مركز بحوث الذكاء الاصطناعي والروبوت" : "e.g. AI & Robotics Research Center"}
+                  required
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">{isArabic ? "اسم المركز (بالإنجليزية)" : "Title (English)"}</Label>
-                <Input value={centerTitleEn} onChange={(e) => setCenterTitleEn(e.target.value)} dir="ltr" />
+                <Label className="text-xs font-bold">{isArabic ? "اسم المركز بالإنجليزية" : "English Center Name"}</Label>
+                <Input
+                  value={centerTitleEn}
+                  onChange={(e) => setCenterTitleEn(e.target.value)}
+                  placeholder={isArabic ? "مثال: AI & Robotics Research Center" : "e.g. AI & Robotics Research Center"}
+                  dir="ltr"
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">{isArabic ? "وصف المركز واختصاصاته *" : "Description *"}</Label>
-                <Textarea rows={3} value={centerDescAr} onChange={(e) => setCenterDescAr(e.target.value)} required />
+                <Label className="text-xs font-bold">{isArabic ? "وصف المركز واختصاصاته" : "Center Description and Scope"}</Label>
+                <Textarea
+                  rows={3}
+                  value={centerDescAr}
+                  onChange={(e) => setCenterDescAr(e.target.value)}
+                  placeholder={isArabic ? "اكتب وصفاً مفصلاً لاختصاصات المركز وأهدافه العلمية..." : "Write a detailed description of center scope and objectives..."}
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1269,7 +1321,7 @@ export default function DashboardResearchPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent dir={dir}>
-                      {CENTER_ICONS.map((ic) => (
+                      {getCenterIcons(isArabic).map((ic) => (
                         <SelectItem key={ic.value} value={ic.value}>
                           {ic.label}
                         </SelectItem>
@@ -1285,7 +1337,7 @@ export default function DashboardResearchPage() {
                       <SelectValue placeholder={isArabic ? "عام" : "General"} />
                     </SelectTrigger>
                     <SelectContent dir={dir}>
-                      <SelectItem value="none">{isArabic ? "عام (كافة الكليات)" : "General"}</SelectItem>
+                      <SelectItem value="none">{isArabic ? "عام لجميع الكليات" : "All Faculties"}</SelectItem>
                       {faculties.map((f) => (
                         <SelectItem key={f.id} value={String(f.id)}>
                           {isArabic ? f.nameAr : f.nameEn}
@@ -1299,11 +1351,19 @@ export default function DashboardResearchPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold">{isArabic ? "اسم المشرف أو المدير" : "Director Name"}</Label>
-                  <Input value={centerDirectorAr} onChange={(e) => setCenterDirectorAr(e.target.value)} />
+                  <Input
+                    value={centerDirectorAr}
+                    onChange={(e) => setCenterDirectorAr(e.target.value)}
+                    placeholder={isArabic ? "مثال: أ.د. فادي العلي" : "e.g. Prof. Fadi Al-Ali"}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold">{isArabic ? "الموقع في الحرم الجامعي" : "Campus Location"}</Label>
-                  <Input value={centerLocation} onChange={(e) => setCenterLocation(e.target.value)} />
+                  <Input
+                    value={centerLocation}
+                    onChange={(e) => setCenterLocation(e.target.value)}
+                    placeholder={isArabic ? "مثال: مبنى الهندسة والمعلوماتية - الطابق الثالث" : "e.g. Engineering Building - 3rd Floor"}
+                  />
                 </div>
               </div>
             </DialogBody>
@@ -1313,7 +1373,7 @@ export default function DashboardResearchPage() {
                 {isArabic ? "إلغاء" : "Cancel"}
               </Button>
               <Button type="submit" className="bg-primary hover:bg-primary/95 text-white text-xs font-bold">
-                {editingCenter ? (isArabic ? "حفظ التعديلات" : "Save") : (isArabic ? "إضافة المركز" : "Create")}
+                {editingCenter ? (isArabic ? "حفظ التعديلات" : "Save Changes") : (isArabic ? "إضافة المركز" : "Add Center")}
               </Button>
             </DialogFooter>
           </form>
@@ -1335,12 +1395,22 @@ export default function DashboardResearchPage() {
           <form onSubmit={handleSaveArea} className="flex flex-col flex-1 overflow-hidden min-h-0">
             <DialogBody className="p-5 overflow-y-auto space-y-4 flex-1 min-h-0">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">{isArabic ? "اسم المجال (بالعربية) *" : "Area Name (Arabic) *"}</Label>
-                <Input value={areaNameAr} onChange={(e) => setAreaNameAr(e.target.value)} required />
+                <Label className="text-xs font-bold">{isArabic ? "اسم المجال بالعربية" : "Arabic Area Name"}</Label>
+                <Input
+                  value={areaNameAr}
+                  onChange={(e) => setAreaNameAr(e.target.value)}
+                  placeholder={isArabic ? "مثال: هندسة البرمجيات والذكاء الاصطناعي" : "e.g. Software Engineering & AI"}
+                  required
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">{isArabic ? "اسم المجال (بالإنجليزية)" : "Area Name (English)"}</Label>
-                <Input value={areaNameEn} onChange={(e) => setAreaNameEn(e.target.value)} dir="ltr" />
+                <Label className="text-xs font-bold">{isArabic ? "اسم المجال بالإنجليزية" : "English Area Name"}</Label>
+                <Input
+                  value={areaNameEn}
+                  onChange={(e) => setAreaNameEn(e.target.value)}
+                  placeholder={isArabic ? "مثال: Software Engineering & AI" : "e.g. Software Engineering & AI"}
+                  dir="ltr"
+                />
               </div>
             </DialogBody>
 
@@ -1349,7 +1419,7 @@ export default function DashboardResearchPage() {
                 {isArabic ? "إلغاء" : "Cancel"}
               </Button>
               <Button type="submit" className="bg-primary hover:bg-primary/95 text-white text-xs font-bold">
-                {editingArea ? (isArabic ? "حفظ التعديلات" : "Save") : (isArabic ? "إضافة المجال" : "Create")}
+                {editingArea ? (isArabic ? "حفظ التعديلات" : "Save Changes") : (isArabic ? "إضافة المجال" : "Add Area")}
               </Button>
             </DialogFooter>
           </form>

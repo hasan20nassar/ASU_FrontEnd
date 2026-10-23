@@ -191,23 +191,41 @@ export default function AlumniManagementPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nameAr.trim() || !formData.email.trim() || !formData.password.trim()) {
-      toast.error(
-        isArabic
-          ? "يرجى ملء كافة الحقول الأساسية (الاسم بالعربية، البريد، كلمة المرور)"
-          : "Please fill required fields (Arabic Name, Email, Password)"
-      );
+
+    if (!formData.nameAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم الخريج بالعربية" : "Please enter the alumni Arabic name");
+      return;
+    }
+    if (!formData.nameEn?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم الخريج بالإنجليزية" : "Please enter the alumni English name");
+      return;
+    }
+    if (!formData.email?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال البريد الإلكتروني" : "Please enter the email address");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      toast.error(isArabic ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address format");
+      return;
+    }
+    if (!formData.password?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال كلمة المرور" : "Please enter the password");
+      return;
+    }
+    if (formData.password.trim().length < 6) {
+      toast.error(isArabic ? "كلمة المرور يجب أن لا تقل عن 6 أحرف" : "Password must be at least 6 characters");
       return;
     }
 
     try {
       await createUserMutation.mutateAsync({
-        nameAr: formData.nameAr,
-        nameEn: formData.nameEn,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        bio: formData.bio,
+        nameAr: formData.nameAr.trim(),
+        nameEn: formData.nameEn.trim(),
+        email: formData.email.trim(),
+        password: formData.password.trim(),
+        phone: formData.phone.trim(),
+        bio: formData.bio.trim(),
         role: "alumni",
         assignedFaculty: formData.assignedFaculty,
         avatar: "/user.png",
@@ -216,26 +234,40 @@ export default function AlumniManagementPage() {
 
       toast.success(
         isArabic
-          ? "تمت إضافة سجل الخريج بنجاح!"
+          ? "تمت إضافة حساب الخريج بنجاح!"
           : "Alumni account created successfully!"
       );
       setIsAddOpen(false);
       resetForm();
-    } catch (err) {
-      toast.error(
-        isArabic ? "حدث خطأ أثناء إضافة الخريج" : "Failed to create alumni account"
-      );
+    } catch (err: any) {
+      const msg = err?.message || err?.detail || (isArabic ? "حدث خطأ أثناء إضافة الخريج" : "Failed to create alumni account");
+      toast.error(msg);
     }
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedAlumni || !formData.nameAr.trim() || !formData.email.trim()) {
-      toast.error(
-        isArabic
-          ? "يرجى ملء الحقول الأساسية"
-          : "Please fill required fields"
-      );
+    if (!selectedAlumni) return;
+
+    if (!formData.nameAr?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم الخريج بالعربية" : "Please enter the alumni Arabic name");
+      return;
+    }
+    if (!formData.nameEn?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم الخريج بالإنجليزية" : "Please enter the alumni English name");
+      return;
+    }
+    if (!formData.email?.trim()) {
+      toast.error(isArabic ? "يرجى إدخال البريد الإلكتروني" : "Please enter the email address");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      toast.error(isArabic ? "صيغة البريد الإلكتروني غير صحيحة" : "Invalid email address format");
+      return;
+    }
+    if (formData.password?.trim() && formData.password.trim().length < 6) {
+      toast.error(isArabic ? "كلمة المرور يجب أن لا تقل عن 6 أحرف" : "Password must be at least 6 characters");
       return;
     }
 
@@ -243,12 +275,12 @@ export default function AlumniManagementPage() {
       await updateUserMutation.mutateAsync({
         id: selectedAlumni.id,
         data: {
-          nameAr: formData.nameAr,
-          nameEn: formData.nameEn,
-          email: formData.email,
-          password: formData.password || undefined,
-          phone: formData.phone,
-          bio: formData.bio || undefined,
+          nameAr: formData.nameAr.trim(),
+          nameEn: formData.nameEn.trim(),
+          email: formData.email.trim(),
+          password: formData.password.trim() || undefined,
+          phone: formData.phone.trim(),
+          bio: formData.bio.trim() || undefined,
           role: "alumni",
           assignedFaculty: formData.assignedFaculty,
           isActive: formData.isActive,
@@ -262,10 +294,9 @@ export default function AlumniManagementPage() {
       );
       setIsEditOpen(false);
       setSelectedAlumni(null);
-    } catch (err) {
-      toast.error(
-        isArabic ? "حدث خطأ أثناء تحديث الحساب" : "Failed to update alumni account"
-      );
+    } catch (err: any) {
+      const msg = err?.message || err?.detail || (isArabic ? "حدث خطأ أثناء تحديث الحساب" : "Failed to update alumni account");
+      toast.error(msg);
     }
   };
 
@@ -277,14 +308,13 @@ export default function AlumniManagementPage() {
       toast.success(
         isArabic
           ? "تم حذف حساب الخريج بنجاح!"
-          : "Alumni deleted successfully!"
+          : "Alumni account deleted successfully!"
       );
       setIsDeleteOpen(false);
       setSelectedAlumni(null);
-    } catch (err) {
-      toast.error(
-        isArabic ? "حدث خطأ أثناء الحذف" : "Failed to delete account"
-      );
+    } catch (err: any) {
+      const msg = err?.message || err?.detail || (isArabic ? "حدث خطأ أثناء حذف الحساب" : "Failed to delete account");
+      toast.error(msg);
     }
   };
 
@@ -446,7 +476,6 @@ export default function AlumniManagementPage() {
                   <TableHead>{isArabic ? "جهة العمل / النبذة المهنية" : "Career / Bio"}</TableHead>
                   <TableHead>{isArabic ? "الحالة" : "Status"}</TableHead>
                   <TableHead className="text-end">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
-                  <TableHead className="text-center">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -491,20 +520,20 @@ export default function AlumniManagementPage() {
                       <TableCell className="text-sm">
                         <div className="flex items-center gap-1.5 text-muted-foreground">
                           <Building2 className="h-3.5 w-3.5 shrink-0" />
-                          <span>{getFacultyName(alumni.assignedFaculty)}</span>
+                          <span>{getFacultyName(alumni.assignedFaculty) || "N/A"}</span>
                         </div>
                       </TableCell>
 
                       <TableCell className="text-sm font-mono text-muted-foreground">
-                        {alumni.phone || "-"}
+                        {alumni.phone || "N/A"}
                       </TableCell>
 
                       <TableCell className="text-sm max-w-[240px] truncate text-muted-foreground">
                         {alumni.bio ? (
                           <span>{alumni.bio}</span>
                         ) : (
-                          <span className="text-muted-foreground/60 italic text-xs">
-                            {isArabic ? "لم تضاف نبذة" : "No bio"}
+                          <span className="text-muted-foreground/60 font-mono text-xs">
+                            N/A
                           </span>
                         )}
                       </TableCell>
@@ -575,35 +604,35 @@ export default function AlumniManagementPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredAlumni.map((alumni) => {
                   const assignedFac = faculties.find((f) => f.id === alumni.assignedFaculty);
 
                   return (
-                    <Card key={alumni.id} className="border border-border/80 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
-                      <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
+                    <Card key={alumni.id} className="border border-border/80 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group min-w-0 w-full">
+                      <CardContent className="p-5 flex flex-col justify-between h-full space-y-4 min-w-0">
                         {/* Top Header with Avatar & Options */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-12 w-12 border-2 border-amber-500/20 shadow-sm">
+                        <div className="flex items-start justify-between gap-3 min-w-0">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <Avatar className="h-12 w-12 border-2 border-amber-500/20 shadow-sm shrink-0">
                               <AvatarImage src={alumni.avatar} />
                               <AvatarFallback className="bg-amber-500/10 text-amber-600 font-bold text-sm">
                                 {alumni.nameAr.slice(0, 2)}
                               </AvatarFallback>
                             </Avatar>
-                            <div>
-                              <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors truncate">
                                 {alumni.nameAr}
                               </h3>
                               {alumni.nameEn && (
-                                <p className="text-xs text-muted-foreground">{alumni.nameEn}</p>
+                                <p className="text-xs text-muted-foreground truncate">{alumni.nameEn}</p>
                               )}
                             </div>
                           </div>
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 -me-2">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 -me-2 shrink-0">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -629,61 +658,61 @@ export default function AlumniManagementPage() {
                         </div>
 
                         {/* Faculty & Status Badges */}
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <div className="flex flex-wrap items-center gap-2 pt-1 min-w-0">
                           {assignedFac ? (
-                            <Badge variant="outline" className="gap-1 border-primary/20 text-primary bg-primary/5 text-xs font-semibold">
-                              <Building2 className="h-3 w-3" />
-                              <span>{isArabic ? assignedFac.nameAr : assignedFac.nameEn}</span>
+                            <Badge variant="outline" className="gap-1 border-primary/20 text-primary bg-primary/5 text-xs font-semibold max-w-full truncate">
+                              <Building2 className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{isArabic ? assignedFac.nameAr : assignedFac.nameEn}</span>
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-muted-foreground text-xs">
+                            <Badge variant="outline" className="text-muted-foreground text-xs shrink-0">
                               {isArabic ? "خريج عام" : "General Alumni"}
                             </Badge>
                           )}
 
                           {alumni.isActive ? (
-                            <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-xs">
+                            <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-xs shrink-0">
                               {isArabic ? "نشط" : "Active"}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-muted-foreground text-xs">
+                            <Badge variant="outline" className="text-muted-foreground text-xs shrink-0">
                               {isArabic ? "معطل" : "Inactive"}
                             </Badge>
                           )}
                         </div>
 
                         {/* Contact & Career/Bio Info */}
-                        <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3">
-                          <div className="flex items-center gap-2">
+                        <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
                             <span className="font-mono truncate">{alumni.email}</span>
                           </div>
                           {alumni.phone && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <span className="font-mono dir-ltr">{alumni.phone}</span>
+                              <span className="font-mono dir-ltr truncate">{alumni.phone}</span>
                             </div>
                           )}
                           {alumni.bio ? (
-                            <div className="flex items-start gap-1.5 pt-1 text-[11px] text-muted-foreground">
+                            <div className="flex items-start gap-1.5 pt-1 text-[11px] text-muted-foreground min-w-0">
                               <Briefcase className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
                               <p className="line-clamp-2 italic">
                                 "{alumni.bio}"
                               </p>
                             </div>
                           ) : (
-                            <span className="text-muted-foreground/50 text-[11px] italic block pt-0.5">
+                            <span className="text-muted-foreground/50 text-[11px] italic block pt-0.5 truncate">
                               {isArabic ? "لم تضاف نبذة مهنية" : "No professional bio added"}
                             </span>
                           )}
                         </div>
 
                         {/* Card Footer Actions */}
-                        <div className="flex items-center justify-end gap-2 pt-2 border-t mt-auto">
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t mt-auto min-w-0">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs font-semibold gap-1.5"
+                            className="h-8 text-xs font-semibold gap-1.5 shrink-0"
                             onClick={() => handleOpenEdit(alumni)}
                           >
                             <Edit className="h-3.5 w-3.5" />
@@ -719,8 +748,9 @@ export default function AlumniManagementPage() {
             <DialogBody>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الاسم بالعربية *" : "Name (Arabic) *"}</Label>
+                  <Label htmlFor="add-nameAr">{isArabic ? "الاسم بالعربية" : "Arabic Name"}</Label>
                   <Input
+                    id="add-nameAr"
                     required
                     placeholder={isArabic ? "أحمد المحمود" : "Ahmed Al-Mahmoud"}
                     value={formData.nameAr}
@@ -729,9 +759,11 @@ export default function AlumniManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الاسم بالإنجليزية" : "Name (English)"}</Label>
+                  <Label htmlFor="add-nameEn">{isArabic ? "الاسم بالإنجليزية" : "English Name"}</Label>
                   <Input
-                    placeholder="Ahmed Al-Mahmoud"
+                    id="add-nameEn"
+                    required
+                    placeholder={isArabic ? "أحمد المحمود" : "Ahmed Al-Mahmoud"}
                     value={formData.nameEn}
                     onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
                   />
@@ -740,8 +772,9 @@ export default function AlumniManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "البريد الإلكتروني *" : "Email Address *"}</Label>
+                  <Label htmlFor="add-email">{isArabic ? "البريد الإلكتروني" : "Email Address"}</Label>
                   <Input
+                    id="add-email"
                     required
                     type="email"
                     placeholder="alumni@asu.edu.sy"
@@ -751,8 +784,9 @@ export default function AlumniManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isArabic ? "كلمة المرور *" : "Password *"}</Label>
+                  <Label htmlFor="add-password">{isArabic ? "كلمة المرور" : "Password"}</Label>
                   <Input
+                    id="add-password"
                     required
                     type="password"
                     placeholder="••••••••"
@@ -764,7 +798,7 @@ export default function AlumniManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الكلية المتخرج منها" : "Graduated Faculty"}</Label>
+                  <Label>{isArabic ? "الكلية" : "Faculty"}</Label>
                   <Select
                     value={formData.assignedFaculty?.toString() || "none"}
                     onValueChange={(val) =>
@@ -779,7 +813,7 @@ export default function AlumniManagementPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">
-                        {isArabic ? "-- بدون كلية محددة --" : "-- Unspecified --"}
+                        {isArabic ? "بدون تحديد كلية" : "Unspecified Faculty"}
                       </SelectItem>
                       {faculties.map((fac) => (
                         <SelectItem key={fac.id} value={fac.id.toString()}>
@@ -791,8 +825,9 @@ export default function AlumniManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isArabic ? "رقم الهاتف" : "Phone Number"}</Label>
+                  <Label htmlFor="add-phone">{isArabic ? "رقم الهاتف" : "Phone Number"}</Label>
                   <Input
+                    id="add-phone"
                     placeholder="0912345678"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -801,13 +836,14 @@ export default function AlumniManagementPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{isArabic ? "جهة العمل / النبذة المهنية" : "Employer / Career Bio"}</Label>
+                <Label htmlFor="add-bio">{isArabic ? "النبذة المهنية وجهة العمل" : "Career Bio and Employer"}</Label>
                 <Textarea
+                  id="add-bio"
                   rows={2}
                   placeholder={
                     isArabic
-                      ? "مثال: مهندس برمجيات في شركة سيريتل، تخرج عام 2023..."
-                      : "e.g. Software Engineer at Syriatel, Graduated 2023..."
+                      ? "مثال: مهندس برمجيات، خريج عام 2023..."
+                      : "e.g. Software Engineer, Graduated 2023..."
                   }
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
@@ -816,7 +852,7 @@ export default function AlumniManagementPage() {
 
               <div className="flex items-center justify-between p-3 rounded-lg border">
                 <div>
-                  <Label className="font-semibold block">
+                  <Label htmlFor="add-isActive" className="font-semibold block cursor-pointer">
                     {isArabic ? "تفعيل الحساب" : "Account Active"}
                   </Label>
                   <span className="text-xs text-muted-foreground">
@@ -826,6 +862,7 @@ export default function AlumniManagementPage() {
                   </span>
                 </div>
                 <Switch
+                  id="add-isActive"
                   checked={formData.isActive}
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, isActive: checked })
@@ -846,7 +883,7 @@ export default function AlumniManagementPage() {
                 {createUserMutation.isPending && (
                   <Loader2 className="h-4 w-4 me-2 animate-spin" />
                 )}
-                {isArabic ? "حفظ الحساب" : "Create Account"}
+                {isArabic ? "إضافة الخريج" : "Add Alumni"}
               </Button>
             </DialogFooter>
           </form>
@@ -867,17 +904,21 @@ export default function AlumniManagementPage() {
             <DialogBody>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الاسم بالعربية *" : "Name (Arabic) *"}</Label>
+                  <Label htmlFor="edit-nameAr">{isArabic ? "الاسم بالعربية" : "Arabic Name"}</Label>
                   <Input
+                    id="edit-nameAr"
                     required
+                    placeholder={isArabic ? "أحمد المحمود" : "Ahmed Al-Mahmoud"}
                     value={formData.nameAr}
                     onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الاسم بالإنجليزية" : "Name (English)"}</Label>
+                  <Label htmlFor="edit-nameEn">{isArabic ? "الاسم بالإنجليزية" : "English Name"}</Label>
                   <Input
+                    id="edit-nameEn"
+                    placeholder={isArabic ? "أحمد المحمود" : "Ahmed Al-Mahmoud"}
                     value={formData.nameEn}
                     onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
                   />
@@ -886,31 +927,37 @@ export default function AlumniManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "البريد الإلكتروني *" : "Email Address *"}</Label>
+                  <Label htmlFor="edit-email">{isArabic ? "البريد الإلكتروني" : "Email Address"}</Label>
                   <Input
+                    id="edit-email"
                     required
                     type="email"
+                    placeholder="alumni@asu.edu.sy"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>
-                    {isArabic ? "كلمة المرور (اتركها فارغة للإبقاء عليها)" : "New Password"}
+                  <Label htmlFor="edit-password">
+                    {isArabic ? "كلمة المرور الجديدة" : "New Password"}
                   </Label>
                   <Input
+                    id="edit-password"
                     type="password"
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isArabic ? "اترك الحقل فارغاً للإبقاء على كلمة المرور الحالية" : "Leave blank to keep the current password"}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? "الكلية المتخرج منها" : "Graduated Faculty"}</Label>
+                  <Label>{isArabic ? "الكلية" : "Faculty"}</Label>
                   <Select
                     value={formData.assignedFaculty?.toString() || "none"}
                     onValueChange={(val) =>
@@ -925,7 +972,7 @@ export default function AlumniManagementPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">
-                        {isArabic ? "-- بدون كلية محددة --" : "-- Unspecified --"}
+                        {isArabic ? "بدون تحديد كلية" : "Unspecified Faculty"}
                       </SelectItem>
                       {faculties.map((fac) => (
                         <SelectItem key={fac.id} value={fac.id.toString()}>
@@ -937,8 +984,10 @@ export default function AlumniManagementPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{isArabic ? "رقم الهاتف" : "Phone Number"}</Label>
+                  <Label htmlFor="edit-phone">{isArabic ? "رقم الهاتف" : "Phone Number"}</Label>
                   <Input
+                    id="edit-phone"
+                    placeholder="0912345678"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
@@ -946,9 +995,15 @@ export default function AlumniManagementPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{isArabic ? "جهة العمل / النبذة المهنية" : "Employer / Career Bio"}</Label>
+                <Label htmlFor="edit-bio">{isArabic ? "النبذة المهنية وجهة العمل" : "Career Bio and Employer"}</Label>
                 <Textarea
+                  id="edit-bio"
                   rows={2}
+                  placeholder={
+                    isArabic
+                      ? "مثال: مهندس برمجيات، خريج عام 2023..."
+                      : "e.g. Software Engineer, Graduated 2023..."
+                  }
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 />
@@ -956,7 +1011,7 @@ export default function AlumniManagementPage() {
 
               <div className="flex items-center justify-between p-3 rounded-lg border">
                 <div>
-                  <Label className="font-semibold block">
+                  <Label htmlFor="edit-isActive" className="font-semibold block cursor-pointer">
                     {isArabic ? "تفعيل الحساب" : "Account Active"}
                   </Label>
                   <span className="text-xs text-muted-foreground">
@@ -966,6 +1021,7 @@ export default function AlumniManagementPage() {
                   </span>
                 </div>
                 <Switch
+                  id="edit-isActive"
                   checked={formData.isActive}
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, isActive: checked })
@@ -986,7 +1042,7 @@ export default function AlumniManagementPage() {
                 {updateUserMutation.isPending && (
                   <Loader2 className="h-4 w-4 me-2 animate-spin" />
                 )}
-                {isArabic ? "حفظ التعديلات" : "Save Changes"}
+                {isArabic ? "حفظ التغييرات" : "Save Changes"}
               </Button>
             </DialogFooter>
           </form>
@@ -1003,8 +1059,8 @@ export default function AlumniManagementPage() {
             </DialogTitle>
             <DialogDescription>
               {isArabic
-                ? `هل أنت متأكد من رغبتك في حذف حساب الخريج "${selectedAlumni?.nameAr}" (${selectedAlumni?.email})؟`
-                : `Are you sure you want to delete alumni account "${selectedAlumni?.nameAr}" (${selectedAlumni?.email})?`}
+                ? `هل أنت متأكد من رغبتك في حذف حساب الخريج "${selectedAlumni?.nameAr || ""}" (${selectedAlumni?.email || ""}) نهائياً؟`
+                : `Are you sure you want to permanently delete alumni account "${selectedAlumni?.nameEn || selectedAlumni?.nameAr || ""}" (${selectedAlumni?.email || ""})?`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1022,7 +1078,7 @@ export default function AlumniManagementPage() {
               {deleteUserMutation.isPending && (
                 <Loader2 className="h-4 w-4 me-2 animate-spin" />
               )}
-              {isArabic ? "تأكيد الحذف" : "Delete Account"}
+              {isArabic ? "تأكيد الحذف" : "Confirm Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

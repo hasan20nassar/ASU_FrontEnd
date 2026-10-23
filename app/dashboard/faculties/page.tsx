@@ -390,6 +390,29 @@ export default function FacultiesManagement() {
     });
   }, [displayStudents, selectedFacultyForHub, hubSearch]);
 
+  // Facilities within Hub
+  const hubFacilities = useMemo(() => {
+    if (!selectedFacultyForHub) return [];
+    const facs: FacultyFacility[] = selectedFacultyForHub.facilities || [];
+    if (!hubSearch) return facs;
+    const q = hubSearch.toLowerCase();
+    return facs.filter(
+      (f) =>
+        f.nameAr?.toLowerCase().includes(q) ||
+        f.nameEn?.toLowerCase().includes(q) ||
+        f.descriptionAr?.toLowerCase().includes(q) ||
+        f.descriptionEn?.toLowerCase().includes(q)
+    );
+  }, [selectedFacultyForHub, hubSearch]);
+
+  // Sub-dialog: Add/Edit Lab in Hub
+  const [isHubLabModalOpen, setIsHubLabModalOpen] = useState(false);
+  const [editingHubLabIndex, setEditingHubLabIndex] = useState<number | null>(null);
+  const [hubLabNameAr, setHubLabNameAr] = useState("");
+  const [hubLabNameEn, setHubLabNameEn] = useState("");
+  const [hubLabDescAr, setHubLabDescAr] = useState("");
+  const [hubLabDescEn, setHubLabDescEn] = useState("");
+
   const handleOpenHub = (faculty: any) => {
     setSelectedFacultyForHub(faculty);
     setHubTab("departments");
@@ -409,24 +432,47 @@ export default function FacultiesManagement() {
 
   const handleCreateProgramInHub = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFacultyForHub || !progNameAr) {
-      toast.error(isArabic ? "يرجى كتابة اسم القسم بالعربية" : "Please enter department name in Arabic");
+    if (!selectedFacultyForHub) {
+      toast.error(isArabic ? "لم يتم تحديد الكلية" : "No faculty selected");
+      return;
+    }
+
+    const trimmedProgNameAr = progNameAr.trim();
+    const trimmedProgNameEn = progNameEn.trim();
+
+    if (!trimmedProgNameAr) {
+      toast.error(isArabic ? "يرجى إدخال اسم القسم بالعربية" : "Please enter the Arabic department name");
+      return;
+    }
+
+    if (!trimmedProgNameEn) {
+      toast.error(isArabic ? "يرجى إدخال اسم القسم بالإنجليزية" : "Please enter the English department name");
+      return;
+    }
+
+    if (!progDuration || progDuration < 1 || progDuration > 7) {
+      toast.error(isArabic ? "مدة الدراسة يجب أن تكون بين 1 و 7 سنوات" : "Study duration must be between 1 and 7 years");
+      return;
+    }
+
+    if (!progCreditHours || progCreditHours <= 0) {
+      toast.error(isArabic ? "الساعات المعتمدة يجب أن تكون أكبر من الصفر" : "Credit hours must be greater than zero");
       return;
     }
 
     const cleanSlug =
       progSlug.trim().replace(/^\/+|\/+$/g, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") ||
-      progNameEn.toLowerCase().trim().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") ||
+      trimmedProgNameEn.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") ||
       `dept-${Date.now()}`;
 
     try {
       await createProgramMutation.mutateAsync({
         faculty: selectedFacultyForHub.id,
-        nameAr: progNameAr,
-        nameEn: progNameEn || progNameAr,
+        nameAr: trimmedProgNameAr,
+        nameEn: trimmedProgNameEn,
         slug: cleanSlug,
-        descriptionAr: `قسم ${progNameAr} في ${selectedFacultyForHub.nameAr}`,
-        descriptionEn: `Department of ${progNameEn || progNameAr}`,
+        descriptionAr: `قسم ${trimmedProgNameAr} في ${selectedFacultyForHub.nameAr}`,
+        descriptionEn: `Department of ${trimmedProgNameEn}`,
         duration: progDuration,
         creditHours: progCreditHours,
         head: progHeadId !== "none" ? Number(progHeadId) : null,
@@ -437,7 +483,7 @@ export default function FacultiesManagement() {
         tuitionNonResident: 1500,
       });
 
-      toast.success(isArabic ? "تمت إضافة القسم إلى الكلية بنجاح!" : "Department added to faculty successfully!");
+      toast.success(isArabic ? "تمت إضافة القسم إلى الكلية بنجاح" : "Department added to faculty successfully");
       setIsAddProgramOpen(false);
     } catch (error: any) {
       const data = error?.body || error?.response?.data;
@@ -501,6 +547,99 @@ export default function FacultiesManagement() {
       toast.success(isArabic ? "تم نقل الطالب إلى القسم المختار بنجاح!" : "Student program updated!");
     } catch (err) {
       toast.error(isArabic ? "حدث خطأ أثناء نقل الطالب" : "Failed to update student program");
+    }
+  };
+
+  const handleOpenAddHubLab = () => {
+    setEditingHubLabIndex(null);
+    setHubLabNameAr("");
+    setHubLabNameEn("");
+    setHubLabDescAr("");
+    setHubLabDescEn("");
+    setIsHubLabModalOpen(true);
+  };
+
+  const handleOpenEditHubLab = (index: number, lab: FacultyFacility) => {
+    setEditingHubLabIndex(index);
+    setHubLabNameAr(lab.nameAr || "");
+    setHubLabNameEn(lab.nameEn || "");
+    setHubLabDescAr(lab.descriptionAr || "");
+    setHubLabDescEn(lab.descriptionEn || "");
+    setIsHubLabModalOpen(true);
+  };
+
+  const handleSaveHubLab = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFacultyForHub) return;
+
+    const trimmedAr = hubLabNameAr.trim();
+    const trimmedEn = hubLabNameEn.trim();
+
+    if (!trimmedAr) {
+      toast.error(isArabic ? "يرجى إدخال اسم المخبر بالعربية" : "Please enter the Arabic lab name");
+      return;
+    }
+
+    const currentLabs: FacultyFacility[] = [...(selectedFacultyForHub.facilities || [])];
+    const labItem: FacultyFacility = {
+      nameAr: trimmedAr,
+      nameEn: trimmedEn || trimmedAr,
+      descriptionAr: hubLabDescAr.trim(),
+      descriptionEn: hubLabDescEn.trim(),
+    };
+
+    let updatedLabs: FacultyFacility[];
+    if (editingHubLabIndex !== null && editingHubLabIndex >= 0) {
+      updatedLabs = currentLabs.map((l, idx) => (idx === editingHubLabIndex ? labItem : l));
+    } else {
+      updatedLabs = [...currentLabs, labItem];
+    }
+
+    try {
+      await updateMutation.mutateAsync({
+        id: selectedFacultyForHub.id,
+        facilities: updatedLabs,
+        labsCount: updatedLabs.length,
+      });
+
+      setSelectedFacultyForHub({
+        ...selectedFacultyForHub,
+        facilities: updatedLabs,
+        labsCount: updatedLabs.length,
+      });
+
+      setIsHubLabModalOpen(false);
+      toast.success(
+        editingHubLabIndex !== null
+          ? (isArabic ? "تم تحديث بيانات المخبر بنجاح!" : "Laboratory updated successfully!")
+          : (isArabic ? "تمت إضافة المخبر للكلية بنجاح!" : "Laboratory added successfully!")
+      );
+    } catch (err) {
+      toast.error(isArabic ? "حدث خطأ أثناء حفظ بيانات المخبر" : "Failed to save laboratory");
+    }
+  };
+
+  const handleDeleteHubLab = async (index: number) => {
+    if (!selectedFacultyForHub) return;
+    const currentLabs: FacultyFacility[] = [...(selectedFacultyForHub.facilities || [])];
+    const updatedLabs = currentLabs.filter((_, idx) => idx !== index);
+
+    try {
+      await updateMutation.mutateAsync({
+        id: selectedFacultyForHub.id,
+        facilities: updatedLabs,
+        labsCount: updatedLabs.length,
+      });
+
+      setSelectedFacultyForHub({
+        ...selectedFacultyForHub,
+        facilities: updatedLabs,
+        labsCount: updatedLabs.length,
+      });
+
+      toast.success(isArabic ? "تم حذف المخبر بنجاح!" : "Laboratory deleted successfully!");
+    } catch (err) {
+      toast.error(isArabic ? "حدث خطأ أثناء حذف المخبر" : "Failed to delete laboratory");
     }
   };
 
@@ -793,16 +932,22 @@ export default function FacultiesManagement() {
   };
 
   const handleAddFacility = () => {
-    if (!newLabNameAr) return;
+    const trimmedLabNameAr = newLabNameAr.trim();
+    const trimmedLabNameEn = newLabNameEn.trim();
+    if (!trimmedLabNameAr) {
+      toast.error(isArabic ? "يرجى إدخال اسم المختبر بالعربية" : "Please enter the Arabic lab name");
+      return;
+    }
     const item: FacultyFacility = {
-      nameAr: newLabNameAr,
-      nameEn: newLabNameEn || newLabNameAr,
-      descriptionAr: newLabDescAr,
+      nameAr: trimmedLabNameAr,
+      nameEn: trimmedLabNameEn || trimmedLabNameAr,
+      descriptionAr: newLabDescAr.trim(),
     };
     setFacilities([...facilities, item]);
     setNewLabNameAr("");
     setNewLabNameEn("");
     setNewLabDescAr("");
+    toast.success(isArabic ? "تمت إضافة المختبر إلى القائمة" : "Lab added to list");
   };
 
   const handleRemoveFacility = (index: number) => {
@@ -811,43 +956,82 @@ export default function FacultiesManagement() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nameAr) {
-      toast.error(isArabic ? "يرجى تعبئة اسم الكلية" : "Please enter faculty name");
+    const trimmedNameAr = nameAr.trim();
+    const trimmedNameEn = nameEn.trim();
+    const trimmedSlug = slug.trim();
+
+    if (!trimmedNameAr) {
+      toast.error(isArabic ? "يرجى إدخال اسم الكلية بالعربية" : "Please enter the Arabic faculty name");
+      return;
+    }
+
+    if (!trimmedNameEn) {
+      toast.error(isArabic ? "يرجى إدخال اسم الكلية بالإنجليزية" : "Please enter the English faculty name");
+      return;
+    }
+
+    if (!trimmedSlug) {
+      toast.error(isArabic ? "يرجى إدخال الرابط المختصر للكلية" : "Please enter the faculty slug");
+      return;
+    }
+
+    if (establishedYear < 1900 || establishedYear > 2100) {
+      toast.error(isArabic ? "يرجى إدخال سنة تأسيس صحيحة بين 1900 و 2100" : "Please enter a valid established year between 1900 and 2100");
+      return;
+    }
+
+    if (studentsCount < 0) {
+      toast.error(isArabic ? "عدد الطلاب لا يمكن أن يكون سالباً" : "Students count cannot be negative");
+      return;
+    }
+
+    if (labsCount < 0) {
+      toast.error(isArabic ? "عدد المختبرات لا يمكن أن يكون سالباً" : "Labs count cannot be negative");
+      return;
+    }
+
+    if (researchPapersCount < 0) {
+      toast.error(isArabic ? "عدد الأبحاث لا يمكن أن يكون سالباً" : "Research papers count cannot be negative");
+      return;
+    }
+
+    if (employmentRate < 0 || employmentRate > 100) {
+      toast.error(isArabic ? "نسبة التوظيف يجب أن تكون بين 0 و 100" : "Employment rate must be between 0 and 100");
       return;
     }
 
     const cleanSlug =
-      slug.trim().replace(/^\/+|\/+$/g, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") ||
-      (nameEn || nameAr).trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]+/g, "").replace(/^-+|-+$/g, "") ||
+      trimmedSlug.replace(/^\/+|\/+$/g, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") ||
+      trimmedNameEn.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]+/g, "").replace(/^-+|-+$/g, "") ||
       `faculty-${Date.now()}`;
 
     const selectedDean = deanId !== "none" ? Number(deanId) : null;
 
     const payload: any = {
-      nameAr,
-      nameEn: nameEn || nameAr,
+      nameAr: trimmedNameAr,
+      nameEn: trimmedNameEn,
       slug: cleanSlug,
-      descriptionAr: descriptionAr || `كلية ${nameAr}`,
-      descriptionEn: descriptionEn || `Faculty of ${nameEn || nameAr}`,
-      mottoAr,
-      mottoEn,
+      descriptionAr: descriptionAr.trim() || `كلية ${trimmedNameAr}`,
+      descriptionEn: descriptionEn.trim() || `Faculty of ${trimmedNameEn}`,
+      mottoAr: mottoAr.trim(),
+      mottoEn: mottoEn.trim(),
       primaryColor,
       accentColor,
       heroBanner,
       logoUrl,
       dean: selectedDean,
-      deanNameAr,
-      deanNameEn,
-      deanMessageAr,
-      deanMessageEn,
-      deanPhoto,
+      deanNameAr: deanNameAr.trim(),
+      deanNameEn: deanNameEn.trim(),
+      deanMessageAr: deanMessageAr.trim(),
+      deanMessageEn: deanMessageEn.trim(),
+      deanPhoto: deanPhoto.trim(),
       establishedYear,
       studentsCount,
       labsCount: facilities.length > 0 ? facilities.length : labsCount,
       researchPapersCount,
       employmentRate,
       facilities,
-      guideDocumentUrl,
+      guideDocumentUrl: guideDocumentUrl.trim(),
       layoutConfig: {
         headerStyle,
         sectionsOrder,
@@ -867,10 +1051,10 @@ export default function FacultiesManagement() {
     try {
       if (currentFaculty) {
         await updateMutation.mutateAsync({ id: currentFaculty.id, ...payload });
-        toast.success(isArabic ? "تم تحديث موقع وهوية الكلية بنجاح!" : "Faculty microsite updated successfully!");
+        toast.success(isArabic ? "تم تحديث موقع وهوية الكلية بنجاح" : "Faculty microsite updated successfully");
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(isArabic ? "تم إنشاء الكلية وموقعها الفرعي بنجاح!" : "Faculty microsite created successfully!");
+        toast.success(isArabic ? "تم إنشاء الكلية وموقعها الفرعي بنجاح" : "Faculty microsite created successfully");
       }
       setIsOpen(false);
     } catch (error: any) {
@@ -987,7 +1171,7 @@ export default function FacultiesManagement() {
           </CardContent>
         </Card>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {displayFaculties.map((faculty) => {
             const facultyMembersCount = displayMembers.filter((m) => m.faculty === faculty.id || m.facultySlug === faculty.slug).length;
             const themeColor = faculty.primaryColor || "#800000";
@@ -996,12 +1180,12 @@ export default function FacultiesManagement() {
             return (
               <Card
                 key={faculty.id}
-                className="border border-border/70 hover:border-primary/40 bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group"
+                className="border border-border/70 hover:border-primary/40 bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group min-w-0 w-full"
               >
-                <div>
+                <div className="min-w-0 w-full">
                   <CardHeader className="bg-muted/10 pb-3 relative p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div
                           className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-300 group-hover:scale-105"
                           style={{
@@ -1012,7 +1196,7 @@ export default function FacultiesManagement() {
                         >
                           <Building2 className="h-6 w-6" />
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <CardTitle
                             className="text-base sm:text-lg font-bold truncate group-hover:text-primary transition-colors cursor-pointer"
                             onClick={() => handleOpenHub(faculty)}
@@ -1070,18 +1254,18 @@ export default function FacultiesManagement() {
                     </div>
 
                     {/* Color Swatches */}
-                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/40">
-                      <span className="text-[11px] text-muted-foreground font-medium">
+                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/40 min-w-0 gap-2">
+                      <span className="text-[11px] text-muted-foreground font-medium truncate">
                         {isArabic ? "الهوية البصرية للكلية" : "Visual Identity"}
                       </span>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <span
-                          className="w-3 h-3 rounded-full border shadow-2xs inline-block"
+                          className="w-3 h-3 rounded-full border shadow-2xs inline-block shrink-0"
                           style={{ backgroundColor: themeColor }}
                           title={isArabic ? "اللون الأساسي" : "Primary"}
                         />
                         <span
-                          className="w-3 h-3 rounded-full border shadow-2xs inline-block"
+                          className="w-3 h-3 rounded-full border shadow-2xs inline-block shrink-0"
                           style={{ backgroundColor: accentColor }}
                           title={isArabic ? "اللون الثانوي" : "Accent"}
                         />
@@ -1089,7 +1273,7 @@ export default function FacultiesManagement() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-5 pt-3 space-y-3.5">
+                  <CardContent className="p-5 pt-3 space-y-3.5 min-w-0">
                     {faculty.descriptionAr && (
                       <CardDescription className="line-clamp-2 text-xs font-medium leading-relaxed">
                         {isArabic ? faculty.descriptionAr : faculty.descriptionEn}
@@ -1099,7 +1283,7 @@ export default function FacultiesManagement() {
                     {/* Motto Badge */}
                     {faculty.mottoAr && (
                       <div
-                        className="p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2"
+                        className="p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 min-w-0 overflow-hidden"
                         style={{
                           backgroundColor: hexToRgba(accentColor, 0.08),
                           borderColor: hexToRgba(accentColor, 0.22),
@@ -1107,18 +1291,18 @@ export default function FacultiesManagement() {
                         }}
                       >
                         <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                        <span className="line-clamp-1">{isArabic ? faculty.mottoAr : faculty.mottoEn}</span>
+                        <span className="truncate">{isArabic ? faculty.mottoAr : faculty.mottoEn}</span>
                       </div>
                     )}
 
                     {/* Dean Badge */}
-                    <div className="p-2.5 border rounded-xl bg-amber-500/5 border-amber-500/20 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-2.5 border rounded-xl bg-amber-500/5 border-amber-500/20 flex items-center justify-between min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20">
                           <Crown className="h-4 w-4 text-amber-600" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] uppercase font-bold text-amber-700">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] uppercase font-bold text-amber-700 truncate">
                             {isArabic ? "عمادة الكلية" : "Faculty Dean"}
                           </p>
                           <p className="text-xs font-bold text-foreground truncate">
@@ -1131,28 +1315,28 @@ export default function FacultiesManagement() {
                     </div>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold pt-1">
-                      <div className="p-2 rounded-xl bg-muted/40 border border-border/40">
-                        <span className="text-muted-foreground block text-[10px] mb-0.5">
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold pt-1 min-w-0">
+                      <div className="p-2 rounded-xl bg-muted/40 border border-border/40 min-w-0 overflow-hidden">
+                        <span className="text-muted-foreground block text-[10px] mb-0.5 truncate">
                           {isArabic ? "الأقسام" : "Depts"}
                         </span>
-                        <span className="text-sm font-bold text-primary">
+                        <span className="text-sm font-bold text-primary truncate block">
                           {faculty.totalPrograms ?? displayPrograms.filter((p) => p.faculty === faculty.id).length}
                         </span>
                       </div>
-                      <div className="p-2 rounded-xl bg-muted/40 border border-border/40">
-                        <span className="text-muted-foreground block text-[10px] mb-0.5">
+                      <div className="p-2 rounded-xl bg-muted/40 border border-border/40 min-w-0 overflow-hidden">
+                        <span className="text-muted-foreground block text-[10px] mb-0.5 truncate">
                           {isArabic ? "المدرسين" : "Teachers"}
                         </span>
-                        <span className="text-sm font-bold text-primary">
+                        <span className="text-sm font-bold text-primary truncate block">
                           {faculty.totalTeachers ?? displayMembers.filter((m: any) => m.faculty === faculty.id || m.departmentDetail?.faculty === faculty.id).length}
                         </span>
                       </div>
-                      <div className="p-2 rounded-xl bg-muted/40 border border-border/40">
-                        <span className="text-muted-foreground block text-[10px] mb-0.5">
+                      <div className="p-2 rounded-xl bg-muted/40 border border-border/40 min-w-0 overflow-hidden">
+                        <span className="text-muted-foreground block text-[10px] mb-0.5 truncate">
                           {isArabic ? "الطلاب" : "Students"}
                         </span>
-                        <span className="text-sm font-bold text-primary">
+                        <span className="text-sm font-bold text-primary truncate block">
                           {faculty.totalStudents ?? displayStudents.filter((s: any) => s.faculty === faculty.id || s.programDetail?.faculty === faculty.id).length}
                         </span>
                       </div>
@@ -1175,11 +1359,7 @@ export default function FacultiesManagement() {
                     <TableHead className="text-start font-bold">{isArabic ? "عميد الكلية" : "Faculty Dean"}</TableHead>
                     <TableHead className="text-start font-bold">{isArabic ? "الهوية البصرية" : "Branding"}</TableHead>
                     <TableHead className="text-start font-bold">{isArabic ? "الإحصائيات" : "Statistics"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "الكلية" : "Faculty"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "عميد الكلية" : "Faculty Dean"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "الهوية البصرية" : "Branding"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "الإحصائيات" : "Statistics"}</TableHead>
-                    <TableHead className="text-center font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
+                    <TableHead className="text-end font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1374,10 +1554,10 @@ export default function FacultiesManagement() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <Label className="text-xs font-bold flex items-center gap-1.5">
                         <Palette className="h-4 w-4 text-primary" />
-                        <span>{isArabic ? "اختيار قالب ألوان متناسق (Color Themes)" : "Choose a Color Theme"}</span>
+                        <span>{isArabic ? "قالب الألوان" : "Color Theme"}</span>
                       </Label>
                       <span className="text-[11px] text-muted-foreground">
-                        {isArabic ? "يمكنك اختيار أي قالب وتعديل درجاته بحرية" : "Select any palette and customize below"}
+                        {isArabic ? "اختر قالباً لونياً متناسقاً أو خصص الألوان أدناه" : "Select a harmonious palette or customize below"}
                       </span>
                     </div>
 
@@ -1391,7 +1571,7 @@ export default function FacultiesManagement() {
                       }}
                     >
                       <SelectTrigger className="bg-background w-full">
-                        <SelectValue placeholder={isArabic ? "-- اختر قالباً لونياً متناسقاً --" : "-- Select a balanced color palette --"} />
+                        <SelectValue placeholder={isArabic ? "اختر قالباً لونياً متناسقاً" : "Select a balanced color palette"} />
                       </SelectTrigger>
                       <SelectContent>
                         {COLOR_PALETTES.map((palette) => (
@@ -1411,11 +1591,17 @@ export default function FacultiesManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="f-nameAr">{isArabic ? "اسم الكلية (بالعربية)" : "Faculty Name (AR)"}</Label>
-                      <Input id="f-nameAr" value={nameAr} onChange={(e) => setNameAr(e.target.value)} required placeholder="كلية الهندسة" />
+                      <Label htmlFor="f-nameAr">{isArabic ? "اسم الكلية بالعربية" : "Arabic Faculty Name"}</Label>
+                      <Input
+                        id="f-nameAr"
+                        value={nameAr}
+                        onChange={(e) => setNameAr(e.target.value)}
+                        required
+                        placeholder={isArabic ? "مثال: كلية الهندسة" : "e.g. Faculty of Engineering"}
+                      />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="f-nameEn">{isArabic ? "اسم الكلية (بالإنكليزية)" : "Faculty Name (EN)"}</Label>
+                      <Label htmlFor="f-nameEn">{isArabic ? "اسم الكلية بالإنجليزية" : "English Faculty Name"}</Label>
                       <Input
                         id="f-nameEn"
                         value={nameEn}
@@ -1426,7 +1612,7 @@ export default function FacultiesManagement() {
                             setSlug(val.toLowerCase().trim().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, ""));
                           }
                         }}
-                        placeholder="Faculty of Engineering"
+                        placeholder={isArabic ? "مثال: Faculty of Engineering" : "e.g. Faculty of Engineering"}
                       />
                     </div>
                   </div>
@@ -1435,7 +1621,7 @@ export default function FacultiesManagement() {
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
                     <div className="sm:col-span-6 space-y-2">
                       <Label htmlFor="f-slug" className="flex items-center gap-1.5">
-                        <span>{isArabic ? "الرابط المختصر (Slug)" : "Faculty Slug"}</span>
+                        <span>{isArabic ? "الرابط المختصر" : "Faculty Slug"}</span>
                       </Label>
                       <Input
                         id="f-slug"
@@ -1445,18 +1631,6 @@ export default function FacultiesManagement() {
                         dir="ltr"
                         placeholder={isArabic ? "مثال: engineering" : "e.g. engineering"}
                       />
-                      {/* Explanatory Box for Slug */}
-                      <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
-                          <Info className="h-3.5 w-3.5 shrink-0" />
-                          <span>{isArabic ? "وظيفة الرابط المختصر:" : "What is Faculty Slug?"}</span>
-                        </div>
-                        <p className="leading-relaxed text-[11px]">
-                          {isArabic
-                            ? "هو المعرف الفريد النظيف لصفحة الكلية على الويب (مثال: asu.edu.sy/faculties/" + (slug || "it") + "). يُساعد الطلاب في الوصول المباشر للكلية، ويحسّن ظهور الكلية في محركات البحث (Google SEO)."
-                            : "A clean unique web identifier for the faculty microsite (e.g. asu.edu.sy/faculties/" + (slug || "it") + ") making direct sharing easy and boosting SEO."}
-                        </p>
-                      </div>
                     </div>
 
                     <div className="sm:col-span-3 space-y-2">
@@ -1483,10 +1657,10 @@ export default function FacultiesManagement() {
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-bold flex items-center gap-1.5">
                           <ImageIcon className="h-4 w-4 text-primary" />
-                          <span>{isArabic ? "شعار الكلية (Logo / Emblem)" : "Faculty Emblem"}</span>
+                          <span>{isArabic ? "شعار الكلية" : "Faculty Emblem"}</span>
                         </Label>
                         <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                          {isArabic ? "الحد الأقصى: 2MB" : "Max 2MB"}
+                          {isArabic ? "الحد الأقصى: 2 ميغابايت" : "Max 2MB"}
                         </Badge>
                       </div>
 
@@ -1539,10 +1713,10 @@ export default function FacultiesManagement() {
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-bold flex items-center gap-1.5">
                           <LayoutTemplate className="h-4 w-4 text-primary" />
-                          <span>{isArabic ? "صورة البانر العريضة (Hero Banner)" : "Hero Banner Image"}</span>
+                          <span>{isArabic ? "صورة البانر الرئيسية" : "Hero Banner Image"}</span>
                         </Label>
                         <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                          {isArabic ? "الحد الأقصى: 4MB" : "Max 4MB"}
+                          {isArabic ? "الحد الأقصى: 4 ميغابايت" : "Max 4MB"}
                         </Badge>
                       </div>
 
@@ -1593,18 +1767,46 @@ export default function FacultiesManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="f-mottoAr">{isArabic ? "شعار الكلية (بالعربية)" : "Faculty Motto (AR)"}</Label>
-                      <Input id="f-mottoAr" value={mottoAr} onChange={(e) => setMottoAr(e.target.value)} placeholder="روّاد التكنولوجيا والابتكار الهندسي" />
+                      <Label htmlFor="f-mottoAr">{isArabic ? "شعار الكلية بالعربية" : "Arabic Faculty Motto"}</Label>
+                      <Input
+                        id="f-mottoAr"
+                        value={mottoAr}
+                        onChange={(e) => setMottoAr(e.target.value)}
+                        placeholder={isArabic ? "مثال: روّاد التكنولوجيا والابتكار الهندسي" : "e.g. Pioneering Engineering Innovation"}
+                      />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="f-mottoEn">{isArabic ? "شعار الكلية (بالإنكليزية)" : "Faculty Motto (EN)"}</Label>
-                      <Input id="f-mottoEn" value={mottoEn} onChange={(e) => setMottoEn(e.target.value)} placeholder="Pioneering Engineering Innovation" />
+                      <Label htmlFor="f-mottoEn">{isArabic ? "شعار الكلية بالإنجليزية" : "English Faculty Motto"}</Label>
+                      <Input
+                        id="f-mottoEn"
+                        value={mottoEn}
+                        onChange={(e) => setMottoEn(e.target.value)}
+                        placeholder={isArabic ? "مثال: Pioneering Engineering Innovation" : "e.g. Pioneering Engineering Innovation"}
+                      />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="f-descAr">{isArabic ? "شرح ونبذة الكلية" : "Faculty Overview"}</Label>
-                    <Textarea id="f-descAr" value={descriptionAr} onChange={(e) => setDescriptionAr(e.target.value)} rows={3} placeholder="نبذة عامة وشاملة عن الكلية وتخصصاتها الأكاديمية والمخبرية..." />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="f-descAr">{isArabic ? "نبذة عن الكلية بالعربية" : "Arabic Faculty Description"}</Label>
+                      <Textarea
+                        id="f-descAr"
+                        value={descriptionAr}
+                        onChange={(e) => setDescriptionAr(e.target.value)}
+                        rows={3}
+                        placeholder={isArabic ? "نبذة عامة وشاملة عن الكلية وتخصصاتها الأكاديمية والمخبرية..." : "Comprehensive overview of the faculty..."}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="f-descEn">{isArabic ? "نبذة عن الكلية بالإنجليزية" : "English Faculty Description"}</Label>
+                      <Textarea
+                        id="f-descEn"
+                        value={descriptionEn}
+                        onChange={(e) => setDescriptionEn(e.target.value)}
+                        rows={3}
+                        placeholder={isArabic ? "نبذة عامة وشاملة عن الكلية بالإنجليزية..." : "Comprehensive overview of the faculty in English..."}
+                      />
+                    </div>
                   </div>
                 </TabsContent>
 
@@ -1614,27 +1816,27 @@ export default function FacultiesManagement() {
                   <div className="space-y-3">
                     <Label className="text-sm font-bold flex items-center gap-2">
                       <LayoutTemplate className="h-4 w-4 text-primary" />
-                      <span>{isArabic ? "نمط ترويسة الصفحة (Header Style)" : "Header Layout Style"}</span>
+                      <span>{isArabic ? "نمط ترويسة الصفحة" : "Header Layout Style"}</span>
                     </Label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
                         {
                           id: "hero_split",
-                          nameAr: "عصري مقسوم (Split)",
+                          nameAr: "عصري مقسوم",
                           nameEn: "Modern Split",
                           descAr: "هيدر بانورامي مع معلومات الكلية والشعار وأزرار تفاعلية",
                           descEn: "Emblem, overview and action buttons side by side",
                         },
                         {
                           id: "hero_full",
-                          nameAr: "بانورامي عريض (Cinematic)",
+                          nameAr: "بانورامي عريض",
                           nameEn: "Cinematic Full",
                           descAr: "صورة بانورامية تغطي الهيدر مع تدرج لوني يعكس ثيم الكلية",
                           descEn: "Full width banner with branded color overlay",
                         },
                         {
                           id: "minimal",
-                          nameAr: "هادئ ومركّز (Minimal)",
+                          nameAr: "هادئ ومركّز",
                           nameEn: "Clean Minimal",
                           descAr: "ترويسة بسيطة خفيفة تركز على العناوين والمسارات",
                           descEn: "Compact and clean header focused on content",
@@ -1856,7 +2058,7 @@ export default function FacultiesManagement() {
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-medium text-muted-foreground">
-                                        {isArabic ? "العنوان الرئيسي (بالعربية)" : "Section Title (AR)"}
+                                        {isArabic ? "العنوان الرئيسي بالعربية" : "Arabic Section Title"}
                                       </span>
                                       <Input
                                         value={secConf.titleAr || ""}
@@ -1867,7 +2069,7 @@ export default function FacultiesManagement() {
                                     </div>
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-medium text-muted-foreground">
-                                        {isArabic ? "العنوان الرئيسي (بالإنكليزية)" : "Section Title (EN)"}
+                                        {isArabic ? "العنوان الرئيسي بالإنجليزية" : "English Section Title"}
                                       </span>
                                       <Input
                                         value={secConf.titleEn || ""}
@@ -1878,7 +2080,7 @@ export default function FacultiesManagement() {
                                     </div>
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-medium text-muted-foreground">
-                                        {isArabic ? "النص التوضيحي/الفرعي (بالعربية)" : "Section Subtitle (AR)"}
+                                        {isArabic ? "النص الفرعي بالعربية" : "Arabic Section Subtitle"}
                                       </span>
                                       <Input
                                         value={secConf.subtitleAr || ""}
@@ -1889,7 +2091,7 @@ export default function FacultiesManagement() {
                                     </div>
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-medium text-muted-foreground">
-                                        {isArabic ? "النص التوضيحي/الفرعي (بالإنكليزية)" : "Section Subtitle (EN)"}
+                                        {isArabic ? "النص الفرعي بالإنجليزية" : "English Section Subtitle"}
                                       </span>
                                       <Input
                                         value={secConf.subtitleEn || ""}
@@ -1907,7 +2109,7 @@ export default function FacultiesManagement() {
                                   <div className="space-y-2">
                                     <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                       <LayoutTemplate className="h-3.5 w-3.5 text-primary" />
-                                      <span>{isArabic ? "نمط العرض والتخطيط (Layout Variant)" : "Layout Variant"}</span>
+                                      <span>{isArabic ? "نمط العرض والتخطيط" : "Layout Variant"}</span>
                                     </Label>
                                     <div className="grid grid-cols-2 gap-2">
                                       {item.supportedLayouts.map((l) => {
@@ -1934,11 +2136,11 @@ export default function FacultiesManagement() {
                                   <div className="space-y-2">
                                     <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                       <Paintbrush className="h-3.5 w-3.5 text-primary" />
-                                      <span>{isArabic ? "خلفية القسم (Background Style)" : "Section Background"}</span>
+                                      <span>{isArabic ? "خلفية القسم" : "Section Background"}</span>
                                     </Label>
                                     <div className="grid grid-cols-2 gap-2">
                                       {[
-                                        { id: "default", nameAr: "نظيف (افتراضي)", nameEn: "Clean Default" },
+                                        { id: "default", nameAr: "افتراضي نظيف", nameEn: "Clean Default" },
                                         { id: "muted", nameAr: "رمادي هادئ", nameEn: "Muted Slate" },
                                         { id: "tint", nameAr: "تدرج هوية الكلية", nameEn: "Faculty Tint" },
                                         { id: "solid", nameAr: "لون الكلية البارز", nameEn: "Solid Branded" },
@@ -2004,7 +2206,7 @@ export default function FacultiesManagement() {
                                     <div className="flex items-center justify-between">
                                       <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                         <Link2 className="h-3.5 w-3.5 text-primary" />
-                                        <span>{isArabic ? "زر إجراء إضافي في نهاية القسم (Action Button)" : "Custom CTA Button"}</span>
+                                        <span>{isArabic ? "زر الإجراء الإضافي" : "Custom Action Button"}</span>
                                       </Label>
                                       <Button
                                         type="button"
@@ -2022,7 +2224,7 @@ export default function FacultiesManagement() {
                                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-background border">
                                         <div className="space-y-1">
                                           <span className="text-[10px] font-medium text-muted-foreground">
-                                            {isArabic ? "نص الزر (بالعربية)" : "Button Text (AR)"}
+                                            {isArabic ? "نص الزر بالعربية" : "Arabic Button Text"}
                                           </span>
                                           <Input
                                             value={secConf.ctaTextAr || ""}
@@ -2033,7 +2235,7 @@ export default function FacultiesManagement() {
                                         </div>
                                         <div className="space-y-1">
                                           <span className="text-[10px] font-medium text-muted-foreground">
-                                            {isArabic ? "نص الزر (بالإنكليزية)" : "Button Text (EN)"}
+                                            {isArabic ? "نص الزر بالإنجليزية" : "English Button Text"}
                                           </span>
                                           <Input
                                             value={secConf.ctaTextEn || ""}
@@ -2044,7 +2246,7 @@ export default function FacultiesManagement() {
                                         </div>
                                         <div className="space-y-1">
                                           <span className="text-[10px] font-medium text-muted-foreground">
-                                            {isArabic ? "رابط التوجيه (URL)" : "Target Link"}
+                                            {isArabic ? "رابط التوجيه" : "Target Link"}
                                           </span>
                                           <Input
                                             value={secConf.ctaLink || ""}
@@ -2089,19 +2291,19 @@ export default function FacultiesManagement() {
                   <div className="space-y-2">
                     <Label className="font-bold flex items-center gap-2">
                       <Crown className="h-4 w-4 text-amber-600" />
-                      <span>{isArabic ? "تعيين العميد من الكادر الأكاديمي (اختياري)" : "Appoint Dean from Faculty Members (Optional)"}</span>
+                      <span>{isArabic ? "تعيين عميد الكلية" : "Appoint Faculty Dean"}</span>
                     </Label>
                     <p className="text-[11px] text-muted-foreground">
                       {isArabic
-                        ? "اختياري: يمكنك حفظ الكلية الآن دون تعيين عميد، وتعيينه لاحقاً بعد إضافة كادر الأساتذة."
-                        : "Optional: You can save the faculty now without a Dean and appoint one later after adding staff."}
+                        ? "يمكنك حفظ الكلية دون تعيين عميد، وتعيينه لاحقاً بعد إضافة كادر الأساتذة."
+                        : "You can save the faculty without appointing a Dean and assign one later after adding staff."}
                     </p>
                     <Select value={deanId} onValueChange={setDeanId}>
                       <SelectTrigger className="bg-background">
-                        <SelectValue placeholder={isArabic ? "اختر أستاذ لتعيينه عميداً (اختياري)" : "Select Professor as Dean (Optional)"} />
+                        <SelectValue placeholder={isArabic ? "اختر أستاذ لتعيينه عميداً" : "Select Professor as Dean"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{isArabic ? "-- بدون عميد حالياً (يمكن تعيينه لاحقاً) --" : "-- No Dean (Can appoint later) --"}</SelectItem>
+                        <SelectItem value="none">{isArabic ? "بدون عميد حالياً" : "No Dean Assigned"}</SelectItem>
                         {displayMembers.map((member) => (
                           <SelectItem key={member.id} value={member.id.toString()}>
                             {isArabic ? member.nameAr : member.nameEn} ({isArabic ? member.titleAr : member.titleEn})
@@ -2113,18 +2315,56 @@ export default function FacultiesManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="f-deanNameAr">{isArabic ? "اسم العميد (إذا لم يُختر من القائمة)" : "Custom Dean Name (AR)"}</Label>
-                      <Input id="f-deanNameAr" value={deanNameAr} onChange={(e) => setDeanNameAr(e.target.value)} placeholder="أ. د. محمد سعيد الحموي" />
+                      <Label htmlFor="f-deanNameAr">{isArabic ? "اسم العميد بالعربية" : "Arabic Dean Name"}</Label>
+                      <Input
+                        id="f-deanNameAr"
+                        value={deanNameAr}
+                        onChange={(e) => setDeanNameAr(e.target.value)}
+                        placeholder={isArabic ? "مثال: أ. د. محمد سعيد الحموي" : "e.g. Prof. Dr. Mohammad Saeed"}
+                      />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="f-deanPhoto">{isArabic ? "صورة العميد الشخصية" : "Dean Photo URL"}</Label>
-                      <Input id="f-deanPhoto" value={deanPhoto} onChange={(e) => setDeanPhoto(e.target.value)} placeholder="/images/faculty/prof_male_1.png" />
+                      <Label htmlFor="f-deanNameEn">{isArabic ? "اسم العميد بالإنجليزية" : "English Dean Name"}</Label>
+                      <Input
+                        id="f-deanNameEn"
+                        value={deanNameEn}
+                        onChange={(e) => setDeanNameEn(e.target.value)}
+                        placeholder={isArabic ? "مثال: Prof. Dr. Mohammad Saeed" : "e.g. Prof. Dr. Mohammad Saeed"}
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="f-deanMessageAr">{isArabic ? "كلمة العميد الترحيبية الرسمية (بالعربية)" : "Dean Welcome Message (AR)"}</Label>
-                    <Textarea id="f-deanMessageAr" value={deanMessageAr} onChange={(e) => setDeanMessageAr(e.target.value)} rows={4} placeholder="أهلاً بكم في الكلية، نهدف إلى تقديم تعليم عالي الجودة يواكب المعايير العالمية..." />
+                    <Label htmlFor="f-deanPhoto">{isArabic ? "رابط صورة العميد" : "Dean Photo URL"}</Label>
+                    <Input
+                      id="f-deanPhoto"
+                      value={deanPhoto}
+                      onChange={(e) => setDeanPhoto(e.target.value)}
+                      placeholder={isArabic ? "مثال: /images/faculty/prof_male_1.png" : "e.g. /images/faculty/prof_male_1.png"}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="f-deanMessageAr">{isArabic ? "كلمة العميد الترحيبية بالعربية" : "Arabic Dean Welcome Message"}</Label>
+                      <Textarea
+                        id="f-deanMessageAr"
+                        value={deanMessageAr}
+                        onChange={(e) => setDeanMessageAr(e.target.value)}
+                        rows={4}
+                        placeholder={isArabic ? "أهلاً بكم في الكلية، نهدف إلى تقديم تعليم عالي الجودة يواكب المعايير العالمية..." : "Welcome to the faculty. We are committed to academic excellence and innovation..."}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="f-deanMessageEn">{isArabic ? "كلمة العميد الترحيبية بالإنجليزية" : "English Dean Welcome Message"}</Label>
+                      <Textarea
+                        id="f-deanMessageEn"
+                        value={deanMessageEn}
+                        onChange={(e) => setDeanMessageEn(e.target.value)}
+                        rows={4}
+                        placeholder={isArabic ? "أهلاً بكم في الكلية باللغة الإنجليزية..." : "Welcome message from the Dean in English..."}
+                      />
+                    </div>
                   </div>
                 </TabsContent>
 
@@ -2143,7 +2383,7 @@ export default function FacultiesManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="f-labsCount">{isArabic ? "عدد المخابر والمرافق" : "Labs Count"}</Label>
+                      <Label htmlFor="f-labsCount">{isArabic ? "عدد المختبرات والمرافق" : "Labs & Facilities Count"}</Label>
                       <Input id="f-labsCount" type="number" value={labsCount} onChange={(e) => setLabsCount(Number(e.target.value))} />
                     </div>
                     <div className="space-y-2">
@@ -2151,7 +2391,7 @@ export default function FacultiesManagement() {
                       <Input id="f-researchPapers" type="number" value={researchPapersCount} onChange={(e) => setResearchPapersCount(Number(e.target.value))} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="f-employmentRate">{isArabic ? "نسبة توظيف الخريجين (%)" : "Employment Rate (%)"}</Label>
+                      <Label htmlFor="f-employmentRate">{isArabic ? "نسبة توظيف الخريجين المئوية" : "Employment Rate Percentage"}</Label>
                       <Input id="f-employmentRate" type="number" value={employmentRate} onChange={(e) => setEmploymentRate(Number(e.target.value))} />
                     </div>
                   </div>
@@ -2160,8 +2400,13 @@ export default function FacultiesManagement() {
                 {/* Tab 4: Research Labs & Documents */}
                 <TabsContent value="labs" className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="f-guideDoc">{isArabic ? "رابط دليل الكلية بروشور PDF" : "Faculty Prospectus PDF Link"}</Label>
-                    <Input id="f-guideDoc" value={guideDocumentUrl} onChange={(e) => setGuideDocumentUrl(e.target.value)} placeholder="https://asu.edu.sy/docs/engineering-prospectus.pdf" />
+                    <Label htmlFor="f-guideDoc">{isArabic ? "رابط دليل الكلية التعريفي" : "Faculty Prospectus Link"}</Label>
+                    <Input
+                      id="f-guideDoc"
+                      value={guideDocumentUrl}
+                      onChange={(e) => setGuideDocumentUrl(e.target.value)}
+                      placeholder={isArabic ? "مثال: https://asu.edu.sy/docs/engineering-prospectus.pdf" : "e.g. https://asu.edu.sy/docs/engineering-prospectus.pdf"}
+                    />
                   </div>
 
                   {/* Facilities List Manager */}
@@ -2184,15 +2429,28 @@ export default function FacultiesManagement() {
                     ))}
 
                     <div className="p-4 border rounded-xl bg-background space-y-3">
-                      <p className="text-xs font-bold text-muted-foreground">{isArabic ? "+ إضافة مخبر/مرفق جديد للكلية" : "+ Add New Research Lab"}</p>
+                      <p className="text-xs font-bold text-muted-foreground">{isArabic ? "+ إضافة مختبر جديد للكلية" : "+ Add New Research Lab"}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <Input placeholder={isArabic ? "اسم المخبر (بالعربية)" : "Lab Name (AR)"} value={newLabNameAr} onChange={(e) => setNewLabNameAr(e.target.value)} />
-                        <Input placeholder={isArabic ? "اسم المخبر (بالإنكليزية)" : "Lab Name (EN)"} value={newLabNameEn} onChange={(e) => setNewLabNameEn(e.target.value)} />
+                        <Input
+                          placeholder={isArabic ? "اسم المختبر بالعربية" : "Arabic Lab Name"}
+                          value={newLabNameAr}
+                          onChange={(e) => setNewLabNameAr(e.target.value)}
+                        />
+                        <Input
+                          placeholder={isArabic ? "اسم المختبر بالإنجليزية" : "English Lab Name"}
+                          value={newLabNameEn}
+                          onChange={(e) => setNewLabNameEn(e.target.value)}
+                        />
                       </div>
-                      <Textarea placeholder={isArabic ? "تجهيزات ومحتويات المخبر..." : "Lab description & equipment..."} value={newLabDescAr} onChange={(e) => setNewLabDescAr(e.target.value)} rows={2} />
+                      <Textarea
+                        placeholder={isArabic ? "تجهيزات ومحتويات المختبر والأنظمة المتوفرة..." : "Lab description, equipment, and workstations..."}
+                        value={newLabDescAr}
+                        onChange={(e) => setNewLabDescAr(e.target.value)}
+                        rows={2}
+                      />
                       <Button type="button" variant="outline" size="sm" className="font-bold gap-2" onClick={handleAddFacility}>
                         <Plus className="h-4 w-4" />
-                        {isArabic ? "إضافة المخبر للقائمة" : "Add Lab to List"}
+                        {isArabic ? "إضافة المختبر للقائمة" : "Add Lab to List"}
                       </Button>
                     </div>
                   </div>
@@ -2210,7 +2468,7 @@ export default function FacultiesManagement() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {isArabic ? "حفظ وتطبيق إعدادات الكلية" : "Save Faculty & Microsite"}
+                {isArabic ? (currentFaculty ? "حفظ التغييرات" : "إضافة الكلية") : (currentFaculty ? "Save Changes" : "Add Faculty")}
               </Button>
             </DialogFooter>
           </form>
@@ -2238,8 +2496,8 @@ export default function FacultiesManagement() {
                   </DialogTitle>
                   <DialogDescription className="text-xs mt-1">
                     {isArabic
-                      ? "إدارة متكاملة للأقسام الأكاديمية، توزيع الكادر التدريسي، ونقل وتسكين الطلاب التابعين للكلية."
-                      : "Comprehensive management of academic departments, faculty staff allocation, and student rosters."}
+                      ? "إدارة متكاملة للأقسام الأكاديمية، المخابر والمختبرات البحثية، توزيع الكادر التدريسي، والطلاب التابعين للكلية."
+                      : "Comprehensive management of academic departments, research laboratories, faculty staff allocation, and student rosters."}
                   </DialogDescription>
                 </div>
               </div>
@@ -2249,6 +2507,10 @@ export default function FacultiesManagement() {
                 <Badge variant="outline" className="gap-1 bg-background font-bold text-xs py-1">
                   <School className="h-3.5 w-3.5 text-primary" />
                   {hubPrograms.length} {isArabic ? "أقسام" : "Depts"}
+                </Badge>
+                <Badge variant="outline" className="gap-1 bg-background font-bold text-xs py-1">
+                  <FlaskConical className="h-3.5 w-3.5 text-amber-600" />
+                  {hubFacilities.length} {isArabic ? "مخابر" : "Labs"}
                 </Badge>
                 <Badge variant="outline" className="gap-1 bg-background font-bold text-xs py-1">
                   <Users className="h-3.5 w-3.5 text-blue-600" />
@@ -2261,15 +2523,17 @@ export default function FacultiesManagement() {
               </div>
             </div>
 
-            {/* Search within Hub (Teachers/Students) */}
-            {(hubTab === "teachers" || hubTab === "students") && (
+            {/* Search within Hub (Teachers/Students/Facilities) */}
+            {(hubTab === "teachers" || hubTab === "students" || hubTab === "facilities") && (
               <div className="relative mt-4">
                 <Search className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={
                     hubTab === "teachers"
                       ? (isArabic ? "بحث في كوادر الكلية (بالاسم، الرتبة، البريد)..." : "Search faculty staff...")
-                      : (isArabic ? "بحث في طلاب الكلية (بالاسم، الرقم الجامعي)..." : "Search enrolled students...")
+                      : hubTab === "students"
+                      ? (isArabic ? "بحث في طلاب الكلية (بالاسم، الرقم الجامعي)..." : "Search enrolled students...")
+                      : (isArabic ? "بحث في مخابر ومختبرات الكلية..." : "Search faculty laboratories...")
                   }
                   value={hubSearch}
                   onChange={(e) => setHubSearch(e.target.value)}
@@ -2281,18 +2545,22 @@ export default function FacultiesManagement() {
 
           <DialogBody className="space-y-4">
             <Tabs value={hubTab} onValueChange={setHubTab} className="w-full">
-              <TabsList className="grid grid-cols-3 mb-6 bg-muted/50 p-1 rounded-xl">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-4 mb-6 bg-muted/50 p-1 rounded-xl">
                 <TabsTrigger value="departments" className="font-bold text-xs gap-2">
                   <School className="h-4 w-4" />
-                  {isArabic ? `الأقسام الأكاديمية (${hubPrograms.length})` : `Departments (${hubPrograms.length})`}
+                  {isArabic ? `الأقسام (${hubPrograms.length})` : `Depts (${hubPrograms.length})`}
+                </TabsTrigger>
+                <TabsTrigger value="facilities" className="font-bold text-xs gap-2">
+                  <FlaskConical className="h-4 w-4" />
+                  {isArabic ? `المخابر (${hubFacilities.length})` : `Labs (${hubFacilities.length})`}
                 </TabsTrigger>
                 <TabsTrigger value="teachers" className="font-bold text-xs gap-2">
                   <Users className="h-4 w-4" />
-                  {isArabic ? `الكادر التدريسي (${hubTeachers.length})` : `Faculty Staff (${hubTeachers.length})`}
+                  {isArabic ? `الكادر (${hubTeachers.length})` : `Staff (${hubTeachers.length})`}
                 </TabsTrigger>
                 <TabsTrigger value="students" className="font-bold text-xs gap-2">
                   <GraduationCap className="h-4 w-4" />
-                  {isArabic ? `الطلاب المسجلون (${hubStudents.length})` : `Students (${hubStudents.length})`}
+                  {isArabic ? `الطلاب (${hubStudents.length})` : `Students (${hubStudents.length})`}
                 </TabsTrigger>
               </TabsList>
 
@@ -2337,7 +2605,6 @@ export default function FacultiesManagement() {
                           <TableHead className="text-center">{isArabic ? "المدرسون" : "Teachers"}</TableHead>
                           <TableHead className="text-center">{isArabic ? "الطلاب" : "Students"}</TableHead>
                           <TableHead className="text-end">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
-                          <TableHead className="text-center">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -2402,7 +2669,103 @@ export default function FacultiesManagement() {
                 )}
               </TabsContent>
 
-              {/* Tab 2: Faculty Staff */}
+              {/* Tab 2: Laboratories & Research Facilities */}
+              <TabsContent value="facilities" className="space-y-4 m-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-sm">
+                      {isArabic ? "المخابر والمختبرات والعيادات البحثية" : "Research Laboratories & Facilities"}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {isArabic
+                        ? "إدارة المختبرات والتجهيزات العلمية التابعة للكلية وتعديل بياناتها المعروضة في الموقع."
+                        : "Manage faculty research facilities, equipment specs, and public showcase."}
+                    </p>
+                  </div>
+                  <Button size="sm" className="font-bold gap-2 shadow-sm" onClick={handleOpenAddHubLab}>
+                    <Plus className="h-4 w-4" />
+                    {isArabic ? "إضافة مخبر جديد للكلية" : "Add Lab to Faculty"}
+                  </Button>
+                </div>
+
+                {hubFacilities.length === 0 ? (
+                  <div className="rounded-xl border border-dashed p-8 text-center bg-muted/20 space-y-3">
+                    <FlaskConical className="h-10 w-10 text-muted-foreground/40 mx-auto" />
+                    <p className="font-bold text-sm text-muted-foreground">
+                      {isArabic ? "لا توجد مخابر مخصصة مسجلة لهذه الكلية حتى الآن." : "No custom laboratories registered for this faculty yet."}
+                    </p>
+                    <p className="text-xs text-muted-foreground/80">
+                      {isArabic
+                        ? "يتم حالياً عرض المخابر التلقائية المعتمدة على الصفحة العامة للكلية، يمكنك إضافة وتخصيص المخابر هنا مباشرة."
+                        : "Currently displaying standardized default labs on public page. You can add and customize labs directly here."}
+                    </p>
+                    <Button size="sm" variant="outline" className="font-bold gap-2" onClick={handleOpenAddHubLab}>
+                      <Plus className="h-4 w-4" />
+                      {isArabic ? "إضافة أول مخبر مخصص" : "Add First Lab Now"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border rounded-xl overflow-hidden shadow-sm">
+                    <Table>
+                      <TableHeader className="bg-muted/30">
+                        <TableRow>
+                          <TableHead className="min-w-[220px]">{isArabic ? "اسم المخبر" : "Laboratory Name"}</TableHead>
+                          <TableHead>{isArabic ? "الوصف والتجهيزات" : "Description & Equipment"}</TableHead>
+                          <TableHead className="text-end">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {hubFacilities.map((lab, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell className="font-bold">
+                              <div className="flex items-center gap-2.5">
+                                <div
+                                  className="p-2.5 rounded-lg text-white shadow-xs shrink-0"
+                                  style={{ backgroundColor: selectedFacultyForHub?.primaryColor || "#800000" }}
+                                >
+                                  <FlaskConical className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <p className="text-xs sm:text-sm font-bold text-foreground">{isArabic ? lab.nameAr : lab.nameEn}</p>
+                                  <p className="text-[11px] text-muted-foreground font-medium">{isArabic ? lab.nameEn : lab.nameAr}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground max-w-md">
+                              <p className="line-clamp-2">
+                                {isArabic ? lab.descriptionAr || "N/A" : lab.descriptionEn || lab.descriptionAr || "N/A"}
+                              </p>
+                            </TableCell>
+                            <TableCell className="text-end">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-xs font-bold"
+                                  onClick={() => handleOpenEditHubLab(idx, lab)}
+                                >
+                                  <Edit className="h-3.5 w-3.5 me-1" />
+                                  {isArabic ? "تعديل" : "Edit"}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-xs font-bold text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDeleteHubLab(idx)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Tab 3: Faculty Staff */}
               <TabsContent value="teachers" className="space-y-4 m-0">
                 <div className="flex items-center justify-between">
                   <div>
@@ -2437,9 +2800,8 @@ export default function FacultiesManagement() {
                         <TableRow>
                           <TableHead>{isArabic ? "الأستاذ" : "Faculty Member"}</TableHead>
                           <TableHead>{isArabic ? "الرتبة العلمية" : "Academic Title"}</TableHead>
-                          <TableHead className="min-w-[220px]">{isArabic ? "القسم الأكاديمي (إسناد فوري)" : "Assigned Department"}</TableHead>
+                          <TableHead className="min-w-[220px]">{isArabic ? "القسم الأكاديمي" : "Assigned Department"}</TableHead>
                           <TableHead className="text-end">{isArabic ? "الملف الشخصي" : "Profile"}</TableHead>
-                          <TableHead className="text-center">{isArabic ? "الملف الشخصي" : "Profile"}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -2468,11 +2830,11 @@ export default function FacultiesManagement() {
                                 onValueChange={(val) => handleReassignTeacher(member.id, val)}
                               >
                                 <SelectTrigger className="h-8 text-xs bg-background">
-                                  <SelectValue placeholder={isArabic ? "اختر القسم" : "Select Dept"} />
+                                  <SelectValue placeholder={isArabic ? "اختر القسم" : "Select Department"} />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="none">
-                                    {isArabic ? "بدون قسم محدد (عمومي بالكلية)" : "No Dept (Faculty General)"}
+                                    {isArabic ? "بدون قسم محدد" : "General Faculty"}
                                   </SelectItem>
                                   {hubPrograms.map((prog) => (
                                     <SelectItem key={prog.id} value={prog.id.toString()}>
@@ -2534,9 +2896,8 @@ export default function FacultiesManagement() {
                           <TableHead>{isArabic ? "الطالب" : "Student"}</TableHead>
                           <TableHead>{isArabic ? "الرقم الجامعي" : "Student ID"}</TableHead>
                           <TableHead>{isArabic ? "السنة الدراسية" : "Academic Year"}</TableHead>
-                          <TableHead className="min-w-[220px]">{isArabic ? "القسم المسجل به (إسناد فوري)" : "Enrolled Department"}</TableHead>
+                          <TableHead className="min-w-[220px]">{isArabic ? "القسم المسجل به" : "Enrolled Department"}</TableHead>
                           <TableHead className="text-end">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
-                          <TableHead className="text-center">{isArabic ? "الإجراءات" : "Actions"}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -2560,7 +2921,7 @@ export default function FacultiesManagement() {
                                 onValueChange={(val) => handleReassignStudent(student.id, val)}
                               >
                                 <SelectTrigger className="h-8 text-xs bg-background">
-                                  <SelectValue placeholder={isArabic ? "اختر القسم" : "Select Dept"} />
+                                  <SelectValue placeholder={isArabic ? "اختر القسم" : "Select Department"} />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {hubPrograms.map((prog) => (
@@ -2600,7 +2961,7 @@ export default function FacultiesManagement() {
       {/* Sub-Dialog: Add Program directly into Selected Faculty */}
       <Dialog open={isAddProgramOpen} onOpenChange={setIsAddProgramOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
+          <DialogHeader className="p-6 pb-4 border-b bg-muted/20">
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
               <School className="h-5 w-5 text-primary" />
               {isArabic ? "إضافة قسم جديد إلى:" : "Add Department to:"}{" "}
@@ -2614,19 +2975,24 @@ export default function FacultiesManagement() {
           </DialogHeader>
 
           <form onSubmit={handleCreateProgramInHub} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            <DialogBody>
-              <div className="space-y-2">
-                <Label>{isArabic ? "اسم القسم (بالعربية) *" : "Department Name (Arabic) *"}</Label>
+            <DialogBody className="p-6 space-y-4 text-xs sm:text-sm">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">
+                  {isArabic ? "اسم القسم بالعربية" : "Arabic Department Name"} <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   value={progNameAr}
                   onChange={(e) => setProgNameAr(e.target.value)}
                   placeholder={isArabic ? "مثال: قسم هندسة البرمجيات" : "e.g. Software Engineering"}
+                  className="bg-background text-xs sm:text-sm"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>{isArabic ? "اسم القسم (بالإنكليزية)" : "Department Name (English)"}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">
+                  {isArabic ? "اسم القسم بالإنجليزية" : "English Department Name"} <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   value={progNameEn}
                   onChange={(e) => {
@@ -2637,40 +3003,44 @@ export default function FacultiesManagement() {
                     }
                   }}
                   placeholder="e.g. Software Engineering Department"
+                  className="bg-background text-xs sm:text-sm"
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>{isArabic ? "الرابط المختصر (Slug)" : "URL Slug"}</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">{isArabic ? "الرابط المختصر" : "URL Slug"}</Label>
                   <Input
                     value={progSlug}
                     onChange={(e) => setProgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
                     dir="ltr"
                     placeholder="software-engineering"
+                    className="bg-background text-xs sm:text-sm"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>{isArabic ? "سنوات الدراسة" : "Duration (Years)"}</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">{isArabic ? "سنوات الدراسة" : "Study Duration"}</Label>
                   <Input
                     type="number"
                     min={1}
                     max={7}
                     value={progDuration}
                     onChange={(e) => setProgDuration(Number(e.target.value))}
+                    className="bg-background text-xs sm:text-sm"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>{isArabic ? "رئيس القسم (من كادر الكلية)" : "Head of Department"}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{isArabic ? "رئيس القسم الأكاديمي" : "Department Head"}</Label>
                 <Select value={progHeadId} onValueChange={setProgHeadId}>
-                  <SelectTrigger className="bg-background">
-                    <SelectValue placeholder={isArabic ? "اختر رئيس القسم" : "Select Head"} />
+                  <SelectTrigger className="bg-background text-xs sm:text-sm">
+                    <SelectValue placeholder={isArabic ? "اختر رئيس القسم" : "Select Department Head"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">{isArabic ? "بدون رئيس قسم حالياً" : "None Appointed"}</SelectItem>
+                    <SelectItem value="none">{isArabic ? "بدون رئيس قسم حالياً" : "No Head Assigned"}</SelectItem>
                     {displayMembers
                       .filter((m) => m.faculty === selectedFacultyForHub?.id || m.departmentDetail?.faculty === selectedFacultyForHub?.id)
                       .map((m) => (
@@ -2683,13 +3053,108 @@ export default function FacultiesManagement() {
               </div>
             </DialogBody>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2">
               <Button type="button" variant="outline" onClick={() => setIsAddProgramOpen(false)}>
                 {isArabic ? "إلغاء" : "Cancel"}
               </Button>
               <Button type="submit" disabled={createProgramMutation.isPending} className="font-bold gap-2">
                 {createProgramMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                {isArabic ? "إضافة وتثبيت القسم" : "Create Department"}
+                {isArabic ? "إضافة القسم" : "Add Department"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sub-Dialog: Add/Edit Laboratory directly in Selected Faculty Hub */}
+      <Dialog open={isHubLabModalOpen} onOpenChange={setIsHubLabModalOpen}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader className="p-6 pb-4 border-b bg-muted/20">
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-primary" />
+              {editingHubLabIndex !== null
+                ? (isArabic ? "تعديل بيانات المخبر البحثي" : "Edit Laboratory")
+                : (isArabic ? "إضافة مخبر بحثي جديد للكلية" : "Add New Laboratory")}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {isArabic
+                ? "أدخل اسم المخبر والتجهيزات العلمية المتوفرة به لعرضها في صفحة الكلية الرسمية."
+                : "Enter laboratory details and research equipment to showcase on the official faculty page."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveHubLab}>
+            <div className="p-6 space-y-4 text-xs sm:text-sm">
+              <div className="space-y-1.5">
+                <Label htmlFor="hub-lab-name-ar" className="text-xs font-bold">
+                  {isArabic ? "اسم المخبر بالعربية" : "Arabic Lab Name"} <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="hub-lab-name-ar"
+                  value={hubLabNameAr}
+                  onChange={(e) => setHubLabNameAr(e.target.value)}
+                  placeholder={isArabic ? "مثال: مخبر الذكاء الاصطناعي والحوسبة الفائقة" : "e.g. AI & HPC Lab"}
+                  className="bg-background text-xs sm:text-sm"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="hub-lab-name-en" className="text-xs font-bold">
+                  {isArabic ? "اسم المخبر بالإنجليزية" : "English Lab Name"} <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="hub-lab-name-en"
+                  value={hubLabNameEn}
+                  onChange={(e) => setHubLabNameEn(e.target.value)}
+                  placeholder="e.g. Artificial Intelligence & HPC Lab"
+                  className="bg-background text-xs sm:text-sm"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="hub-lab-desc-ar" className="text-xs font-bold">
+                  {isArabic ? "الوصف والتجهيزات بالعربية" : "Arabic Description & Equipment"}
+                </Label>
+                <Textarea
+                  id="hub-lab-desc-ar"
+                  value={hubLabDescAr}
+                  onChange={(e) => setHubLabDescAr(e.target.value)}
+                  placeholder={isArabic ? "وصف الأجهزة والمعدات المتوفرة والأنشطة البحثية المقامة في المخبر..." : "Equipment specs and research activities..."}
+                  className="bg-background text-xs sm:text-sm"
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="hub-lab-desc-en" className="text-xs font-bold">
+                  {isArabic ? "الوصف والتجهيزات بالإنجليزية" : "English Description & Equipment"}
+                </Label>
+                <Textarea
+                  id="hub-lab-desc-en"
+                  value={hubLabDescEn}
+                  onChange={(e) => setHubLabDescEn(e.target.value)}
+                  placeholder="Equipment specifications and research focus in English..."
+                  className="bg-background text-xs sm:text-sm"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="p-4 px-6 border-t bg-muted/10 gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsHubLabModalOpen(false)}>
+                {isArabic ? "إلغاء" : "Cancel"}
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending} className="font-bold gap-2">
+                {updateMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {editingHubLabIndex !== null
+                  ? (isArabic ? "حفظ التعديلات" : "Update Laboratory")
+                  : (isArabic ? "إضافة المخبر" : "Save Laboratory")}
               </Button>
             </DialogFooter>
           </form>

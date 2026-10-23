@@ -331,28 +331,50 @@ export default function ContentManagement() {
 
   const handleSaveNews = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newsTitleAr || !newsTitleEn || !newsExcerptAr || !newsExcerptEn || !newsDate) {
-      toast.error(isArabic ? "يرجى ملء الحقول المطلوبة (العنوان، الموجز، التاريخ)" : "Please fill in required fields");
+    if (!newsTitleAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان الخبر بالعربية" : "Please enter the Arabic article title");
+      return;
+    }
+    if (!newsTitleEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان الخبر بالإنجليزية" : "Please enter the English article title");
+      return;
+    }
+    if (!newsExcerptAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الموجز التمهيدي بالعربية" : "Please enter the Arabic lead excerpt");
+      return;
+    }
+    if (!newsExcerptEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال الموجز التمهيدي بالإنجليزية" : "Please enter the English lead excerpt");
+      return;
+    }
+    if (!newsDate.trim()) {
+      toast.error(isArabic ? "يرجى تحديد تاريخ نشر الخبر" : "Please select the publication date");
       return;
     }
 
     if (newsScope === "faculty" && !newsFaculty) {
-      toast.error(isArabic ? "يرجى تحديد الكلية المستهدفة" : "Please select target faculty");
+      toast.error(isArabic ? "يرجى تحديد الكلية المستهدفة" : "Please select the target faculty");
       return;
     }
 
-    if (newsScope === "department" && (!newsFaculty || !newsProgram)) {
-      toast.error(isArabic ? "يرجى تحديد الكلية والقسم المستهدف" : "Please select target faculty and department");
-      return;
+    if (newsScope === "department") {
+      if (!newsFaculty) {
+        toast.error(isArabic ? "يرجى تحديد الكلية المستهدفة أولاً" : "Please select the target faculty first");
+        return;
+      }
+      if (!newsProgram) {
+        toast.error(isArabic ? "يرجى تحديد القسم أو البرنامج الأكاديمي" : "Please select the target department or program");
+        return;
+      }
     }
 
     const payload: Partial<NewsArticle> = {
-      titleAr: newsTitleAr,
-      titleEn: newsTitleEn,
-      excerptAr: newsExcerptAr,
-      excerptEn: newsExcerptEn,
-      contentAr: newsContentAr.trim() || newsExcerptAr,
-      contentEn: newsContentEn.trim() || newsExcerptEn,
+      titleAr: newsTitleAr.trim(),
+      titleEn: newsTitleEn.trim(),
+      excerptAr: newsExcerptAr.trim(),
+      excerptEn: newsExcerptEn.trim(),
+      contentAr: newsContentAr.trim() || newsExcerptAr.trim(),
+      contentEn: newsContentEn.trim() || newsExcerptEn.trim(),
       category: newsCategory,
       scope: newsScope,
       faculty: (newsScope === "faculty" || newsScope === "department") ? newsFaculty : null,
@@ -361,11 +383,11 @@ export default function ContentManagement() {
       featured: newsFeatured,
       status: newsStatus,
       readingTime: Number(newsReadingTime) || 3,
-      authorNameAr: newsAuthorNameAr,
-      authorTitleAr: newsAuthorTitleAr,
+      authorNameAr: newsAuthorNameAr.trim(),
+      authorTitleAr: newsAuthorTitleAr.trim(),
       image: newsImage || editingArticle?.image || "/images/news/registration.png",
-      imageCaptionAr: newsImageCaptionAr,
-      imageCaptionEn: newsImageCaptionEn,
+      imageCaptionAr: newsImageCaptionAr.trim(),
+      imageCaptionEn: newsImageCaptionEn.trim(),
       galleryImages: newsGallery,
       attachments: newsAttachments,
       slug: editingArticle?.slug || newsTitleEn.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
@@ -384,7 +406,7 @@ export default function ContentManagement() {
       }
       setIsOpenNewsModal(false);
     } catch (err) {
-      toast.error(isArabic ? "حدث خطأ أثناء الحفظ" : "An error occurred while saving");
+      toast.error(isArabic ? "حدث خطأ أثناء حفظ الخبر" : "An error occurred while saving the article");
     }
   };
 
@@ -430,19 +452,39 @@ export default function ContentManagement() {
 
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!eventTitleAr || !eventTitleEn || !eventDate || !eventTime || !eventLocationAr || !eventLocationEn) {
-      toast.error(isArabic ? "يرجى ملء الحقول المطلوبة" : "Please fill in required fields");
+    if (!eventTitleAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان الفعالية بالعربية" : "Please enter the Arabic event title");
+      return;
+    }
+    if (!eventTitleEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان الفعالية بالإنجليزية" : "Please enter the English event title");
+      return;
+    }
+    if (!eventDate.trim()) {
+      toast.error(isArabic ? "يرجى تحديد تاريخ الفعالية" : "Please select the event date");
+      return;
+    }
+    if (!eventTime.trim()) {
+      toast.error(isArabic ? "يرجى تحديد وقت الفعالية" : "Please specify the event time");
+      return;
+    }
+    if (!eventLocationAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال موقع الفعالية بالعربية" : "Please enter the Arabic event location");
+      return;
+    }
+    if (!eventLocationEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال موقع الفعالية بالإنجليزية" : "Please enter the English event location");
       return;
     }
 
     const payload: Partial<Event> = {
-      titleAr: eventTitleAr,
-      titleEn: eventTitleEn,
-      descriptionAr: eventTitleAr,
-      descriptionEn: eventTitleEn,
+      titleAr: eventTitleAr.trim(),
+      titleEn: eventTitleEn.trim(),
+      descriptionAr: eventTitleAr.trim(),
+      descriptionEn: eventTitleEn.trim(),
       date: eventDate,
-      time: eventTime,
-      location: { ar: eventLocationAr, en: eventLocationEn } as any,
+      time: eventTime.trim(),
+      location: { ar: eventLocationAr.trim(), en: eventLocationEn.trim() } as any,
       type: eventType,
       faculty: eventFaculty as any,
     };
@@ -461,7 +503,7 @@ export default function ContentManagement() {
       }
       setIsOpenEventModal(false);
     } catch (err) {
-      toast.error(isArabic ? "حدث خطأ أثناء الحفظ" : "An error occurred while saving");
+      toast.error(isArabic ? "حدث خطأ أثناء حفظ الفعالية" : "An error occurred while saving the event");
     }
   };
 
@@ -517,16 +559,28 @@ export default function ContentManagement() {
 
   const handleSaveCalendar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!calendarEventAr || !calendarEventEn || !calendarDateAr || !calendarDateEn) {
-      toast.error(isArabic ? "يرجى ملء جميع الحقول المطلوبة" : "Please fill in all required fields");
+    if (!calendarEventAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم الحدث الأكاديمي بالعربية" : "Please enter the Arabic calendar event name");
+      return;
+    }
+    if (!calendarEventEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم الحدث الأكاديمي بالإنجليزية" : "Please enter the English calendar event name");
+      return;
+    }
+    if (!calendarDateAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال تاريخ الحدث بالعربية" : "Please enter the Arabic event date");
+      return;
+    }
+    if (!calendarDateEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال تاريخ الحدث بالإنجليزية" : "Please enter the English event date");
       return;
     }
 
     const payload = {
-      eventAr: calendarEventAr,
-      eventEn: calendarEventEn,
-      dateAr: calendarDateAr,
-      dateEn: calendarDateEn,
+      eventAr: calendarEventAr.trim(),
+      eventEn: calendarEventEn.trim(),
+      dateAr: calendarDateAr.trim(),
+      dateEn: calendarDateEn.trim(),
       order: Number(calendarOrder) || 0,
     };
 
@@ -543,7 +597,7 @@ export default function ContentManagement() {
       }
       setIsOpenCalendarModal(false);
     } catch (err) {
-      toast.error(isArabic ? "حدث خطأ أثناء الحفظ" : "An error occurred while saving");
+      toast.error(isArabic ? "حدث خطأ أثناء حفظ الحدث" : "An error occurred while saving the calendar item");
     }
   };
 
@@ -643,13 +697,8 @@ export default function ContentManagement() {
                         <TableHead className="font-bold text-start w-[16%]">{isArabic ? "المستوى والنطاق" : "Scope"}</TableHead>
                         <TableHead className="font-bold text-start w-[12%]">{isArabic ? "التصنيف" : "Category"}</TableHead>
                         <TableHead className="font-bold text-start w-[12%]">{isArabic ? "التاريخ" : "Date"}</TableHead>
-                        <TableHead className="font-bold text-center w-[36%]">{isArabic ? "عنوان الخبر" : "Title"}</TableHead>
-                        <TableHead className="font-bold text-center w-[16%]">{isArabic ? "المستوى والنطاق" : "Scope"}</TableHead>
-                        <TableHead className="font-bold text-center w-[12%]">{isArabic ? "التصنيف" : "Category"}</TableHead>
-                        <TableHead className="font-bold text-center w-[12%]">{isArabic ? "التاريخ" : "Date"}</TableHead>
                         <TableHead className="font-bold text-center w-[8%]">{isArabic ? "مميز" : "Featured"}</TableHead>
                         <TableHead className="font-bold text-end px-4 w-[16%]">{isArabic ? "إجراءات" : "Actions"}</TableHead>
-                        <TableHead className="font-bold text-center px-4 w-[16%]">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -685,10 +734,10 @@ export default function ContentManagement() {
                               <TableCell className="font-bold text-start align-top w-[36%] overflow-hidden">
                                 <div className="space-y-0.5">
                                   <div className="line-clamp-2 hover:text-primary transition-colors cursor-pointer leading-snug" onClick={() => handleOpenEditNews(article)}>
-                                    {isArabic ? article.titleAr : article.titleEn}
+                                    {(isArabic ? article.titleAr : article.titleEn) || "N/A"}
                                   </div>
                                   <div className="text-xs text-muted-foreground line-clamp-1 font-normal">
-                                    {isArabic ? article.excerptAr : article.excerptEn}
+                                    {(isArabic ? article.excerptAr : article.excerptEn) || "N/A"}
                                   </div>
                                 </div>
                               </TableCell>
@@ -798,11 +847,6 @@ export default function ContentManagement() {
                         <TableHead className="font-bold text-start w-[18%]">{isArabic ? "التاريخ والوقت" : "Date & Time"}</TableHead>
                         <TableHead className="font-bold text-start w-[12%]">{isArabic ? "النوع" : "Type"}</TableHead>
                         <TableHead className="font-bold text-end px-4 w-[8%]">{isArabic ? "إجراءات" : "Actions"}</TableHead>
-                        <TableHead className="font-bold text-center w-[38%]">{isArabic ? "الفعالية" : "Event"}</TableHead>
-                        <TableHead className="font-bold text-center w-[24%]">{isArabic ? "الموقع" : "Location"}</TableHead>
-                        <TableHead className="font-bold text-center w-[18%]">{isArabic ? "التاريخ والوقت" : "Date & Time"}</TableHead>
-                        <TableHead className="font-bold text-center w-[12%]">{isArabic ? "النوع" : "Type"}</TableHead>
-                        <TableHead className="font-bold text-center px-4 w-[8%]">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -817,16 +861,16 @@ export default function ContentManagement() {
                           <TableRow key={event.id} className="hover:bg-muted/30">
                             <TableCell className="font-bold text-start align-top w-[38%] overflow-hidden">
                               <span className="line-clamp-2 leading-snug">
-                                {isArabic ? event.titleAr : event.titleEn}
+                                <span>{(isArabic ? event.titleAr : event.titleEn) || "N/A"}</span>
                               </span>
                             </TableCell>
                             <TableCell className="text-start align-top text-xs text-muted-foreground w-[24%] overflow-hidden">
                               <span className="line-clamp-2 leading-relaxed">
-                                {isArabic ? event.location?.ar : event.location?.en}
+                                <span>{(isArabic ? event.location?.ar : event.location?.en) || "N/A"}</span>
                               </span>
                             </TableCell>
                             <TableCell className="text-start tabular-nums text-xs text-muted-foreground whitespace-nowrap align-top w-[18%]">
-                              <div>{event.date}</div>
+                              <div>{event.date || "N/A"}</div>
                               {event.time && <div className="text-[11px] text-muted-foreground/80">{event.time}</div>}
                             </TableCell>
                             <TableCell className="text-start align-top w-[12%]">
@@ -893,17 +937,12 @@ export default function ContentManagement() {
                   <Table className="w-full table-fixed">
                     <TableHeader>
                       <TableRow className="bg-muted/20">
-                        <TableHead className="font-bold text-start w-[32%]">{isArabic ? "الحدث (بالعربية)" : "Event (Arabic)"}</TableHead>
-                        <TableHead className="font-bold text-start w-[30%]">{isArabic ? "الحدث (بالإنجليزية)" : "Event (English)"}</TableHead>
-                        <TableHead className="font-bold text-start w-[15%]">{isArabic ? "التاريخ (بالعربية)" : "Date (Arabic)"}</TableHead>
-                        <TableHead className="font-bold text-start w-[13%]">{isArabic ? "التاريخ (بالإنجليزية)" : "Date (English)"}</TableHead>
-                        <TableHead className="font-bold text-center w-[32%]">{isArabic ? "الحدث (بالعربية)" : "Event (Arabic)"}</TableHead>
-                        <TableHead className="font-bold text-center w-[30%]">{isArabic ? "الحدث (بالإنجليزية)" : "Event (English)"}</TableHead>
-                        <TableHead className="font-bold text-center w-[15%]">{isArabic ? "التاريخ (بالعربية)" : "Date (Arabic)"}</TableHead>
-                        <TableHead className="font-bold text-center w-[13%]">{isArabic ? "التاريخ (بالإنجليزية)" : "Date (English)"}</TableHead>
+                        <TableHead className="font-bold text-start w-[32%]">{isArabic ? "الحدث بالعربية" : "Arabic Event"}</TableHead>
+                        <TableHead className="font-bold text-start w-[30%]">{isArabic ? "الحدث بالإنجليزية" : "English Event"}</TableHead>
+                        <TableHead className="font-bold text-start w-[15%]">{isArabic ? "التاريخ بالعربية" : "Arabic Date"}</TableHead>
+                        <TableHead className="font-bold text-start w-[13%]">{isArabic ? "التاريخ بالإنجليزية" : "English Date"}</TableHead>
                         <TableHead className="font-bold text-center w-[5%]">{isArabic ? "الترتيب" : "Order"}</TableHead>
                         <TableHead className="font-bold text-end px-4 w-[5%]">{isArabic ? "إجراءات" : "Actions"}</TableHead>
-                        <TableHead className="font-bold text-center px-4 w-[5%]">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -917,16 +956,16 @@ export default function ContentManagement() {
                         filteredCalendar.map((item) => (
                           <TableRow key={item.id} className="hover:bg-muted/30">
                             <TableCell className="font-bold text-start align-top w-[32%] overflow-hidden">
-                              <span className="line-clamp-2 leading-snug">{item.eventAr}</span>
+                              <span className="line-clamp-2 leading-snug">{item.eventAr || "N/A"}</span>
                             </TableCell>
                             <TableCell className="text-start align-top w-[30%] overflow-hidden">
-                              <span className="line-clamp-2 leading-snug">{item.eventEn}</span>
+                              <span className="line-clamp-2 leading-snug">{item.eventEn || "N/A"}</span>
                             </TableCell>
                             <TableCell className="text-start text-xs text-muted-foreground align-top w-[15%]">
-                              <span>{item.dateAr}</span>
+                              <span>{item.dateAr || "N/A"}</span>
                             </TableCell>
                             <TableCell className="text-start text-xs text-muted-foreground align-top w-[13%]">
-                              <span>{item.dateEn}</span>
+                              <span>{item.dateEn || "N/A"}</span>
                             </TableCell>
                             <TableCell className="text-center font-semibold align-top w-[5%]">{item.order || 0}</TableCell>
                             <TableCell className="text-end px-4 align-top w-[5%]">
@@ -985,19 +1024,19 @@ export default function ContentManagement() {
                 type="button"
                 onClick={() => setNewsModalTab("general")}
                 className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${newsModalTab === "general"
-                    ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                    : "hover:bg-muted text-muted-foreground"
+                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                  : "hover:bg-muted text-muted-foreground"
                   }`}
               >
                 <Layers className="h-3.5 w-3.5" />
-                {isArabic ? "البيانات والهرمية" : "General & Scope"}
+                {isArabic ? "البيانات والهرمية" : "General and Scope"}
               </button>
               <button
                 type="button"
                 onClick={() => setNewsModalTab("content")}
                 className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${newsModalTab === "content"
-                    ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                    : "hover:bg-muted text-muted-foreground"
+                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                  : "hover:bg-muted text-muted-foreground"
                   }`}
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -1007,8 +1046,8 @@ export default function ContentManagement() {
                 type="button"
                 onClick={() => setNewsModalTab("media")}
                 className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${newsModalTab === "media"
-                    ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                    : "hover:bg-muted text-muted-foreground"
+                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                  : "hover:bg-muted text-muted-foreground"
                   }`}
               >
                 <ImageIcon className="h-3.5 w-3.5" />
@@ -1019,8 +1058,8 @@ export default function ContentManagement() {
                 type="button"
                 onClick={() => setNewsModalTab("gallery")}
                 className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${newsModalTab === "gallery"
-                    ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                    : "hover:bg-muted text-muted-foreground"
+                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                  : "hover:bg-muted text-muted-foreground"
                   }`}
               >
                 <Sparkles className="h-3.5 w-3.5" />
@@ -1035,12 +1074,12 @@ export default function ContentManagement() {
                 type="button"
                 onClick={() => setNewsModalTab("attachments")}
                 className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${newsModalTab === "attachments"
-                    ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                    : "hover:bg-muted text-muted-foreground"
+                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                  : "hover:bg-muted text-muted-foreground"
                   }`}
               >
                 <Paperclip className="h-3.5 w-3.5" />
-                {isArabic ? "المستندات والقرارات (PDF)" : "Attachments"}
+                {isArabic ? "المستندات والقرارات" : "Documents and Attachments"}
                 {newsAttachments.length > 0 && (
                   <span className="bg-primary/20 text-primary rounded-full px-1.5 py-0.2 text-[10px]">
                     {newsAttachments.length}
@@ -1058,26 +1097,26 @@ export default function ContentManagement() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="newsTitleAr" className="font-bold">
-                        {isArabic ? "عنوان الخبر (بالعربية) *" : "Article Title (Arabic) *"}
+                        {isArabic ? "عنوان الخبر بالعربية" : "Arabic Article Title"}
                       </Label>
                       <Input
                         id="newsTitleAr"
                         required
                         value={newsTitleAr}
                         onChange={(e) => setNewsTitleAr(e.target.value)}
-                        placeholder="جامعة أنطاكية السورية تدشن..."
+                        placeholder={isArabic ? "مثال: جامعة أنطاكية السورية تدشن المرحلة الجديدة..." : "e.g. Antioch Syrian University launches..."}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="newsTitleEn" className="font-bold">
-                        {isArabic ? "عنوان الخبر (بالإنجليزية) *" : "Article Title (English) *"}
+                        {isArabic ? "عنوان الخبر بالإنجليزية" : "English Article Title"}
                       </Label>
                       <Input
                         id="newsTitleEn"
                         required
                         value={newsTitleEn}
                         onChange={(e) => setNewsTitleEn(e.target.value)}
-                        placeholder="Antioch Syrian University launches..."
+                        placeholder={isArabic ? "مثال: Antioch Syrian University launches..." : "e.g. Antioch Syrian University launches..."}
                       />
                     </div>
                   </div>
@@ -1086,13 +1125,13 @@ export default function ContentManagement() {
                   <div className="rounded-xl border p-4 bg-muted/20 space-y-3">
                     <div className="flex items-center gap-2 font-bold text-sm text-foreground">
                       <Layers className="h-4 w-4 text-primary" />
-                      {isArabic ? "مستوى الخبر والنطاق المؤسساتي (الهرمية الجامعية)" : "Publishing Scope & Hierarchy"}
+                      {isArabic ? "مستوى الخبر والنطاق المؤسساتي" : "Publishing Scope and Hierarchy"}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <label
                         className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer text-sm transition-all ${newsScope === "university"
-                            ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
-                            : "hover:bg-muted/50 border-input"
+                          ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                          : "hover:bg-muted/50 border-input"
                           }`}
                       >
                         <input
@@ -1107,13 +1146,13 @@ export default function ContentManagement() {
                           }}
                           className="sr-only"
                         />
-                        <span>🏛️ {isArabic ? "مستوى الجامعة عام" : "University-Wide"}</span>
+                        <span>🏛️ {isArabic ? "مستوى الجامعة العام" : "University-Wide"}</span>
                       </label>
 
                       <label
                         className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer text-sm transition-all ${newsScope === "faculty"
-                            ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
-                            : "hover:bg-muted/50 border-input"
+                          ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                          : "hover:bg-muted/50 border-input"
                           }`}
                       >
                         <input
@@ -1132,8 +1171,8 @@ export default function ContentManagement() {
 
                       <label
                         className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer text-sm transition-all ${newsScope === "department"
-                            ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
-                            : "hover:bg-muted/50 border-input"
+                          ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                          : "hover:bg-muted/50 border-input"
                           }`}
                       >
                         <input
@@ -1144,7 +1183,7 @@ export default function ContentManagement() {
                           onChange={() => setNewsScope("department")}
                           className="sr-only"
                         />
-                        <span>🔬 {isArabic ? "مستوى القسم / البرنامج" : "Department Level"}</span>
+                        <span>🔬 {isArabic ? "مستوى القسم والبرنامج" : "Department Level"}</span>
                       </label>
                     </div>
 
@@ -1153,7 +1192,7 @@ export default function ContentManagement() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                         <div className="space-y-1.5">
                           <Label htmlFor="newsFaculty" className="text-xs font-bold text-foreground">
-                            {isArabic ? "حدد الكلية التابعة *" : "Target Faculty *"}
+                            {isArabic ? "الكلية المستهدفة" : "Target Faculty"}
                           </Label>
                           <select
                             id="newsFaculty"
@@ -1177,7 +1216,7 @@ export default function ContentManagement() {
                         {newsScope === "department" && (
                           <div className="space-y-1.5">
                             <Label htmlFor="newsProgram" className="text-xs font-bold text-foreground">
-                              {isArabic ? "حدد القسم / البرنامج الأكاديمي *" : "Target Department / Program *"}
+                              {isArabic ? "القسم أو البرنامج الأكاديمي" : "Target Department or Program"}
                             </Label>
                             <select
                               id="newsProgram"
@@ -1188,8 +1227,8 @@ export default function ContentManagement() {
                             >
                               <option value="">
                                 {!newsFaculty
-                                  ? (isArabic ? "-- يرجى اختيار الكلية أولاً --" : "-- Choose Faculty First --")
-                                  : (isArabic ? "-- اختر القسم / البرنامج --" : "-- Select Department --")}
+                                  ? (isArabic ? "-- اختر الكلية أولاً --" : "-- Select Faculty First --")
+                                  : (isArabic ? "-- اختر القسم أو البرنامج --" : "-- Select Department --")}
                               </option>
                               {programs
                                 .filter((p) => p.faculty === newsFaculty)
@@ -1235,7 +1274,7 @@ export default function ContentManagement() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="newsReadingTime" className="font-bold">{isArabic ? "وقت القراءة (بالدقائق)" : "Read Time (Mins)"}</Label>
+                      <Label htmlFor="newsReadingTime" className="font-bold">{isArabic ? "وقت القراءة بالدقائق" : "Read Time in Minutes"}</Label>
                       <Input
                         id="newsReadingTime"
                         type="number"
@@ -1250,21 +1289,21 @@ export default function ContentManagement() {
                   {/* Author / Source Attribution */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="newsAuthorNameAr" className="font-bold">{isArabic ? "الكاتب / جهة النشر" : "Author / Publisher"}</Label>
+                      <Label htmlFor="newsAuthorNameAr" className="font-bold">{isArabic ? "الكاتب أو جهة النشر" : "Author or Publisher"}</Label>
                       <Input
                         id="newsAuthorNameAr"
                         value={newsAuthorNameAr}
                         onChange={(e) => setNewsAuthorNameAr(e.target.value)}
-                        placeholder={isArabic ? "المكتب الإعلامي - كلية الهندسة" : "Faculty Media Office"}
+                        placeholder={isArabic ? "مثال: المكتب الإعلامي - كلية الهندسة" : "e.g. Faculty Media Office"}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="newsAuthorTitleAr" className="font-bold">{isArabic ? "صفة الناشر / الرتبة" : "Publisher Role / Title"}</Label>
+                      <Label htmlFor="newsAuthorTitleAr" className="font-bold">{isArabic ? "صفة الناشر أو الرتبة" : "Publisher Role or Title"}</Label>
                       <Input
                         id="newsAuthorTitleAr"
                         value={newsAuthorTitleAr}
                         onChange={(e) => setNewsAuthorTitleAr(e.target.value)}
-                        placeholder={isArabic ? "عمادة الكلية / العلاقات العامة" : "Deanship / PR Office"}
+                        placeholder={isArabic ? "مثال: عمادة الكلية / العلاقات العامة" : "e.g. Deanship / PR Office"}
                       />
                     </div>
                   </div>
@@ -1279,9 +1318,9 @@ export default function ContentManagement() {
                         onChange={(e) => setNewsStatus(e.target.value as any)}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                       >
-                        <option value="published">{isArabic ? "منشور فوري (Published)" : "Published"}</option>
-                        <option value="draft">{isArabic ? "مسودة غير معلنة (Draft)" : "Draft"}</option>
-                        <option value="archived">{isArabic ? "مؤرشف (Archived)" : "Archived"}</option>
+                        <option value="published">{isArabic ? "منشور فوري" : "Published"}</option>
+                        <option value="draft">{isArabic ? "مسودة غير معلنة" : "Draft"}</option>
+                        <option value="archived">{isArabic ? "مؤرشف" : "Archived"}</option>
                       </select>
                     </div>
 
@@ -1295,7 +1334,7 @@ export default function ContentManagement() {
                       />
                       <Label htmlFor="newsFeatured" className="cursor-pointer font-bold flex items-center gap-1.5 text-sm">
                         <Star className={`h-4 w-4 ${newsFeatured ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
-                        {isArabic ? "تثبيت الخبر في الصفحة الرئيسية (مميز)" : "Pin to Homepage (Featured)"}
+                        {isArabic ? "تثبيت الخبر في الصفحة الرئيسية كخبر مميز" : "Pin Article to Homepage as Featured"}
                       </Label>
                     </div>
                   </div>
@@ -1318,7 +1357,7 @@ export default function ContentManagement() {
                         className={`px-3 py-1 rounded-md font-bold transition-all ${newsContentLangTab === "ar" ? "bg-background text-primary shadow-xs" : "text-muted-foreground"
                           }`}
                       >
-                        العربية (AR)
+                        {isArabic ? "العربية" : "Arabic"}
                       </button>
                       <button
                         type="button"
@@ -1326,7 +1365,7 @@ export default function ContentManagement() {
                         className={`px-3 py-1 rounded-md font-bold transition-all ${newsContentLangTab === "en" ? "bg-background text-primary shadow-xs" : "text-muted-foreground"
                           }`}
                       >
-                        English (EN)
+                        {isArabic ? "الإنجليزية" : "English"}
                       </button>
                     </div>
                   </div>
@@ -1335,8 +1374,8 @@ export default function ContentManagement() {
                   <div className="space-y-2">
                     <Label className="font-bold text-sm">
                       {newsContentLangTab === "ar"
-                        ? "الموجز التمهيدي (Lead Excerpt) بالعربية *"
-                        : "Lead Excerpt (English) *"}
+                        ? (isArabic ? "الموجز التمهيدي بالعربية" : "Arabic Lead Excerpt")
+                        : (isArabic ? "الموجز التمهيدي بالإنجليزية" : "English Lead Excerpt")}
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       {isArabic
@@ -1350,7 +1389,7 @@ export default function ContentManagement() {
                         value={newsExcerptAr}
                         onChange={(e) => setNewsExcerptAr(e.target.value)}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
-                        placeholder="أعلنت جامعة أنطاكية السورية عن انطلاق المرحلة الجديدة من خطة التحول الرقمي..."
+                        placeholder={isArabic ? "أعلنت جامعة أنطاكية السورية عن انطلاق المرحلة الجديدة من خطة التحول الرقمي..." : "Antioch Syrian University announces the launch of its digital transformation phase..."}
                       />
                     ) : (
                       <textarea
@@ -1359,7 +1398,7 @@ export default function ContentManagement() {
                         value={newsExcerptEn}
                         onChange={(e) => setNewsExcerptEn(e.target.value)}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
-                        placeholder="Antioch Syrian University announces the launch of its digital transformation phase..."
+                        placeholder={isArabic ? "Antioch Syrian University announces the launch of its digital transformation phase..." : "Antioch Syrian University announces the launch of its digital transformation phase..."}
                       />
                     )}
                   </div>
@@ -1369,8 +1408,8 @@ export default function ContentManagement() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label className="font-bold text-sm">
                         {newsContentLangTab === "ar"
-                          ? "جسم الخبر الكامل (Article Body)"
-                          : "Full Article Body (English)"}
+                          ? (isArabic ? "المحتوى التحريري الكامل بالعربية" : "Arabic Full Article Body")
+                          : (isArabic ? "المحتوى التحريري الكامل بالإنجليزية" : "English Full Article Body")}
                       </Label>
                       {/* Formatting Toolbar */}
                       <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border text-xs">
@@ -1456,7 +1495,7 @@ export default function ContentManagement() {
                         value={newsContentAr}
                         onChange={(e) => setNewsContentAr(e.target.value)}
                         className="w-full rounded-md border border-input bg-background p-3 text-sm font-mono leading-relaxed placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
-                        placeholder="اكتب نص الخبر التحريري الكامل هنا. يمكنك استخدام أدوات التنسيق أعلاه لإضافة عناوين فرعية، اقتباسات بارزة، وإدراج صور وسط المقال..."
+                        placeholder={isArabic ? "اكتب نص الخبر التحريري الكامل هنا. يمكنك استخدام أدوات التنسيق أعلاه لإضافة عناوين فرعية، اقتباسات بارزة، وإدراج صور وسط المقال..." : "Write the full editorial article here. You can use the formatting tools above for headings, quotes, and inline images..."}
                       />
                     ) : (
                       <textarea
@@ -1464,7 +1503,7 @@ export default function ContentManagement() {
                         value={newsContentEn}
                         onChange={(e) => setNewsContentEn(e.target.value)}
                         className="w-full rounded-md border border-input bg-background p-3 text-sm font-mono leading-relaxed placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
-                        placeholder="Write the full editorial article here. You can use the formatting tools above for headings, quotes, and inline images..."
+                        placeholder={isArabic ? "Write the full editorial article here. You can use the formatting tools above for headings, quotes, and inline images..." : "Write the full editorial article here. You can use the formatting tools above for headings, quotes, and inline images..."}
                       />
                     )}
                   </div>
@@ -1481,8 +1520,8 @@ export default function ContentManagement() {
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {isArabic
-                        ? "صورة عالية الجودة تظهر في أعلى صفحة الخبر وبطاقات الأخبار (النسبة الموصى بها: 16:9 وبحجم أقل من 5MB)."
-                        : "High quality image for hero banner and cards (recommended 16:9 ratio, under 5MB)."}
+                        ? "صورة عالية الجودة بنسبة 16:9 وبحجم أقل من 5 ميغابايت تظهر في أعلى صفحة الخبر وبطاقات الأخبار."
+                        : "High quality 16:9 ratio image under 5MB for hero banner and news cards."}
                     </p>
                   </div>
 
@@ -1524,22 +1563,22 @@ export default function ContentManagement() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
                         <div className="space-y-1">
                           <Label className="text-xs font-bold">
-                            {isArabic ? "شرح توضيحي أو حقوق الصورة (بالعربية)" : "Image Caption / Credit (Arabic)"}
+                            {isArabic ? "شرح الصورة بالعربية" : "Arabic Image Caption"}
                           </Label>
                           <Input
                             value={newsImageCaptionAr}
                             onChange={(e) => setNewsImageCaptionAr(e.target.value)}
-                            placeholder="تصوير: المكتب الإعلامي لجامعة أنطاكية"
+                            placeholder={isArabic ? "مثال: تصوير المكتب الإعلامي لجامعة أنطاكية" : "e.g. Photo by ASU Media Office"}
                           />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs font-bold">
-                            {isArabic ? "شرح الصورة (بالإنجليزية)" : "Image Caption / Credit (English)"}
+                            {isArabic ? "شرح الصورة بالإنجليزية" : "English Image Caption"}
                           </Label>
                           <Input
                             value={newsImageCaptionEn}
                             onChange={(e) => setNewsImageCaptionEn(e.target.value)}
-                            placeholder="Photo: ASU Media Office"
+                            placeholder={isArabic ? "مثال: Photo by ASU Media Office" : "e.g. Photo by ASU Media Office"}
                           />
                         </div>
                       </div>
@@ -1561,7 +1600,7 @@ export default function ContentManagement() {
                               : (isArabic ? "انقر لاختيار صورة الغلاف أو اسحب الملف هنا" : "Click to select cover or drag & drop")}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            JPG, PNG, WebP (حتى 5 ميغابايت)
+                            {isArabic ? "صيغ مدعومة: JPG, PNG, WebP حتى 5 ميغابايت" : "Supported: JPG, PNG, WebP up to 5MB"}
                           </p>
                         </div>
                         <input
@@ -1599,12 +1638,12 @@ export default function ContentManagement() {
                     <div>
                       <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-primary" />
-                        {isArabic ? "ألبوم صور الفعالية (معرض الصور التفاعلي)" : "Event Photo Gallery"}
+                        {isArabic ? "معرض صور الفعالية" : "Event Photo Gallery"}
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {isArabic
-                          ? "أضف صوراً إضافية توثق وقائع المؤتمر أو الحفل؛ ستظهر كمعرض صور متجاوب مع تكبير بملء الشاشة."
-                          : "Add event photos that will display in a full-screen interactive lightbox gallery."}
+                          ? "صور توثيقية إضافية للفعالية تظهر كمعرض صور متجاوب بملء الشاشة."
+                          : "Additional documentation photos displayed in a responsive full-screen gallery."}
                       </p>
                     </div>
 
@@ -1633,7 +1672,7 @@ export default function ContentManagement() {
                         {isArabic ? "لا توجد صور في المعرض بعد" : "No gallery photos yet"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {isArabic ? "اضغط على زر (إضافة صور للألبوم) لرفع مجموعة صور دفعة واحدة." : "Click 'Add Photos' to upload multiple photos at once."}
+                        {isArabic ? "اضغط على زر إضافة صور للألبوم لرفع مجموعة صور دفعة واحدة." : "Click Add Photos to upload multiple photos at once."}
                       </p>
                     </div>
                   ) : (
@@ -1677,12 +1716,12 @@ export default function ContentManagement() {
                     <div>
                       <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                         <Paperclip className="h-4 w-4 text-primary" />
-                        {isArabic ? "المستندات والقرارات المرفقة (PDF & Docs)" : "Official Documents & Attachments"}
+                        {isArabic ? "المستندات والقرارات المرفقة" : "Official Documents and Attachments"}
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {isArabic
-                          ? "ارفع وثائق القرارات الجامعية، جداول الندوات، أو أدلة التسجيل بصيغة PDF ليتمكن الزوار من تحميلها مباشرة."
-                          : "Upload official PDF resolutions, schedules, or guides for direct download by visitors."}
+                          ? "وثائق رسمية وقرارات تنظيمية بصيغة PDF للتحميل المباشر."
+                          : "Official documents and decisions in PDF format for direct download."}
                       </p>
                     </div>
 
@@ -1710,7 +1749,7 @@ export default function ContentManagement() {
                         {isArabic ? "لا توجد ملفات مرفقة بهذا الخبر" : "No document attachments"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {isArabic ? "يمكنك رفع ملفات PDF للقرارات الإدارية والتنظيمية." : "You can upload PDF files for administrative decisions."}
+                        {isArabic ? "يمكنك رفع ملفات المستندات للقرارات الإدارية والتنظيمية." : "You can upload document files for administrative decisions."}
                       </p>
                     </div>
                   ) : (
@@ -1824,24 +1863,24 @@ export default function ContentManagement() {
           <form onSubmit={handleSaveEvent} className="flex flex-col flex-1 min-h-0 overflow-hidden text-start">
             <DialogBody className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="eventTitleAr">{isArabic ? "اسم الفعالية (بالعربية)" : "Event Title (Arabic)"}</Label>
+                <Label htmlFor="eventTitleAr">{isArabic ? "عنوان الفعالية بالعربية" : "Arabic Event Title"}</Label>
                 <Input
                   id="eventTitleAr"
                   required
                   value={eventTitleAr}
                   onChange={(e) => setEventTitleAr(e.target.value)}
-                  placeholder="ندوة البحث العلمي..."
+                  placeholder={isArabic ? "مثال: ندوة البحث العلمي والابتكار..." : "e.g. Scientific Research Seminar..."}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="eventTitleEn">{isArabic ? "اسم الفعالية (بالإنجليزية)" : "Event Title (English)"}</Label>
+                <Label htmlFor="eventTitleEn">{isArabic ? "عنوان الفعالية بالإنجليزية" : "English Event Title"}</Label>
                 <Input
                   id="eventTitleEn"
                   required
                   value={eventTitleEn}
                   onChange={(e) => setEventTitleEn(e.target.value)}
-                  placeholder="Scientific Research Seminar..."
+                  placeholder={isArabic ? "مثال: Scientific Research Seminar..." : "e.g. Scientific Research Seminar..."}
                 />
               </div>
 
@@ -1864,31 +1903,31 @@ export default function ContentManagement() {
                     required
                     value={eventTime}
                     onChange={(e) => setEventTime(e.target.value)}
-                    placeholder="10:00 AM - 12:00 PM"
+                    placeholder={isArabic ? "مثال: 10:00 ص - 12:00 م" : "e.g. 10:00 AM - 12:00 PM"}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="eventLocationAr">{isArabic ? "الموقع (بالعربية)" : "Location (Arabic)"}</Label>
+                  <Label htmlFor="eventLocationAr">{isArabic ? "موقع الفعالية بالعربية" : "Arabic Event Location"}</Label>
                   <Input
                     id="eventLocationAr"
                     required
                     value={eventLocationAr}
                     onChange={(e) => setEventLocationAr(e.target.value)}
-                    placeholder="المدرج الكبير"
+                    placeholder={isArabic ? "مثال: المدرج الكبير" : "e.g. Main Auditorium"}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="eventLocationEn">{isArabic ? "الموقع (بالإنجليزية)" : "Location (English)"}</Label>
+                  <Label htmlFor="eventLocationEn">{isArabic ? "موقع الفعالية بالإنجليزية" : "English Event Location"}</Label>
                   <Input
                     id="eventLocationEn"
                     required
                     value={eventLocationEn}
                     onChange={(e) => setEventLocationEn(e.target.value)}
-                    placeholder="Main Auditorium"
+                    placeholder={isArabic ? "مثال: Main Auditorium" : "e.g. Main Auditorium"}
                   />
                 </div>
               </div>
@@ -1948,48 +1987,48 @@ export default function ContentManagement() {
             <DialogBody className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="calendarEventAr">{isArabic ? "اسم الحدث (بالعربية)" : "Event Name (Arabic)"}</Label>
+                  <Label htmlFor="calendarEventAr">{isArabic ? "اسم الحدث بالعربية" : "Arabic Event Name"}</Label>
                   <Input
                     id="calendarEventAr"
                     required
                     value={calendarEventAr}
                     onChange={(e) => setCalendarEventAr(e.target.value)}
-                    placeholder="مثال: بداية الفصل الدراسي الأول"
+                    placeholder={isArabic ? "مثال: بداية الفصل الدراسي الأول" : "e.g. First Semester Begins"}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="calendarEventEn">{isArabic ? "اسم الحدث (بالإنجليزية)" : "Event Name (English)"}</Label>
+                  <Label htmlFor="calendarEventEn">{isArabic ? "اسم الحدث بالإنجليزية" : "English Event Name"}</Label>
                   <Input
                     id="calendarEventEn"
                     required
                     value={calendarEventEn}
                     onChange={(e) => setCalendarEventEn(e.target.value)}
-                    placeholder="e.g. First Semester Begins"
+                    placeholder={isArabic ? "مثال: First Semester Begins" : "e.g. First Semester Begins"}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="calendarDateAr">{isArabic ? "التاريخ/الشهر (بالعربية)" : "Date/Month (Arabic)"}</Label>
+                  <Label htmlFor="calendarDateAr">{isArabic ? "تاريخ الحدث بالعربية" : "Arabic Event Date"}</Label>
                   <Input
                     id="calendarDateAr"
                     required
                     value={calendarDateAr}
                     onChange={(e) => setCalendarDateAr(e.target.value)}
-                    placeholder="مثال: سبتمبر 2024"
+                    placeholder={isArabic ? "مثال: 15 أيلول 2024" : "e.g. September 15, 2024"}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="calendarDateEn">{isArabic ? "التاريخ/الشهر (بالإنجليزية)" : "Date/Month (English)"}</Label>
+                  <Label htmlFor="calendarDateEn">{isArabic ? "تاريخ الحدث بالإنجليزية" : "English Event Date"}</Label>
                   <Input
                     id="calendarDateEn"
                     required
                     value={calendarDateEn}
                     onChange={(e) => setCalendarDateEn(e.target.value)}
-                    placeholder="e.g. September 2024"
+                    placeholder={isArabic ? "مثال: September 15, 2024" : "e.g. September 15, 2024"}
                   />
                 </div>
               </div>

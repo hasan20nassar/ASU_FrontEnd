@@ -559,16 +559,22 @@ export default function ProgramsManagement() {
   };
 
   const handleAddFacility = () => {
-    if (!newLabNameAr) return;
+    const trimmedLabNameAr = newLabNameAr.trim();
+    const trimmedLabNameEn = newLabNameEn.trim();
+    if (!trimmedLabNameAr) {
+      toast.error(isArabic ? "يرجى إدخال اسم المختبر بالعربية" : "Please enter the Arabic lab name");
+      return;
+    }
     const item: FacultyFacility = {
-      nameAr: newLabNameAr,
-      nameEn: newLabNameEn || newLabNameAr,
-      descriptionAr: newLabDescAr,
+      nameAr: trimmedLabNameAr,
+      nameEn: trimmedLabNameEn || trimmedLabNameAr,
+      descriptionAr: newLabDescAr.trim(),
     };
     setFacilities([...facilities, item]);
     setNewLabNameAr("");
     setNewLabNameEn("");
     setNewLabDescAr("");
+    toast.success(isArabic ? "تمت إضافة المختبر إلى القائمة" : "Lab added to list");
   };
 
   const handleRemoveFacility = (index: number) => {
@@ -726,53 +732,123 @@ export default function ProgramsManagement() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nameAr) {
-      toast.error(isArabic ? "يرجى كتابة اسم القسم بالعربية" : "Please enter department name in Arabic");
+    const trimmedNameAr = nameAr.trim();
+    const trimmedNameEn = nameEn.trim();
+    const trimmedSlug = slug.trim();
+
+    if (!trimmedNameAr) {
+      toast.error(isArabic ? "يرجى إدخال اسم القسم بالعربية" : "Please enter the Arabic department name");
       return;
     }
+
+    if (!trimmedNameEn) {
+      toast.error(isArabic ? "يرجى إدخال اسم القسم بالإنجليزية" : "Please enter the English department name");
+      return;
+    }
+
     if (!facultyId || Number(facultyId) <= 0) {
       toast.error(
         isArabic
-          ? "يجب اختيار الكلية التابع لها هذا القسم (يرجى إنشاء كلية أولاً من إدارة الكليات)"
+          ? "يرجى اختيار الكلية التابع لها هذا القسم"
           : "Please select an assigned faculty"
       );
       return;
     }
 
+    if (!trimmedSlug) {
+      toast.error(isArabic ? "يرجى إدخال الرابط المختصر للقسم" : "Please enter the department slug");
+      return;
+    }
+
+    if (!duration || duration < 1 || duration > 7) {
+      toast.error(isArabic ? "مدة الدراسة يجب أن تكون بين 1 و 7 سنوات" : "Study duration must be between 1 and 7 years");
+      return;
+    }
+
+    if (!creditHours || creditHours <= 0) {
+      toast.error(isArabic ? "الساعات المعتمدة يجب أن تكون أكبر من الصفر" : "Credit hours must be greater than zero");
+      return;
+    }
+
+    if (establishedYear < 1900 || establishedYear > 2100) {
+      toast.error(isArabic ? "يرجى إدخال سنة تأسيس صحيحة بين 1900 و 2100" : "Please enter a valid established year between 1900 and 2100");
+      return;
+    }
+
+    if (studentsCount < 0) {
+      toast.error(isArabic ? "عدد الطلاب لا يمكن أن يكون سالباً" : "Students count cannot be negative");
+      return;
+    }
+
+    if (labsCount < 0) {
+      toast.error(isArabic ? "عدد المختبرات لا يمكن أن يكون سالباً" : "Labs count cannot be negative");
+      return;
+    }
+
+    if (researchPapersCount < 0) {
+      toast.error(isArabic ? "عدد الأبحاث لا يمكن أن يكون سالباً" : "Research papers count cannot be negative");
+      return;
+    }
+
+    if (employmentRate < 0 || employmentRate > 100) {
+      toast.error(isArabic ? "نسبة التوظيف يجب أن تكون بين 0 و 100" : "Employment rate must be between 0 and 100");
+      return;
+    }
+
+    if (minScorePercent < 0 || minScorePercent > 100) {
+      toast.error(isArabic ? "الحد الأدنى لنسبة الثانوية يجب أن يكون بين 0 و 100" : "Minimum score percentage must be between 0 and 100");
+      return;
+    }
+
+    if (minScorePoints < 0) {
+      toast.error(isArabic ? "الحد الأدنى لدرجات القبول لا يمكن أن يكون سالباً" : "Minimum admission score points cannot be negative");
+      return;
+    }
+
+    if (tuitionSyrian < 0) {
+      toast.error(isArabic ? "القسط السنوي للطلاب السوريين لا يمكن أن يكون سالباً" : "Syrian tuition cannot be negative");
+      return;
+    }
+
+    if (tuitionNonResident < 0) {
+      toast.error(isArabic ? "القسط السنوي للطلاب غير المقيمين لا يمكن أن يكون سالباً" : "Non-resident tuition cannot be negative");
+      return;
+    }
+
     const cleanSlug =
-      slug.trim().replace(/^\/+|\/+$/g, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") ||
-      (nameEn || nameAr).trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]+/g, "").replace(/^-+|-+$/g, "") ||
+      trimmedSlug.replace(/^\/+|\/+$/g, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") ||
+      trimmedNameEn.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]+/g, "").replace(/^-+|-+$/g, "") ||
       `prog-${Date.now()}`;
 
     const selectedHead = headId !== "none" ? Number(headId) : null;
 
     const payload: Partial<ExtendedProgram> = {
-      nameAr,
-      nameEn: nameEn || nameAr,
+      nameAr: trimmedNameAr,
+      nameEn: trimmedNameEn,
       slug: cleanSlug,
       faculty: Number(facultyId),
       head: selectedHead as any,
-      headNameAr,
-      headNameEn,
-      headMessageAr,
-      headMessageEn,
-      headPhoto,
-      mottoAr,
-      mottoEn,
+      headNameAr: headNameAr.trim(),
+      headNameEn: headNameEn.trim(),
+      headMessageAr: headMessageAr.trim(),
+      headMessageEn: headMessageEn.trim(),
+      headPhoto: headPhoto.trim(),
+      mottoAr: mottoAr.trim(),
+      mottoEn: mottoEn.trim(),
       primaryColor,
       accentColor,
       heroBanner,
       logoUrl,
-      descriptionAr: descriptionAr || `قسم ${nameAr}`,
-      descriptionEn: descriptionEn || `Department of ${nameEn || nameAr}`,
+      descriptionAr: descriptionAr.trim() || `قسم ${trimmedNameAr}`,
+      descriptionEn: descriptionEn.trim() || `Department of ${trimmedNameEn}`,
       establishedYear,
       studentsCount,
       labsCount: facilities.length > 0 ? facilities.length : labsCount,
       researchPapersCount,
       employmentRate,
       facilities,
-      careerPaths,
-      guideDocumentUrl,
+      careerPaths: careerPaths.trim(),
+      guideDocumentUrl: guideDocumentUrl.trim(),
       duration,
       creditHours,
       minScorePercent,
@@ -798,10 +874,10 @@ export default function ProgramsManagement() {
     try {
       if (currentProgram) {
         await updateMutation.mutateAsync({ id: currentProgram.id, data: payload });
-        toast.success(isArabic ? "تم تحديث هوية وتخطيط القسم بنجاح!" : "Department microsite updated successfully!");
+        toast.success(isArabic ? "تم تحديث هوية وتخطيط القسم بنجاح" : "Department microsite updated successfully");
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success(isArabic ? "تم إنشاء القسم الجديد وموقعه بنجاح!" : "Department created successfully!");
+        toast.success(isArabic ? "تم إنشاء القسم الجديد وموقعه بنجاح" : "Department created successfully");
       }
       setIsOpen(false);
     } catch (err: any) {
@@ -876,24 +952,58 @@ export default function ProgramsManagement() {
 
   const handleSaveCourse = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coursesProgram) return;
-    if (!courseCode.trim()) {
-      toast.error(isArabic ? "يرجى كتابة رمز المقرر (مثال: SWE201)" : "Please enter course code");
+    if (!coursesProgram) {
+      toast.error(isArabic ? "لم يتم تحديد القسم الأكاديمي" : "No department selected");
       return;
     }
-    if (!courseNameAr.trim()) {
-      toast.error(isArabic ? "يرجى كتابة اسم المقرر بالعربية" : "Please enter course name in Arabic");
+
+    const trimmedCode = courseCode.trim().toUpperCase();
+    const trimmedNameAr = courseNameAr.trim();
+    const trimmedNameEn = courseNameEn.trim();
+
+    if (!trimmedCode) {
+      toast.error(isArabic ? "يرجى إدخال رمز المقرر الأكاديمي" : "Please enter the course code");
+      return;
+    }
+
+    if (trimmedCode.length < 2) {
+      toast.error(isArabic ? "رمز المقرر يجب أن يحتوي على حرفين على الأقل" : "Course code must be at least 2 characters");
+      return;
+    }
+
+    if (!trimmedNameAr) {
+      toast.error(isArabic ? "يرجى إدخال اسم المقرر بالعربية" : "Please enter the Arabic course name");
+      return;
+    }
+
+    if (!trimmedNameEn) {
+      toast.error(isArabic ? "يرجى إدخال اسم المقرر بالإنجليزية" : "Please enter the English course name");
+      return;
+    }
+
+    if (!courseCredits || courseCredits <= 0 || courseCredits > 12) {
+      toast.error(isArabic ? "عدد الساعات المعتمدة يجب أن يكون بين 1 و 12 ساعة" : "Credit hours must be between 1 and 12");
+      return;
+    }
+
+    if (!courseYear || courseYear < 1 || courseYear > (coursesProgram.duration || 7)) {
+      toast.error(isArabic ? "يرجى تحديد سنة دراسية صحيحة" : "Please select a valid academic year");
+      return;
+    }
+
+    if (!courseSemester || (courseSemester !== 1 && courseSemester !== 2)) {
+      toast.error(isArabic ? "يرجى تحديد الفصل الدراسي الأول أو الثاني" : "Please select semester 1 or 2");
       return;
     }
 
     const payload: Partial<Course> = {
-      code: courseCode.trim().toUpperCase(),
-      nameAr: courseNameAr.trim(),
-      nameEn: courseNameEn.trim() || courseNameAr.trim(),
-      credits: Number(courseCredits) || 3,
+      code: trimmedCode,
+      nameAr: trimmedNameAr,
+      nameEn: trimmedNameEn,
+      credits: Number(courseCredits),
       program: coursesProgram.id,
-      year: Number(courseYear) || 1,
-      semester: Number(courseSemester) || 1,
+      year: Number(courseYear),
+      semester: Number(courseSemester),
       prerequisitesText: coursePrerequisites.trim(),
       descriptionAr: courseDescriptionAr.trim(),
       descriptionEn: courseDescriptionEn.trim(),
@@ -902,10 +1012,10 @@ export default function ProgramsManagement() {
     try {
       if (editingCourse) {
         await updateCourseMutation.mutateAsync({ id: editingCourse.id, data: payload });
-        toast.success(isArabic ? "تم تحديث بيانات المقرر بنجاح!" : "Course updated successfully!");
+        toast.success(isArabic ? "تم تحديث بيانات المقرر بنجاح" : "Course updated successfully");
       } else {
         await createCourseMutation.mutateAsync(payload);
-        toast.success(isArabic ? "تم إضافة المقرر الدراسي بنجاح!" : "Course created successfully!");
+        toast.success(isArabic ? "تمت إضافة المقرر الدراسي بنجاح" : "Course created successfully");
       }
       setIsCourseFormOpen(false);
     } catch (err: any) {
@@ -1037,12 +1147,7 @@ export default function ProgramsManagement() {
                     <TableHead className="text-start font-bold">{isArabic ? "رئيس القسم" : "Department Head"}</TableHead>
                     <TableHead className="text-start font-bold">{isArabic ? "الهوية البصرية" : "Branding"}</TableHead>
                     <TableHead className="text-start font-bold">{isArabic ? "الساعات والمعامل" : "Duration & Credits"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "القسم والتخصص" : "Department"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "الكلية التابع لها" : "Assigned Faculty"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "رئيس القسم" : "Department Head"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "الهوية البصرية" : "Branding"}</TableHead>
-                    <TableHead className="text-center font-bold">{isArabic ? "الساعات والمعامل" : "Duration & Credits"}</TableHead>
-                    <TableHead className="text-center font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
+                    <TableHead className="text-end font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1186,7 +1291,7 @@ export default function ProgramsManagement() {
             </div>
           ) : (
             /* Cards View */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 sm:p-6 bg-muted/10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4 sm:p-6 bg-muted/10">
               {filteredPrograms.map((program) => {
                 const parentFaculty = displayFaculties.find((f) => f.id === program.faculty);
                 const headDisplay = program.headDetail
@@ -1198,12 +1303,12 @@ export default function ProgramsManagement() {
                 return (
                   <Card
                     key={program.id}
-                    className="border border-border/70 hover:border-primary/40 bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group"
+                    className="border border-border/70 hover:border-primary/40 bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group min-w-0 w-full"
                   >
-                    <div>
+                    <div className="min-w-0 w-full">
                       <CardHeader className="p-5 pb-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-start justify-between gap-3 min-w-0">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             {program.logoUrl ? (
                               <div className="w-12 h-12 rounded-xl border bg-background p-1 shrink-0 flex items-center justify-center overflow-hidden shadow-xs">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1221,7 +1326,7 @@ export default function ProgramsManagement() {
                                 <GraduationCap className="h-6 w-6" />
                               </div>
                             )}
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <CardTitle
                                 className="text-base font-bold truncate group-hover:text-primary transition-colors cursor-pointer"
                                 onClick={() => handleOpenDialog(program)}
@@ -1281,19 +1386,19 @@ export default function ProgramsManagement() {
                         </div>
 
                         {/* Faculty Badge & Colors */}
-                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
-                          <Badge variant="secondary" className="font-bold gap-1 bg-primary/5 text-primary border-primary/10 text-xs">
-                            <Building2 className="h-3 w-3" />
-                            {parentFaculty ? (isArabic ? parentFaculty.nameAr : parentFaculty.nameEn) : (isArabic ? "غير مسند" : "Unassigned")}
+                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50 gap-2 min-w-0">
+                          <Badge variant="secondary" className="font-bold gap-1 bg-primary/5 text-primary border-primary/10 text-xs min-w-0 max-w-[70%]">
+                            <Building2 className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{parentFaculty ? (isArabic ? parentFaculty.nameAr : parentFaculty.nameEn) : (isArabic ? "غير مسند" : "Unassigned")}</span>
                           </Badge>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 shrink-0">
                             <span
-                              className="w-3 h-3 rounded-full border shadow-2xs inline-block"
+                              className="w-3 h-3 rounded-full border shadow-2xs inline-block shrink-0"
                               style={{ backgroundColor: pColor }}
                               title={isArabic ? "اللون الأساسي" : "Primary"}
                             />
                             <span
-                              className="w-3 h-3 rounded-full border shadow-2xs inline-block"
+                              className="w-3 h-3 rounded-full border shadow-2xs inline-block shrink-0"
                               style={{ backgroundColor: aColor }}
                               title={isArabic ? "لون التمييز" : "Accent"}
                             />
@@ -1301,11 +1406,11 @@ export default function ProgramsManagement() {
                         </div>
                       </CardHeader>
 
-                      <CardContent className="p-5 pt-0 space-y-3">
+                      <CardContent className="p-5 pt-0 space-y-3 min-w-0">
                         {/* Motto Badge */}
                         {program.mottoAr && (
                           <div
-                            className="p-2 rounded-lg border text-xs font-bold flex items-center gap-1.5"
+                            className="p-2 rounded-lg border text-xs font-bold flex items-center gap-1.5 min-w-0 overflow-hidden"
                             style={{
                               backgroundColor: hexToRgba(aColor, 0.08),
                               borderColor: hexToRgba(aColor, 0.2),
@@ -1313,20 +1418,20 @@ export default function ProgramsManagement() {
                             }}
                           >
                             <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                            <span className="line-clamp-1">{isArabic ? program.mottoAr : program.mottoEn}</span>
+                            <span className="truncate">{isArabic ? program.mottoAr : program.mottoEn}</span>
                           </div>
                         )}
 
                         {/* Department Head */}
-                        <div className="p-2.5 rounded-xl border bg-muted/30 flex items-center gap-2.5">
+                        <div className="p-2.5 rounded-xl border bg-muted/30 flex items-center gap-2.5 min-w-0">
                           <Avatar className="h-7 w-7 border shrink-0">
                             {program.headPhoto && <AvatarImage src={program.headPhoto} alt={headDisplay || ""} />}
                             <AvatarFallback className="bg-amber-500/10 text-amber-600 text-[10px] font-bold">
                               <Crown className="h-3.5 w-3.5" />
                             </AvatarFallback>
                           </Avatar>
-                          <div className="min-w-0">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground block truncate">
                               {isArabic ? "رئيس القسم" : "Department Head"}
                             </span>
                             <p className="text-xs font-bold text-foreground truncate">
@@ -1336,20 +1441,20 @@ export default function ProgramsManagement() {
                         </div>
 
                         {/* Stats Row */}
-                        <div className="grid grid-cols-2 gap-2 text-center text-xs font-bold pt-1">
-                          <div className="p-2 rounded-xl bg-muted/40 border border-border/40">
-                            <span className="text-muted-foreground block text-[10px] mb-0.5">
+                        <div className="grid grid-cols-2 gap-2 text-center text-xs font-bold pt-1 min-w-0">
+                          <div className="p-2 rounded-xl bg-muted/40 border border-border/40 min-w-0 overflow-hidden">
+                            <span className="text-muted-foreground block text-[10px] mb-0.5 truncate">
                               {isArabic ? "مدة الدراسة" : "Duration"}
                             </span>
-                            <span className="text-xs font-bold text-primary">
+                            <span className="text-xs font-bold text-primary truncate block">
                               {program.duration} {isArabic ? "سنوات" : "yrs"} ({program.creditHours}h)
                             </span>
                           </div>
-                          <div className="p-2 rounded-xl bg-muted/40 border border-border/40">
-                            <span className="text-muted-foreground block text-[10px] mb-0.5">
+                          <div className="p-2 rounded-xl bg-muted/40 border border-border/40 min-w-0 overflow-hidden">
+                            <span className="text-muted-foreground block text-[10px] mb-0.5 truncate">
                               {isArabic ? "المخابر والطلاب" : "Labs & Students"}
                             </span>
-                            <span className="text-xs font-bold text-primary">
+                            <span className="text-xs font-bold text-primary truncate block">
                               {program.facilities?.length || program.labsCount || 0} {isArabic ? "مخابر" : "labs"} • {program.studentsCount || 0}
                             </span>
                           </div>
@@ -1360,11 +1465,11 @@ export default function ProgramsManagement() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleOpenCourses(program)}
-                          className="w-full font-bold gap-2 text-xs mt-2 border-primary/20 hover:bg-primary/10 hover:text-primary transition-all"
+                          className="w-full font-bold gap-2 text-xs mt-2 border-primary/20 hover:bg-primary/10 hover:text-primary transition-all whitespace-normal h-auto py-2 min-w-0"
                         >
-                          <BookOpen className="h-3.5 w-3.5 text-primary" />
-                          <span>{isArabic ? "الخطة والمقررات الدراسية" : "Courses & Study Plan"}</span>
-                          <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-mono bg-primary/10 text-primary">
+                          <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span className="truncate flex-1 text-center">{isArabic ? "الخطة والمقررات الدراسية" : "Courses & Study Plan"}</span>
+                          <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-mono bg-primary/10 text-primary shrink-0">
                             {program.courses?.length ?? 0}
                           </Badge>
                         </Button>
@@ -1428,7 +1533,7 @@ export default function ProgramsManagement() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <Label className="text-xs font-bold flex items-center gap-1.5">
                         <Palette className="h-4 w-4 text-primary" />
-                        <span>{isArabic ? "اختيار قالب ألوان متناسق (Color Themes)" : "Choose a Color Theme"}</span>
+                        <span>{isArabic ? "قالب ألوان متناسق للقسم" : "Department Color Theme"}</span>
                       </Label>
                       <span className="text-[11px] text-muted-foreground">
                         {isArabic ? "يمكنك اختيار أي قالب وتعديل درجاته بحرية" : "Select any palette and customize below"}
@@ -1465,11 +1570,11 @@ export default function ProgramsManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="p-nameAr">{isArabic ? "اسم القسم (بالعربية) *" : "Department Name (AR) *"}</Label>
-                      <Input id="p-nameAr" value={nameAr} onChange={(e) => setNameAr(e.target.value)} required placeholder="هندسة البرمجيات ونظم المعلومات" />
+                      <Label htmlFor="p-nameAr">{isArabic ? "اسم القسم بالعربية *" : "Department Name in Arabic *"}</Label>
+                      <Input id="p-nameAr" value={nameAr} onChange={(e) => setNameAr(e.target.value)} required placeholder={isArabic ? "هندسة البرمجيات ونظم المعلومات" : "Software Engineering"} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="p-nameEn">{isArabic ? "اسم القسم (بالإنكليزية)" : "Department Name (EN)"}</Label>
+                      <Label htmlFor="p-nameEn">{isArabic ? "اسم القسم بالإنكليزية *" : "Department Name in English *"}</Label>
                       <Input
                         id="p-nameEn"
                         value={nameEn}
@@ -1481,6 +1586,7 @@ export default function ProgramsManagement() {
                           }
                         }}
                         placeholder="Software Engineering & Information Systems"
+                        required
                       />
                     </div>
                   </div>
@@ -1490,7 +1596,7 @@ export default function ProgramsManagement() {
                     <div className="space-y-2">
                       <Label className="font-bold flex items-center gap-1.5">
                         <Building2 className="h-4 w-4 text-primary" />
-                        <span>{isArabic ? "الكلية التابع لها هذا القسم *" : "Assigned Faculty *"}</span>
+                        <span>{isArabic ? "الكلية التابع لها القسم *" : "Assigned Faculty *"}</span>
                       </Label>
                       <Select value={facultyId} onValueChange={setFacultyId}>
                         <SelectTrigger className="bg-background">
@@ -1508,7 +1614,7 @@ export default function ProgramsManagement() {
 
                     <div className="space-y-2">
                       <Label htmlFor="p-slug" className="flex items-center gap-1.5">
-                        <span>{isArabic ? "الرابط المختصر (Slug) *" : "Department Slug *"}</span>
+                        <span>{isArabic ? "الرابط المختصر للقسم *" : "Department Slug *"}</span>
                       </Label>
                       <Input
                         id="p-slug"
@@ -1519,19 +1625,6 @@ export default function ProgramsManagement() {
                         placeholder="software-eng"
                       />
                     </div>
-                  </div>
-
-                  {/* Slug Explanation Box */}
-                  <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-muted-foreground space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
-                      <Info className="h-3.5 w-3.5 shrink-0" />
-                      <span>{isArabic ? "وظيفة الرابط المختصر:" : "What is Department Slug?"}</span>
-                    </div>
-                    <p className="leading-relaxed text-[11px]">
-                      {isArabic
-                        ? `هو المعرف النظيف لصفحة القسم التابع للكلية على الويب: asu.edu.sy/academics/${currentFacultySlug || "faculty"}/${slug || "dept"}. يُسهل المشاركة المباشرة ويدعم أرشفة محركات البحث (SEO).`
-                        : `A clean web identifier for the program: asu.edu.sy/academics/${currentFacultySlug || "faculty"}/${slug || "dept"} boosting direct sharing and Google search indexing.`}
-                    </p>
                   </div>
 
                   {/* Primary & Accent Color Inputs */}
@@ -1560,7 +1653,7 @@ export default function ProgramsManagement() {
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-bold flex items-center gap-1.5">
                           <ImageIcon className="h-4 w-4 text-primary" />
-                          <span>{isArabic ? "شعار القسم (Logo / Emblem)" : "Department Emblem"}</span>
+                          <span>{isArabic ? "شعار القسم" : "Department Emblem"}</span>
                         </Label>
                         <Badge variant="outline" className="text-[10px] text-muted-foreground">
                           {isArabic ? "الحد الأقصى: 2MB" : "Max 2MB"}
@@ -1616,7 +1709,7 @@ export default function ProgramsManagement() {
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-bold flex items-center gap-1.5">
                           <LayoutTemplate className="h-4 w-4 text-primary" />
-                          <span>{isArabic ? "صورة البانر العريضة (Hero Banner)" : "Hero Banner Image"}</span>
+                          <span>{isArabic ? "صورة الغلاف العريضة" : "Hero Banner Image"}</span>
                         </Label>
                         <Badge variant="outline" className="text-[10px] text-muted-foreground">
                           {isArabic ? "الحد الأقصى: 4MB" : "Max 4MB"}
@@ -1670,18 +1763,36 @@ export default function ProgramsManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="p-mottoAr">{isArabic ? "شعار ورسالة القسم (بالعربية)" : "Department Motto (AR)"}</Label>
-                      <Input id="p-mottoAr" value={mottoAr} onChange={(e) => setMottoAr(e.target.value)} placeholder="روّاد هندسة البرمجيات والذكاء الاصطناعي" />
+                      <Label htmlFor="p-mottoAr">{isArabic ? "شعار ورسالة القسم بالعربية" : "Department Motto in Arabic"}</Label>
+                      <Input id="p-mottoAr" value={mottoAr} onChange={(e) => setMottoAr(e.target.value)} placeholder={isArabic ? "روّاد هندسة البرمجيات والذكاء الاصطناعي" : "Software Engineering Pioneers"} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="p-mottoEn">{isArabic ? "شعار ورسالة القسم (بالإنكليزية)" : "Department Motto (EN)"}</Label>
+                      <Label htmlFor="p-mottoEn">{isArabic ? "شعار ورسالة القسم بالإنكليزية" : "Department Motto in English"}</Label>
                       <Input id="p-mottoEn" value={mottoEn} onChange={(e) => setMottoEn(e.target.value)} placeholder="Engineering Digital Horizons" />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="p-descAr">{isArabic ? "شرح ونبذة تعريفية عن القسم" : "Department Overview"}</Label>
-                    <Textarea id="p-descAr" value={descriptionAr} onChange={(e) => setDescriptionAr(e.target.value)} rows={3} placeholder="نبذة عامة وشاملة عن القسم وأهدافه ومخرجات التعلم الأكاديمية والعملية..." />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="p-descAr">{isArabic ? "النبذة التعريفية عن القسم بالعربية" : "Department Overview in Arabic"}</Label>
+                      <Textarea
+                        id="p-descAr"
+                        value={descriptionAr}
+                        onChange={(e) => setDescriptionAr(e.target.value)}
+                        rows={3}
+                        placeholder={isArabic ? "نبذة عامة وشاملة عن القسم وأهدافه ومخرجات التعلم الأكاديمية والعملية..." : "Comprehensive overview of the department in Arabic..."}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="p-descEn">{isArabic ? "النبذة التعريفية عن القسم بالإنكليزية" : "Department Overview in English"}</Label>
+                      <Textarea
+                        id="p-descEn"
+                        value={descriptionEn}
+                        onChange={(e) => setDescriptionEn(e.target.value)}
+                        rows={3}
+                        placeholder={isArabic ? "نبذة عامة وشاملة عن القسم وأهدافه ومخرجات التعلم بالإنكليزية..." : "Comprehensive overview of the department, academic goals, and learning outcomes..."}
+                      />
+                    </div>
                   </div>
                 </TabsContent>
 
@@ -1691,27 +1802,27 @@ export default function ProgramsManagement() {
                   <div className="space-y-3">
                     <Label className="text-sm font-bold flex items-center gap-2">
                       <LayoutTemplate className="h-4 w-4 text-primary" />
-                      <span>{isArabic ? "نمط ترويسة صفحة القسم (Header Style)" : "Header Layout Style"}</span>
+                      <span>{isArabic ? "نمط ترويسة صفحة القسم" : "Header Layout Style"}</span>
                     </Label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
                         {
                           id: "hero_split",
-                          nameAr: "عصري مقسوم (Split)",
+                          nameAr: "عصري مقسوم",
                           nameEn: "Modern Split",
                           descAr: "هيدر بانورامي مع معلومات التخصص والشعار وبطاقات ملخصة",
                           descEn: "Emblem, overview and action buttons side by side",
                         },
                         {
                           id: "hero_full",
-                          nameAr: "بانورامي عريض (Cinematic)",
+                          nameAr: "بانورامي عريض",
                           nameEn: "Cinematic Full",
                           descAr: "صورة بانورامية تغطي الهيدر مع تدرج لوني يعكس هوية القسم",
                           descEn: "Full width banner with branded color overlay",
                         },
                         {
                           id: "minimal",
-                          nameAr: "هادئ ومركّز (Minimal)",
+                          nameAr: "هادئ ومركّز",
                           nameEn: "Clean Minimal",
                           descAr: "ترويسة بسيطة خفيفة تركز على العناوين والمسارات والمعدل",
                           descEn: "Compact and clean header focused on content",
@@ -1933,7 +2044,7 @@ export default function ProgramsManagement() {
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-medium text-muted-foreground">
-                                        {isArabic ? "العنوان الرئيسي (بالعربية)" : "Section Title (AR)"}
+                                        {isArabic ? "العنوان الرئيسي بالعربية" : "Section Title in Arabic"}
                                       </span>
                                       <Input
                                         value={secConf.titleAr || ""}
@@ -1944,7 +2055,7 @@ export default function ProgramsManagement() {
                                     </div>
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-medium text-muted-foreground">
-                                        {isArabic ? "العنوان الرئيسي (بالإنكليزية)" : "Section Title (EN)"}
+                                        {isArabic ? "العنوان الرئيسي بالإنكليزية" : "Section Title in English"}
                                       </span>
                                       <Input
                                         value={secConf.titleEn || ""}
@@ -1955,7 +2066,7 @@ export default function ProgramsManagement() {
                                     </div>
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-medium text-muted-foreground">
-                                        {isArabic ? "النص التوضيحي/الفرعي (بالعربية)" : "Section Subtitle (AR)"}
+                                        {isArabic ? "النص التوضيحي بالعربية" : "Section Subtitle in Arabic"}
                                       </span>
                                       <Input
                                         value={secConf.subtitleAr || ""}
@@ -1966,7 +2077,7 @@ export default function ProgramsManagement() {
                                     </div>
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-medium text-muted-foreground">
-                                        {isArabic ? "النص التوضيحي/الفرعي (بالإنكليزية)" : "Section Subtitle (EN)"}
+                                        {isArabic ? "النص التوضيحي بالإنكليزية" : "Section Subtitle in English"}
                                       </span>
                                       <Input
                                         value={secConf.subtitleEn || ""}
@@ -1984,7 +2095,7 @@ export default function ProgramsManagement() {
                                   <div className="space-y-2">
                                     <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                       <LayoutTemplate className="h-3.5 w-3.5 text-primary" />
-                                      <span>{isArabic ? "نمط العرض والتخطيط (Layout Variant)" : "Layout Variant"}</span>
+                                      <span>{isArabic ? "نمط العرض والتخطيط" : "Layout Variant"}</span>
                                     </Label>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                       {item.supportedLayouts.map((l) => {
@@ -2011,11 +2122,11 @@ export default function ProgramsManagement() {
                                   <div className="space-y-2">
                                     <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                       <Paintbrush className="h-3.5 w-3.5 text-primary" />
-                                      <span>{isArabic ? "خلفية القسم (Background Style)" : "Section Background"}</span>
+                                      <span>{isArabic ? "خلفية القسم" : "Section Background"}</span>
                                     </Label>
                                     <div className="grid grid-cols-2 gap-2">
                                       {[
-                                        { id: "default", nameAr: "نظيف (افتراضي)", nameEn: "Clean Default" },
+                                        { id: "default", nameAr: "افتراضي", nameEn: "Clean Default" },
                                         { id: "muted", nameAr: "رمادي هادئ", nameEn: "Muted Slate" },
                                         { id: "tint", nameAr: "تدرج هوية القسم", nameEn: "Program Tint" },
                                         { id: "solid", nameAr: "لون القسم البارز", nameEn: "Solid Branded" },
@@ -2075,7 +2186,7 @@ export default function ProgramsManagement() {
                                     <div className="flex items-center justify-between">
                                       <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                         <ExternalLink className="h-3.5 w-3.5 text-primary" />
-                                        <span>{isArabic ? "زر التفاعل والانتقال (CTA Button)" : "Section Action Button (CTA)"}</span>
+                                        <span>{isArabic ? "زر التفاعل والانتقال" : "Section Action Button"}</span>
                                       </Label>
                                       <Button
                                         type="button"
@@ -2092,7 +2203,7 @@ export default function ProgramsManagement() {
                                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-background border">
                                         <div className="space-y-1">
                                           <span className="text-[10px] font-medium text-muted-foreground">
-                                            {isArabic ? "نص الزر (بالعربية)" : "Button Text (AR)"}
+                                            {isArabic ? "نص الزر بالعربية" : "Button Text in Arabic"}
                                           </span>
                                           <Input
                                             value={secConf.ctaTextAr || ""}
@@ -2103,7 +2214,7 @@ export default function ProgramsManagement() {
                                         </div>
                                         <div className="space-y-1">
                                           <span className="text-[10px] font-medium text-muted-foreground">
-                                            {isArabic ? "نص الزر (بالإنكليزية)" : "Button Text (EN)"}
+                                            {isArabic ? "نص الزر بالإنكليزية" : "Button Text in English"}
                                           </span>
                                           <Input
                                             value={secConf.ctaTextEn || ""}
@@ -2114,7 +2225,7 @@ export default function ProgramsManagement() {
                                         </div>
                                         <div className="space-y-1">
                                           <span className="text-[10px] font-medium text-muted-foreground">
-                                            {isArabic ? "رابط التوجيه (URL)" : "Target Link"}
+                                            {isArabic ? "رابط التوجيه" : "Target Link"}
                                           </span>
                                           <Input
                                             value={secConf.ctaLink || ""}
@@ -2159,7 +2270,7 @@ export default function ProgramsManagement() {
                   <div className="space-y-2">
                     <Label className="font-bold flex items-center gap-2">
                       <Crown className="h-4 w-4 text-amber-500" />
-                      <span>{isArabic ? "تعيين رئيس القسم من الكادر التدريسي (اختياري)" : "Appoint Department Head (Optional)"}</span>
+                      <span>{isArabic ? "تعيين رئيس القسم من الكادر التدريسي" : "Appoint Department Head"}</span>
                     </Label>
                     <p className="text-[11px] text-muted-foreground">
                       {isArabic
@@ -2168,10 +2279,10 @@ export default function ProgramsManagement() {
                     </p>
                     <Select value={headId} onValueChange={setHeadId}>
                       <SelectTrigger className="bg-background">
-                        <SelectValue placeholder={isArabic ? "اختر رئيس القسم (اختياري)" : "Select Head of Department (Optional)"} />
+                        <SelectValue placeholder={isArabic ? "اختر رئيس القسم..." : "Select Head of Department..."} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">{isArabic ? "-- بدون رئيس قسم حالياً (يمكن تعيينه لاحقاً) --" : "-- No Head (Can appoint later) --"}</SelectItem>
+                        <SelectItem value="none">{isArabic ? "بدون تعيين رئيس قسم حالياً" : "No Head assigned currently"}</SelectItem>
                         {displayMembers.map((member) => (
                           <SelectItem key={member.id} value={member.id.toString()}>
                             {isArabic ? member.nameAr : member.nameEn} ({isArabic ? member.titleAr : member.titleEn})
@@ -2183,11 +2294,11 @@ export default function ProgramsManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="p-headNameAr">{isArabic ? "اسم رئيس القسم (يدوياً إذا لم يُختر من القائمة)" : "Head Name (AR)"}</Label>
-                      <Input id="p-headNameAr" value={headNameAr} onChange={(e) => setHeadNameAr(e.target.value)} placeholder="د. باسل خوري" />
+                      <Label htmlFor="p-headNameAr">{isArabic ? "اسم رئيس القسم بالعربية" : "Head Name in Arabic"}</Label>
+                      <Input id="p-headNameAr" value={headNameAr} onChange={(e) => setHeadNameAr(e.target.value)} placeholder={isArabic ? "د. باسل خوري" : "Dr. Basel Khoury"} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="p-headNameEn">{isArabic ? "اسم رئيس القسم (بالإنكليزية)" : "Head Name (EN)"}</Label>
+                      <Label htmlFor="p-headNameEn">{isArabic ? "اسم رئيس القسم بالإنكليزية" : "Head Name in English"}</Label>
                       <Input id="p-headNameEn" value={headNameEn} onChange={(e) => setHeadNameEn(e.target.value)} placeholder="Dr. Basel Khoury" />
                     </div>
                   </div>
@@ -2248,15 +2359,27 @@ export default function ProgramsManagement() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="p-headMessageAr">{isArabic ? "كلمة رئيس القسم الترحيبية والرؤية (بالعربية)" : "Head Welcome Message (AR)"}</Label>
-                    <Textarea
-                      id="p-headMessageAr"
-                      value={headMessageAr}
-                      onChange={(e) => setHeadMessageAr(e.target.value)}
-                      rows={4}
-                      placeholder="يسرني أن أرحب بكم في قسم هندسة البرمجيات، حيث نسعى لتخريج مهندسين متميزين قادرين على قيادة التحول الرقمي..."
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="p-headMessageAr">{isArabic ? "كلمة رئيس القسم الترحيبية بالعربية" : "Head Welcome Message in Arabic"}</Label>
+                      <Textarea
+                        id="p-headMessageAr"
+                        value={headMessageAr}
+                        onChange={(e) => setHeadMessageAr(e.target.value)}
+                        rows={4}
+                        placeholder={isArabic ? "يسرني أن أرحب بكم في قسم هندسة البرمجيات، حيث نسعى لتخريج مهندسين متميزين قادرين على قيادة التحول الرقمي..." : "Welcome message in Arabic..."}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="p-headMessageEn">{isArabic ? "كلمة رئيس القسم الترحيبية بالإنكليزية" : "Head Welcome Message in English"}</Label>
+                      <Textarea
+                        id="p-headMessageEn"
+                        value={headMessageEn}
+                        onChange={(e) => setHeadMessageEn(e.target.value)}
+                        rows={4}
+                        placeholder={isArabic ? "كلمة رئيس القسم الترحيبية بالإنكليزية..." : "It gives me great pleasure to welcome you to the department, where we strive to graduate exceptional engineers..."}
+                      />
+                    </div>
                   </div>
                 </TabsContent>
 
@@ -2279,12 +2402,13 @@ export default function ProgramsManagement() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="p-researchPapers">{isArabic ? "عدد الأبحاط والأوراق العلمية" : "Published Papers"}</Label>
+                      <Label htmlFor="p-researchPapers">{isArabic ? "عدد الأبحاث والأوراق العلمية" : "Published Research Papers"}</Label>
                       <Input id="p-researchPapers" type="number" value={researchPapersCount} onChange={(e) => setResearchPapersCount(Number(e.target.value))} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="p-employmentRate">{isArabic ? "نسبة توظيف الخريجين (%)" : "Employment Rate (%)"}</Label>
+                      <Label htmlFor="p-employmentRate">{isArabic ? "نسبة توظيف الخريجين" : "Graduate Employment Rate"}</Label>
                       <Input id="p-employmentRate" type="number" value={employmentRate} onChange={(e) => setEmploymentRate(Number(e.target.value))} />
+                      <p className="text-xs text-muted-foreground">{isArabic ? "نسبة مئوية بين 0 و 100" : "Percentage between 0 and 100"}</p>
                     </div>
                   </div>
 
@@ -2295,7 +2419,7 @@ export default function ProgramsManagement() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="p-duration">{isArabic ? "مدة الدراسة (بالسنوات)" : "Duration (Years)"}</Label>
+                        <Label htmlFor="p-duration">{isArabic ? "مدة الدراسة بالسنوات" : "Study Duration in Years"}</Label>
                         <Input id="p-duration" type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
                       </div>
                       <div className="space-y-2">
@@ -2303,18 +2427,19 @@ export default function ProgramsManagement() {
                         <Input id="p-credits" type="number" value={creditHours} onChange={(e) => setCreditHours(Number(e.target.value))} />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="p-minPercent">{isArabic ? "الحد الأدنى للثانوية (%)" : "Min Score (%)"}</Label>
+                        <Label htmlFor="p-minPercent">{isArabic ? "الحد الأدنى لمعدل القبول" : "Minimum Admission Score"}</Label>
                         <Input id="p-minPercent" type="number" value={minScorePercent} onChange={(e) => setMinScorePercent(Number(e.target.value))} />
+                        <p className="text-xs text-muted-foreground">{isArabic ? "نسبة مئوية بين 0 و 100" : "Percentage between 0 and 100"}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="p-tuitionSyp">{isArabic ? "القسط السنوي للطلاب السوريين (ل.س)" : "Tuition (Syrian SYP)"}</Label>
+                        <Label htmlFor="p-tuitionSyp">{isArabic ? "القسط السنوي للطلاب المقيمين بالليرة السورية" : "Annual Tuition for Syrian Students (SYP)"}</Label>
                         <Input id="p-tuitionSyp" type="number" value={tuitionSyrian} onChange={(e) => setTuitionSyrian(Number(e.target.value))} />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="p-tuitionUsd">{isArabic ? "القسط السنوي للطلاب غير المقيمين ($)" : "Tuition (Non-Resident USD)"}</Label>
+                        <Label htmlFor="p-tuitionUsd">{isArabic ? "القسط السنوي للطلاب غير المقيمين بالدولار" : "Annual Tuition for Non-Residents (USD)"}</Label>
                         <Input id="p-tuitionUsd" type="number" value={tuitionNonResident} onChange={(e) => setTuitionNonResident(Number(e.target.value))} />
                       </div>
                     </div>
@@ -2324,7 +2449,7 @@ export default function ProgramsManagement() {
                 {/* Tab 5: Labs, Career Paths & Prospectus */}
                 <TabsContent value="facilities" className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="p-guideDoc">{isArabic ? "رابط دليل القسم / الخطة الدراسية PDF" : "Program Prospectus / Syllabus PDF URL"}</Label>
+                    <Label htmlFor="p-guideDoc">{isArabic ? "رابط دليل القسم والخطة الدراسية" : "Program Prospectus and Syllabus URL"}</Label>
                     <Input id="p-guideDoc" value={guideDocumentUrl} onChange={(e) => setGuideDocumentUrl(e.target.value)} placeholder="https://asu.edu.sy/docs/software-eng-plan.pdf" />
                   </div>
 
@@ -2361,8 +2486,8 @@ export default function ProgramsManagement() {
                     <div className="p-4 border rounded-xl bg-background space-y-3">
                       <p className="text-xs font-bold text-muted-foreground">{isArabic ? "+ إضافة مخبر تخصصي جديد" : "+ Add New Specialized Lab"}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <Input placeholder={isArabic ? "اسم المختبر (بالعربية)" : "Lab Name (AR)"} value={newLabNameAr} onChange={(e) => setNewLabNameAr(e.target.value)} />
-                        <Input placeholder={isArabic ? "اسم المختبر (بالإنكليزية)" : "Lab Name (EN)"} value={newLabNameEn} onChange={(e) => setNewLabNameEn(e.target.value)} />
+                        <Input placeholder={isArabic ? "اسم المختبر بالعربية *" : "Lab Name in Arabic *"} value={newLabNameAr} onChange={(e) => setNewLabNameAr(e.target.value)} />
+                        <Input placeholder={isArabic ? "اسم المختبر بالإنكليزية" : "Lab Name in English"} value={newLabNameEn} onChange={(e) => setNewLabNameEn(e.target.value)} />
                       </div>
                       <Textarea placeholder={isArabic ? "تجهيزات ومحتويات المختبر والأنظمة البرمجية المتوفرة..." : "Lab description, hardware and software setups..."} value={newLabDescAr} onChange={(e) => setNewLabDescAr(e.target.value)} rows={2} />
                       <Button type="button" variant="outline" size="sm" className="font-bold gap-2" onClick={handleAddFacility}>
@@ -2385,7 +2510,7 @@ export default function ProgramsManagement() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {isArabic ? "حفظ وتطبيق إعدادات القسم" : "Save Department & Microsite"}
+                {isArabic ? (currentProgram ? "حفظ التغييرات" : "إضافة القسم الأكاديمي") : (currentProgram ? "Save Changes" : "Add Department")}
               </Button>
             </DialogFooter>
           </form>
@@ -2397,13 +2522,13 @@ export default function ProgramsManagement() {
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleDelete}
-        title={isArabic ? "حذف القسم الأكاديمي (عملية عالية الخطورة)" : "High-Risk Operation: Delete Department"}
+        title={isArabic ? "حذف القسم الأكاديمي" : "Delete Department"}
         description={
           isArabic
             ? `تحذير: هل أنت متأكد من حذف قسم ${currentProgram?.nameAr || "هذا القسم"}؟ سيتم حذف جميع بيانات وموقع وتعيينات هذا القسم.`
             : `Warning: Are you sure you want to delete ${currentProgram?.nameEn}? All related data and pages will be removed.`
         }
-        confirmText={isArabic ? "تأكيد حذف القسم الأمني" : "Confirm Security Deletion"}
+        confirmText={isArabic ? "تأكيد حذف القسم" : "Confirm Delete Department"}
         isPending={deleteMutation.isPending}
       />
 
@@ -2503,12 +2628,7 @@ export default function ProgramsManagement() {
                             <TableHead className="text-start font-bold">{isArabic ? "السنة والفصل" : "Year & Term"}</TableHead>
                             <TableHead className="text-start font-bold">{isArabic ? "الساعات" : "Credits"}</TableHead>
                             <TableHead className="text-start font-bold">{isArabic ? "المتطلب السابق" : "Prereq"}</TableHead>
-                            <TableHead className="text-center font-bold">{isArabic ? "الرمز" : "Code"}</TableHead>
-                            <TableHead className="text-center font-bold">{isArabic ? "المقرر" : "Course"}</TableHead>
-                            <TableHead className="text-center font-bold">{isArabic ? "السنة والفصل" : "Year & Term"}</TableHead>
-                            <TableHead className="text-center font-bold">{isArabic ? "الساعات" : "Credits"}</TableHead>
-                            <TableHead className="text-center font-bold">{isArabic ? "المتطلب السابق" : "Prereq"}</TableHead>
-                            <TableHead className="text-center font-bold">{isArabic ? "إجراءات" : "Actions"}</TableHead>
+                            <TableHead className="text-end font-bold px-6">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -2584,15 +2704,15 @@ export default function ProgramsManagement() {
                         key={yearNum}
                         value={yearNum.toString()}
                         className={`text-xs font-bold gap-2 py-2 rounded-lg transition-all data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:shadow-xs ${isSelected
-                            ? "!bg-primary !text-primary-foreground shadow-xs"
-                            : "text-muted-foreground hover:bg-muted/60"
+                          ? "!bg-primary !text-primary-foreground shadow-xs"
+                          : "text-muted-foreground hover:bg-muted/60"
                           }`}
                       >
                         <span>{label}</span>
                         <span
                           className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono transition-colors ${isSelected
-                              ? "bg-white/20 text-white font-bold"
-                              : "bg-muted text-foreground"
+                            ? "bg-white/20 text-white font-bold"
+                            : "bg-muted text-foreground"
                             }`}
                         >
                           {yearCourses.length}
@@ -2619,8 +2739,8 @@ export default function ProgramsManagement() {
                                 type="button"
                                 onClick={() => setSelectedSemesterTab(sem.toString())}
                                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${isSelected
-                                    ? "bg-primary text-primary-foreground shadow-xs"
-                                    : "bg-muted/40 text-muted-foreground hover:bg-muted"
+                                  ? "bg-primary text-primary-foreground shadow-xs"
+                                  : "bg-muted/40 text-muted-foreground hover:bg-muted"
                                   }`}
                               >
                                 <span>{isArabic ? (sem === 1 ? "الفصل الأول" : "الفصل الثاني") : `Semester ${sem}`}</span>
@@ -2709,13 +2829,9 @@ export default function ProgramsManagement() {
                                 <TableRow className="bg-muted/30">
                                   <TableHead className="w-24 text-start font-bold">{isArabic ? "الرمز" : "Code"}</TableHead>
                                   <TableHead className="text-start font-bold">{isArabic ? "اسم المقرر" : "Course Name"}</TableHead>
-                                  <TableHead className="w-24 text-center font-bold">{isArabic ? "الرمز" : "Code"}</TableHead>
-                                  <TableHead className="text-center font-bold">{isArabic ? "اسم المقرر" : "Course Name"}</TableHead>
                                   <TableHead className="w-24 text-center font-bold">{isArabic ? "الساعات" : "Credits"}</TableHead>
                                   <TableHead className="text-start font-bold">{isArabic ? "المتطلب السابق" : "Prerequisite"}</TableHead>
                                   <TableHead className="text-start font-bold">{isArabic ? "الوصف" : "Description"}</TableHead>
-                                  <TableHead className="text-center font-bold">{isArabic ? "المتطلب السابق" : "Prerequisite"}</TableHead>
-                                  <TableHead className="text-center font-bold">{isArabic ? "الوصف" : "Description"}</TableHead>
                                   <TableHead className="w-20 text-center font-bold">{isArabic ? "إجراءات" : "Actions"}</TableHead>
                                 </TableRow>
                               </TableHeader>
@@ -2849,7 +2965,7 @@ export default function ProgramsManagement() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="c-nameAr" className="text-xs font-bold">
-                  {isArabic ? "اسم المقرر (بالعربية) *" : "Course Name (Arabic) *"}
+                  {isArabic ? "اسم المقرر بالعربية *" : "Course Name in Arabic *"}
                 </Label>
                 <Input
                   id="c-nameAr"
@@ -2862,13 +2978,14 @@ export default function ProgramsManagement() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="c-nameEn" className="text-xs font-bold">
-                  {isArabic ? "اسم المقرر (بالإنكليزية)" : "Course Name (English)"}
+                  {isArabic ? "اسم المقرر بالإنكليزية *" : "Course Name in English *"}
                 </Label>
                 <Input
                   id="c-nameEn"
                   placeholder="Software Engineering I"
                   value={courseNameEn}
                   onChange={(e) => setCourseNameEn(e.target.value)}
+                  required
                 />
               </div>
 
@@ -2924,7 +3041,7 @@ export default function ProgramsManagement() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="c-prereq" className="text-xs font-bold">
-                  {isArabic ? "المتطلب السابق (إن وجد)" : "Prerequisites (Optional)"}
+                  {isArabic ? "المتطلب السابق" : "Prerequisites"}
                 </Label>
                 <Input
                   id="c-prereq"
@@ -2934,21 +3051,39 @@ export default function ProgramsManagement() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="c-descAr" className="text-xs font-bold">
-                  {isArabic ? "نبذة وتوصيف المقرر بالعربية" : "Course Syllabus / Description (Arabic)"}
-                </Label>
-                <Textarea
-                  id="c-descAr"
-                  rows={3}
-                  placeholder={
-                    isArabic
-                      ? "وصف موجز للمفاهيم ومخرجات التعلم المستهدفة من هذا المقرر..."
-                      : "Course topics and intended learning outcomes..."
-                  }
-                  value={courseDescriptionAr}
-                  onChange={(e) => setCourseDescriptionAr(e.target.value)}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="c-descAr" className="text-xs font-bold">
+                    {isArabic ? "توصيف المقرر بالعربية" : "Course Syllabus in Arabic"}
+                  </Label>
+                  <Textarea
+                    id="c-descAr"
+                    rows={3}
+                    placeholder={
+                      isArabic
+                        ? "وصف موجز للمفاهيم ومخرجات التعلم المستهدفة من هذا المقرر..."
+                        : "Course topics and intended learning outcomes..."
+                    }
+                    value={courseDescriptionAr}
+                    onChange={(e) => setCourseDescriptionAr(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="c-descEn" className="text-xs font-bold">
+                    {isArabic ? "توصيف المقرر بالإنكليزية" : "Course Syllabus in English"}
+                  </Label>
+                  <Textarea
+                    id="c-descEn"
+                    rows={3}
+                    placeholder={
+                      isArabic
+                        ? "وصف موجز للمفاهيم بالإنكليزية..."
+                        : "Course overview, key topics and learning outcomes..."
+                    }
+                    value={courseDescriptionEn}
+                    onChange={(e) => setCourseDescriptionEn(e.target.value)}
+                  />
+                </div>
               </div>
             </DialogBody>
 
@@ -2966,7 +3101,7 @@ export default function ProgramsManagement() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {isArabic ? "حفظ المقرر" : "Save Course"}
+                {isArabic ? (editingCourse ? "حفظ التغييرات" : "إضافة المقرر") : (editingCourse ? "Save Changes" : "Add Course")}
               </Button>
             </DialogFooter>
           </form>
@@ -2979,7 +3114,7 @@ export default function ProgramsManagement() {
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
               <Trash2 className="h-5 w-5" />
-              <span>{isArabic ? "تأكيد حذف المقرر الدراسي" : "Delete Course Confirmation"}</span>
+              <span>{isArabic ? "تأكيد حذف المقرر الدراسي" : "Confirm Course Deletion"}</span>
             </DialogTitle>
             <DialogDescription>
               {isArabic
@@ -3009,7 +3144,7 @@ export default function ProgramsManagement() {
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              {isArabic ? "تأكيد الحذف" : "Delete Course"}
+              {isArabic ? "تأكيد الحذف" : "Confirm Deletion"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -100,20 +100,21 @@ const CATEGORY_CHOICES = [
   { id: "general", nameAr: "المعارف والمراجع العامة", nameEn: "General References", color: "from-slate-700 to-slate-950" },
 ];
 
-const GRADIENT_PRESETS = [
-  { label: "أزرق نيلي (Blue/Indigo)", value: "from-blue-600 to-indigo-950" },
-  { label: "زمردي وتيلي (Emerald/Teal)", value: "from-emerald-600 to-teal-900" },
-  { label: "بنفسجي ملكي (Purple/Indigo)", value: "from-purple-600 to-indigo-950" },
-  { label: "كهرماني وبرتقالي (Amber/Orange)", value: "from-amber-600 to-orange-900" },
-  { label: "عنابي ملكي (Rose/Red)", value: "from-rose-600 to-red-950" },
-  { label: "سماوي وأزرق (Sky/Blue)", value: "from-sky-600 to-blue-950" },
-  { label: "فوشيا وبنفسجي (Fuchsia/Purple)", value: "from-fuchsia-600 to-purple-900" },
-  { label: "رمادي وفحمي (Slate/Dark)", value: "from-slate-700 to-slate-950" },
+const getGradientPresets = (isArabic: boolean) => [
+  { label: isArabic ? "أزرق نيلي" : "Blue & Indigo", value: "from-blue-600 to-indigo-950" },
+  { label: isArabic ? "زمردي وتيلي" : "Emerald & Teal", value: "from-emerald-600 to-teal-900" },
+  { label: isArabic ? "بنفسجي ملكي" : "Purple & Indigo", value: "from-purple-600 to-indigo-950" },
+  { label: isArabic ? "كهرماني وبرتقالي" : "Amber & Orange", value: "from-amber-600 to-orange-900" },
+  { label: isArabic ? "عنابي ملكي" : "Rose & Red", value: "from-rose-600 to-red-950" },
+  { label: isArabic ? "سماوي وأزرق" : "Sky & Blue", value: "from-sky-600 to-blue-950" },
+  { label: isArabic ? "فوشيا وبنفسجي" : "Fuchsia & Purple", value: "from-fuchsia-600 to-purple-900" },
+  { label: isArabic ? "رمادي وفحمي" : "Slate & Dark", value: "from-slate-700 to-slate-950" },
 ];
 
 export default function LibraryManagementPage() {
   const { language, dir } = useLanguage();
   const isArabic = language === "ar";
+  const gradientPresets = getGradientPresets(isArabic);
 
   // Data fetching
   const { data: facultiesList } = useFaculties();
@@ -309,8 +310,60 @@ export default function LibraryManagementPage() {
   const handleSaveBook = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!titleAr.trim() || !authorAr.trim()) {
-      toast.error(isArabic ? "يرجى إدخال عنوان الكتاب واسم المؤلف بالعربية على الأقل" : "Please fill Title and Author in Arabic");
+    if (!titleAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان الكتاب باللغة العربية" : "Please enter the book title in Arabic");
+      setModalTab("general");
+      return;
+    }
+
+    if (!titleEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال عنوان الكتاب باللغة الإنجليزية" : "Please enter the book title in English");
+      setModalTab("general");
+      return;
+    }
+
+    if (!authorAr.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم المؤلف باللغة العربية" : "Please enter the author name in Arabic");
+      setModalTab("general");
+      return;
+    }
+
+    if (!authorEn.trim()) {
+      toast.error(isArabic ? "يرجى إدخال اسم المؤلف باللغة الإنجليزية" : "Please enter the author name in English");
+      setModalTab("general");
+      return;
+    }
+
+    if (!category) {
+      toast.error(isArabic ? "يرجى تحديد التخصص الأكاديمي للكتاب" : "Please select the academic discipline");
+      setModalTab("general");
+      return;
+    }
+
+    const numYear = Number(year);
+    if (isNaN(numYear) || numYear < 1900 || numYear > 2099) {
+      toast.error(isArabic ? "يرجى إدخال سنة نشر صحيحة بين 1900 و 2099" : "Please enter a valid publication year between 1900 and 2099");
+      setModalTab("general");
+      return;
+    }
+
+    const numTotalCopies = Number(totalCopies);
+    if (isNaN(numTotalCopies) || numTotalCopies < 1) {
+      toast.error(isArabic ? "يرجى إدخال إجمالي عدد النسخ المطبوعة (1 على الأقل)" : "Total copies must be at least 1");
+      setModalTab("inventory");
+      return;
+    }
+
+    const numAvailableCopies = Number(availableCopies);
+    if (isNaN(numAvailableCopies) || numAvailableCopies < 0) {
+      toast.error(isArabic ? "يرجى إدخال عدد صحيح للنسخ المتاحة" : "Available copies must be 0 or more");
+      setModalTab("inventory");
+      return;
+    }
+
+    if (numAvailableCopies > numTotalCopies) {
+      toast.error(isArabic ? "النسخ المتاحة لا يمكن أن تتجاوز إجمالي عدد النسخ" : "Available copies cannot exceed total copies");
+      setModalTab("inventory");
       return;
     }
 
@@ -326,7 +379,7 @@ export default function LibraryManagementPage() {
       category,
       categoryNameAr: matchedCat ? matchedCat.nameAr : "",
       categoryNameEn: matchedCat ? matchedCat.nameEn : "",
-      year: Number(year) || 2024,
+      year: numYear,
       edition: edition.trim(),
       pages: Number(pages) || 0,
       language: bookLanguage,
@@ -338,8 +391,8 @@ export default function LibraryManagementPage() {
       pdfFileSize,
       pdfFileSizeFormatted,
       allowDownload,
-      totalCopies: Number(totalCopies) || 1,
-      availableCopies: Number(availableCopies) || 0,
+      totalCopies: numTotalCopies,
+      availableCopies: numAvailableCopies,
       shelfLocation: shelfLocation.trim(),
       available,
     };
@@ -655,18 +708,16 @@ export default function LibraryManagementPage() {
               <div className="flex items-center gap-1 bg-muted p-1 rounded-lg border border-border">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`p-1.5 rounded-md transition-colors ${
-                    viewMode === "table" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    }`}
                   title={isArabic ? "عرض جدول" : "Table View"}
                 >
                   <List className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`p-1.5 rounded-md transition-colors ${
-                    viewMode === "grid" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    }`}
                   title={isArabic ? "عرض كروت" : "Grid View"}
                 >
                   <LayoutGrid className="h-4 w-4" />
@@ -729,9 +780,8 @@ export default function LibraryManagementPage() {
                             />
                           ) : (
                             <div
-                              className={`h-14 w-10 rounded shadow bg-gradient-to-br ${
-                                book.coverColor || "from-blue-600 to-indigo-950"
-                              } border border-white/20 mx-auto flex flex-col justify-between p-1 select-none text-[6px] text-white`}
+                              className={`h-14 w-10 rounded shadow bg-gradient-to-br ${book.coverColor || "from-blue-600 to-indigo-950"
+                                } border border-white/20 mx-auto flex flex-col justify-between p-1 select-none text-[6px] text-white`}
                             >
                               <span className="font-mono text-[5px] text-white/60">ASU</span>
                               <span className="line-clamp-2 font-bold leading-tight">
@@ -777,10 +827,10 @@ export default function LibraryManagementPage() {
                         <TableCell>
                           <div className="space-y-1 text-xs">
                             <p className="font-mono text-muted-foreground">
-                              ISBN: {book.isbn || "—"}
+                              ISBN: {book.isbn || "N/A"}
                             </p>
                             <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                              <span>{book.year}</span>
+                              <span>{book.year || "N/A"}</span>
                               {book.pages ? <span>• {book.pages} {isArabic ? "صفحة" : "pages"}</span> : null}
                             </div>
                           </div>
@@ -870,17 +920,17 @@ export default function LibraryManagementPage() {
             </div>
           ) : (
             /* Card Grid View */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
               {filteredBooks.map((book) => {
                 const cat = CATEGORY_CHOICES.find((c) => c.id === book.category);
                 return (
                   <Card
                     key={book.id}
-                    className="group relative flex flex-col justify-between overflow-hidden border-border hover:border-primary/40 transition-all duration-300 shadow-sm hover:shadow-lg"
+                    className="group relative flex flex-col justify-between overflow-hidden border-border hover:border-primary/40 transition-all duration-300 shadow-sm hover:shadow-lg min-w-0 w-full"
                   >
-                    <CardHeader className="p-4 pb-2 space-y-3">
+                    <CardHeader className="p-4 pb-2 space-y-3 min-w-0">
                       {/* Cover presentation */}
-                      <div className="relative aspect-[3/4.2] w-[130px] mx-auto rounded-lg shadow-md overflow-hidden border border-border group-hover:scale-105 transition-transform duration-300">
+                      <div className="relative aspect-[3/4.2] w-[130px] mx-auto rounded-lg shadow-md overflow-hidden border border-border group-hover:scale-105 transition-transform duration-300 shrink-0">
                         {book.coverImage ? (
                           <img
                             src={book.coverImage}
@@ -889,9 +939,8 @@ export default function LibraryManagementPage() {
                           />
                         ) : (
                           <div
-                            className={`w-full h-full bg-gradient-to-br ${
-                              book.coverColor || "from-blue-600 to-indigo-950"
-                            } p-3 flex flex-col justify-between text-white select-none`}
+                            className={`w-full h-full bg-gradient-to-br ${book.coverColor || "from-blue-600 to-indigo-950"
+                              } p-3 flex flex-col justify-between text-white select-none`}
                           >
                             <span className="text-[8px] font-mono tracking-widest text-white/50 bg-black/20 w-fit px-1.5 py-0.5 rounded">
                               ASU LIB
@@ -907,12 +956,12 @@ export default function LibraryManagementPage() {
                       </div>
 
                       {/* Info */}
-                      <div className="space-y-1.5 text-start pt-2">
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline" className="text-[10px] font-bold">
-                            {isArabic ? cat?.nameAr : cat?.nameEn}
+                      <div className="space-y-1.5 text-start pt-2 min-w-0">
+                        <div className="flex items-center justify-between min-w-0 gap-2">
+                          <Badge variant="outline" className="text-[10px] font-bold truncate max-w-[70%]">
+                            <span className="truncate">{isArabic ? cat?.nameAr : cat?.nameEn}</span>
                           </Badge>
-                          <span className="text-[10px] font-mono text-muted-foreground">{book.year}</span>
+                          <span className="text-[10px] font-mono text-muted-foreground shrink-0">{book.year}</span>
                         </div>
                         <h4 className="font-bold text-sm text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                           {isArabic ? book.titleAr : book.titleEn}
@@ -926,31 +975,31 @@ export default function LibraryManagementPage() {
                       </div>
                     </CardHeader>
 
-                    <CardContent className="p-4 pt-2 border-t border-border mt-auto">
-                      <div className="flex items-center justify-between text-xs mb-3">
-                        <span className="text-muted-foreground">
+                    <CardContent className="p-4 pt-2 border-t border-border mt-auto min-w-0">
+                      <div className="flex items-center justify-between text-xs mb-3 min-w-0">
+                        <span className="text-muted-foreground truncate">
                           {isArabic ? "النسخ المتاحة:" : "Available:"}
                         </span>
-                        <span className="font-mono font-bold">
+                        <span className="font-mono font-bold shrink-0">
                           {book.availableCopies} / {book.totalCopies}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1 text-xs font-semibold gap-1.5"
+                          className="flex-1 text-xs font-semibold gap-1.5 min-w-0"
                           onClick={() => handleOpenModal(book)}
                         >
-                          <Edit className="h-3.5 w-3.5 text-primary" />
-                          <span>{isArabic ? "تعديل" : "Edit"}</span>
+                          <Edit className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span className="truncate">{isArabic ? "تعديل" : "Edit"}</span>
                         </Button>
                         {book.pdfFile && (
                           <Button
                             variant="secondary"
                             size="sm"
-                            className="text-xs gap-1"
+                            className="text-xs gap-1 shrink-0"
                             asChild
                           >
                             <a href={book.pdfFile} target="_blank" rel="noreferrer">
@@ -990,11 +1039,11 @@ export default function LibraryManagementPage() {
                 </SelectTrigger>
                 <SelectContent dir={dir}>
                   <SelectItem value="all">{isArabic ? "جميع الطلبات" : "All Requests"}</SelectItem>
-                  <SelectItem value="pending">{isArabic ? "قيد الانتظار (Pending)" : "Pending"}</SelectItem>
-                  <SelectItem value="approved">{isArabic ? "تمت الموافقة (Approved)" : "Approved"}</SelectItem>
-                  <SelectItem value="borrowed">{isArabic ? "مستعار حالياً (Borrowed)" : "Borrowed"}</SelectItem>
-                  <SelectItem value="returned">{isArabic ? "تمت الإعادة (Returned)" : "Returned"}</SelectItem>
-                  <SelectItem value="cancelled">{isArabic ? "ملغى (Cancelled)" : "Cancelled"}</SelectItem>
+                  <SelectItem value="pending">{isArabic ? "قيد الانتظار" : "Pending"}</SelectItem>
+                  <SelectItem value="approved">{isArabic ? "تمت الموافقة" : "Approved"}</SelectItem>
+                  <SelectItem value="borrowed">{isArabic ? "مستعار حالياً" : "Borrowed"}</SelectItem>
+                  <SelectItem value="returned">{isArabic ? "تمت الإعادة" : "Returned"}</SelectItem>
+                  <SelectItem value="cancelled">{isArabic ? "ملغى" : "Cancelled"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1177,8 +1226,8 @@ export default function LibraryManagementPage() {
                     ? "تعديل بيانات الكتاب الأكاديمي"
                     : "Edit Academic Book"
                   : isArabic
-                  ? "إضافة كتاب ومصدر أكاديمي جديد"
-                  : "Add New Academic Book"}
+                    ? "إضافة كتاب ومصدر أكاديمي جديد"
+                    : "Add New Academic Book"}
               </span>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground mt-1">
@@ -1268,18 +1317,18 @@ export default function LibraryManagementPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">
-                        {isArabic ? "عنوان الكتاب (بالعربية) *" : "Book Title (Arabic) *"}
+                        {isArabic ? "عنوان الكتاب بالعربية" : "Book Title in Arabic"}
                       </Label>
                       <Input
                         value={titleAr}
                         onChange={(e) => setTitleAr(e.target.value)}
-                        placeholder="مثال: مبادئ الهندسة المدنية والإنشائية"
+                        placeholder={isArabic ? "مثال: مبادئ الهندسة المدنية والإنشائية" : "e.g. Principles of Civil Engineering"}
                         required
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">
-                        {isArabic ? "عنوان الكتاب (بالإنجليزية) *" : "Book Title (English) *"}
+                        {isArabic ? "عنوان الكتاب بالإنجليزية" : "Book Title in English"}
                       </Label>
                       <Input
                         value={titleEn}
@@ -1293,18 +1342,18 @@ export default function LibraryManagementPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">
-                        {isArabic ? "اسم المؤلف (بالعربية) *" : "Author Name (Arabic) *"}
+                        {isArabic ? "اسم المؤلف بالعربية" : "Author Name in Arabic"}
                       </Label>
                       <Input
                         value={authorAr}
                         onChange={(e) => setAuthorAr(e.target.value)}
-                        placeholder="مثال: د. أحمد خليل"
+                        placeholder={isArabic ? "مثال: د. أحمد خليل" : "e.g. Dr. Ahmed Khalil"}
                         required
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">
-                        {isArabic ? "اسم المؤلف (بالإنجليزية)" : "Author Name (English)"}
+                        {isArabic ? "اسم المؤلف بالإنجليزية" : "Author Name in English"}
                       </Label>
                       <Input
                         value={authorEn}
@@ -1318,7 +1367,7 @@ export default function LibraryManagementPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">
-                        {isArabic ? "التخصص الأكاديمي *" : "Academic Discipline *"}
+                        {isArabic ? "التخصص الأكاديمي" : "Academic Discipline"}
                       </Label>
                       <Select value={category} onValueChange={setCategory}>
                         <SelectTrigger className="text-xs">
@@ -1343,7 +1392,7 @@ export default function LibraryManagementPage() {
                           <SelectValue placeholder={isArabic ? "اختر الكلية..." : "Select Faculty..."} />
                         </SelectTrigger>
                         <SelectContent dir={dir}>
-                          <SelectItem value="none">{isArabic ? "عام (دون تخصيص كلية)" : "General (No Faculty)"}</SelectItem>
+                          <SelectItem value="none">{isArabic ? "عام، دون تخصيص كلية" : "General - All Faculties"}</SelectItem>
                           {faculties.map((fac) => (
                             <SelectItem key={fac.id} value={String(fac.id)}>
                               {isArabic ? fac.nameAr : fac.nameEn}
@@ -1414,9 +1463,9 @@ export default function LibraryManagementPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent dir={dir}>
-                          <SelectItem value="العربية">العربية (Arabic)</SelectItem>
-                          <SelectItem value="الإنجليزية">الإنجليزية (English)</SelectItem>
-                          <SelectItem value="الفرنسية">الفرنسية (French)</SelectItem>
+                          <SelectItem value="العربية">{isArabic ? "العربية" : "Arabic"}</SelectItem>
+                          <SelectItem value="الإنجليزية">{isArabic ? "الإنجليزية" : "English"}</SelectItem>
+                          <SelectItem value="الفرنسية">{isArabic ? "الفرنسية" : "French"}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1440,10 +1489,10 @@ export default function LibraryManagementPage() {
                             ASU LIB
                           </span>
                           <h4 className="text-xs font-bold leading-tight drop-shadow line-clamp-3">
-                            {titleAr || "عنوان الكتاب"}
+                            {titleAr || (isArabic ? "عنوان الكتاب" : "Book Title")}
                           </h4>
                           <p className="text-[9px] text-white/80 font-semibold truncate border-t border-white/20 pt-1.5">
-                            {authorAr || "اسم المؤلف"}
+                            {authorAr || (isArabic ? "اسم المؤلف" : "Author Name")}
                           </p>
                         </div>
                       )}
@@ -1453,12 +1502,12 @@ export default function LibraryManagementPage() {
                     <div className="space-y-4 flex-1">
                       <div>
                         <h4 className="font-bold text-sm text-foreground">
-                          {isArabic ? "رفع صورة الغلاف (JPG, PNG, WebP)" : "Upload Cover Image"}
+                          {isArabic ? "صورة الغلاف" : "Cover Image"}
                         </h4>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {isArabic
-                            ? "يتم التحقق من الصورة وتأمينها تلقائياً. الحد الأقصى للحجم 5 ميغابايت."
-                            : "Images are securely verified via Pillow. Max file size: 5 MB."}
+                            ? "الامتدادات المدعومة: JPG و PNG و WebP. الحد الأقصى 5 ميغابايت."
+                            : "Supported formats: JPG, PNG, WebP. Maximum size: 5 MB."}
                         </p>
                       </div>
 
@@ -1506,14 +1555,17 @@ export default function LibraryManagementPage() {
                       {/* Fallback Gradient Picker */}
                       <div className="space-y-2 pt-2 border-t border-border">
                         <Label className="text-xs font-bold">
-                          {isArabic ? "التدرج اللوني للغلاف (في حال عدم وجود صورة)" : "Fallback Gradient Theme"}
+                          {isArabic ? "التدرج اللوني البديل للغلاف" : "Fallback Cover Gradient"}
                         </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {isArabic ? "يُستخدم كخلفية افتراضية في حال عدم رفع صورة مخصصة للغلاف" : "Used as the default backdrop when no custom cover image is provided"}
+                        </p>
                         <Select value={coverColor} onValueChange={setCoverColor}>
                           <SelectTrigger className="text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent dir={dir}>
-                            {GRADIENT_PRESETS.map((grad) => (
+                            {gradientPresets.map((grad) => (
                               <SelectItem key={grad.value} value={grad.value}>
                                 {grad.label}
                               </SelectItem>
@@ -1582,12 +1634,12 @@ export default function LibraryManagementPage() {
                         </div>
                         <div>
                           <h4 className="font-bold text-sm text-foreground">
-                            {isArabic ? "رفع الكتاب الإلكتروني بصيغة PDF" : "Upload Digital PDF Book"}
+                            {isArabic ? "الكتاب الإلكتروني بصيغة PDF" : "Digital PDF Edition"}
                           </h4>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             {isArabic
-                              ? "يُسمح بملفات PDF فقط حتى حجم 100 ميغابايت"
-                              : "Strictly accepts .pdf documents up to 100 MB"}
+                              ? "يقبل ملفات PDF فقط بحجم أقصى يصل إلى 100 ميغابايت"
+                              : "Accepts PDF documents only, up to 100 MB"}
                           </p>
                         </div>
 
@@ -1645,7 +1697,7 @@ export default function LibraryManagementPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">
-                        {isArabic ? "إجمالي النسخ المطبوعة المتوفرة *" : "Total Physical Copies *"}
+                        {isArabic ? "إجمالي النسخ المطبوعة" : "Total Physical Copies"}
                       </Label>
                       <Input
                         type="number"
@@ -1662,7 +1714,7 @@ export default function LibraryManagementPage() {
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">
-                        {isArabic ? "النسخ المتاحة حالياً للإعارة *" : "Available Copies *"}
+                        {isArabic ? "النسخ المتاحة للإعارة" : "Available Copies"}
                       </Label>
                       <Input
                         type="number"
@@ -1681,7 +1733,7 @@ export default function LibraryManagementPage() {
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold">
-                      {isArabic ? "موقع الرف في المكتبة المركزية" : "Shelf Location / Tag"}
+                      {isArabic ? "موقع الرف في المكتبة" : "Shelf Location"}
                     </Label>
                     <Input
                       value={shelfLocation}
@@ -1714,19 +1766,19 @@ export default function LibraryManagementPage() {
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold">
-                      {isArabic ? "نبذة ووصف الكتاب (بالعربية)" : "Book Description (Arabic)"}
+                      {isArabic ? "نبذة ووصف الكتاب بالعربية" : "Book Description in Arabic"}
                     </Label>
                     <Textarea
                       rows={4}
                       value={descriptionAr}
                       onChange={(e) => setDescriptionAr(e.target.value)}
-                      placeholder="اكتب نبذة شاملة عن الكتاب وموضوعاته الأكاديمية..."
+                      placeholder={isArabic ? "اكتب ملخصاً أو نبذة تعريفية عن محتوى الكتاب وموضوعاته الأكاديمية..." : "Write a summary or abstract about the book and its academic topics..."}
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold">
-                      {isArabic ? "نبذة ووصف الكتاب (بالإنجليزية)" : "Book Description (English)"}
+                      {isArabic ? "نبذة ووصف الكتاب بالإنجليزية" : "Book Description in English"}
                     </Label>
                     <Textarea
                       rows={4}
@@ -1764,8 +1816,8 @@ export default function LibraryManagementPage() {
                       ? "حفظ التعديلات"
                       : "Save Changes"
                     : isArabic
-                    ? "إضافة الكتاب للمكتبة"
-                    : "Add Book"}
+                      ? "إضافة الكتاب للمكتبة"
+                      : "Add Book"}
                 </span>
               </Button>
             </DialogFooter>
