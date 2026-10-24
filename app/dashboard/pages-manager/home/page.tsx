@@ -157,19 +157,19 @@ export default function HomePageBuilderPage() {
   const [dragPartnerIdx, setDragPartnerIdx] = useState<number | null>(null);
   const [dragOverPartnerIdx, setDragOverPartnerIdx] = useState<number | null>(null);
 
-  // Sync initial settings when loaded from backend
-  useEffect(() => {
-    if (settings.homePageConfig) {
-      const merged = getMergedHomePageConfig(settings.homePageConfig);
-      setDraftConfig(merged);
-      setSavedBaseline(JSON.stringify(merged));
-    }
-  }, [settings.homePageConfig]);
-
   // Detect unsaved changes
   const isDirty = useMemo(() => {
     return JSON.stringify(draftConfig) !== savedBaseline;
   }, [draftConfig, savedBaseline]);
+
+  // Sync initial settings when loaded from backend (only if user has no unsaved local edits)
+  useEffect(() => {
+    if (settings.homePageConfig && !isDirty) {
+      const merged = getMergedHomePageConfig(settings.homePageConfig);
+      setDraftConfig(merged);
+      setSavedBaseline(JSON.stringify(merged));
+    }
+  }, [settings.homePageConfig, isDirty]);
 
   // Warn before closing tab if there are unsaved changes
   useEffect(() => {

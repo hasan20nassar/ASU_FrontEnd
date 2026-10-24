@@ -632,13 +632,30 @@ const SiteSettingsContext = createContext<SiteSettingsContextType | undefined>(u
 const STORAGE_KEY = "asu_site_settings_v11";
 const SETTINGS_EVENT = "asu_site_settings_updated";
 
-function getApiBaseUrl(): string {
-  const url =
-    process.env.NEXT_PUBLIC_API_URL ||
-    (typeof window !== "undefined" && window.location.hostname === "localhost"
-      ? "http://127.0.0.1:8000"
-      : "");
-  return url.replace(/\/+$/, "");
+function getCandidateApiBaseUrls(): string[] {
+  const candidates: string[] = [];
+
+  // 1. Relative same-origin proxy (works across LAN devices via Next.js rewrites)
+  candidates.push("");
+
+  // 2. Dynamic current hostname with port 8000 (if Django is running on 0.0.0.0:8000)
+  if (typeof window !== "undefined" && window.location.hostname) {
+    const protocol = window.location.protocol || "http:";
+    const host = window.location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".vercel.app")) {
+      candidates.push(`${protocol}//${host}:8000`);
+    }
+  }
+
+  // 3. Configured NEXT_PUBLIC_API_URL
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    candidates.push(process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, ""));
+  }
+
+  // 4. Localhost fallback
+  candidates.push("http://127.0.0.1:8000");
+
+  return Array.from(new Set(candidates));
 }
 
 export function getMergedContactFields(
@@ -876,126 +893,119 @@ function getStoredSettings(): SiteSettings {
 }
 
 async function fetchFromBackendApi(): Promise<SiteSettings | null> {
-  try {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("asu_access_token")
-        : "";
-    const headers: Record<string, string> = { Accept: "application/json" };
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+  const candidates = getCandidateApiBaseUrls();
 
-    const baseUrl = getApiBaseUrl();
-    const res = await fetch(`${baseUrl}/api/site-settings/`, {
-      method: "GET",
-      headers,
-    });
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data) return null;
-
-    const mergedSocialLinks = { ...DEFAULT_SITE_SETTINGS.socialLinks };
-    if (data.socialLinks && typeof data.socialLinks === "object") {
-      Object.keys(DEFAULT_SITE_SETTINGS.socialLinks).forEach((key) => {
-        if (data.socialLinks[key]) {
-          mergedSocialLinks[key] = {
-            ...mergedSocialLinks[key],
-            ...data.socialLinks[key],
-          };
-        }
+  for (const baseUrl of candidates) {
+    try {
+      const res = await fetch(`${baseUrl}/api/site-settings/`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
+        },
+        cache: "no-store",
       });
+
+      if (!res.ok) continue;
+      const rawData = await res.json();
+      const data = Array.isArray(rawData) ? rawData[0] : rawData;
+      if (!data || typeof data !== "object") continue;
+
+      const mergedSocialLinks = { ...DEFAULT_SITE_SETTINGS.socialLinks };
+      if (data.socialLinks && typeof data.socialLinks === "object") {
+        Object.keys(DEFAULT_SITE_SETTINGS.socialLinks).forEach((key) => {
+          if (data.socialLinks[key]) {
+            mergedSocialLinks[key] = {
+              ...mergedSocialLinks[key],
+              ...data.socialLinks[key],
+            };
+          }
+        });
+      }
+
+      const mergedContactFields = getMergedContactFields(data.contactFields);
+      const mergedPublishedPages = getMergedPublishedPages(data.publishedPages);
+      const mergedHomePageConfig = getMergedHomePageConfig(data.homePageConfig);
+
+      return {
+        email: data.email || DEFAULT_SITE_SETTINGS.email,
+        phone: data.phone || DEFAULT_SITE_SETTINGS.phone,
+        address: data.address || DEFAULT_SITE_SETTINGS.address,
+        addressEn: data.addressEn || DEFAULT_SITE_SETTINGS.addressEn,
+        officeAddress: data.officeAddress || DEFAULT_SITE_SETTINGS.officeAddress,
+        officeAddressEn:
+          data.officeAddressEn || DEFAULT_SITE_SETTINGS.officeAddressEn,
+        workingHours: data.workingHours || DEFAULT_SITE_SETTINGS.workingHours,
+        workingHoursEn:
+          data.workingHoursEn || DEFAULT_SITE_SETTINGS.workingHoursEn,
+        contactFields: mergedContactFields,
+        registrationOpen:
+          data.registrationOpen ?? DEFAULT_SITE_SETTINGS.registrationOpen,
+        maintenanceMode:
+          data.maintenanceMode ?? DEFAULT_SITE_SETTINGS.maintenanceMode,
+        showResults: data.showResults ?? DEFAULT_SITE_SETTINGS.showResults,
+        socialLinks: mergedSocialLinks,
+        publishedPages: mergedPublishedPages,
+        homePageConfig: mergedHomePageConfig,
+      };
+    } catch {
+      // Try next candidate base URL
+      continue;
     }
-
-    const mergedContactFields = getMergedContactFields(data.contactFields);
-    const mergedPublishedPages = getMergedPublishedPages(data.publishedPages);
-    const mergedHomePageConfig = getMergedHomePageConfig(data.homePageConfig);
-
-    return {
-      email: data.email || DEFAULT_SITE_SETTINGS.email,
-      phone: data.phone || DEFAULT_SITE_SETTINGS.phone,
-      address: data.address || DEFAULT_SITE_SETTINGS.address,
-      addressEn: data.addressEn || DEFAULT_SITE_SETTINGS.addressEn,
-      officeAddress: data.officeAddress || DEFAULT_SITE_SETTINGS.officeAddress,
-      officeAddressEn:
-        data.officeAddressEn || DEFAULT_SITE_SETTINGS.officeAddressEn,
-      workingHours: data.workingHours || DEFAULT_SITE_SETTINGS.workingHours,
-      workingHoursEn:
-        data.workingHoursEn || DEFAULT_SITE_SETTINGS.workingHoursEn,
-      contactFields: mergedContactFields,
-      registrationOpen:
-        data.registrationOpen ?? DEFAULT_SITE_SETTINGS.registrationOpen,
-      maintenanceMode:
-        data.maintenanceMode ?? DEFAULT_SITE_SETTINGS.maintenanceMode,
-      showResults: data.showResults ?? DEFAULT_SITE_SETTINGS.showResults,
-      socialLinks: mergedSocialLinks,
-      publishedPages: mergedPublishedPages,
-      homePageConfig: mergedHomePageConfig,
-    };
-  } catch (err) {
-    console.warn(
-      "Notice: Fetching site settings from API failed, using cached settings.",
-      err
-    );
-    return null;
   }
+
+  console.warn(
+    "Notice: Fetching site settings from API failed on all endpoints, using cached settings."
+  );
+  return null;
 }
 
 async function saveToBackendApi(updatedState: SiteSettings): Promise<boolean> {
-  try {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("asu_access_token")
-        : "";
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+  const candidates = getCandidateApiBaseUrls();
+  const payload = JSON.stringify({
+    email: updatedState.email,
+    phone: updatedState.phone,
+    address: updatedState.address,
+    addressEn: updatedState.addressEn,
+    officeAddress: updatedState.officeAddress,
+    officeAddressEn: updatedState.officeAddressEn,
+    workingHours: updatedState.workingHours,
+    workingHoursEn: updatedState.workingHoursEn,
+    contactFields: updatedState.contactFields,
+    registrationOpen: updatedState.registrationOpen,
+    maintenanceMode: updatedState.maintenanceMode,
+    showResults: updatedState.showResults,
+    socialLinks: updatedState.socialLinks,
+    publishedPages: {
+      ...updatedState.publishedPages,
+      home: true,
+    },
+    homePageConfig: updatedState.homePageConfig,
+  });
 
-    const baseUrl = getApiBaseUrl();
-    const res = await fetch(`${baseUrl}/api/site-settings/`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        email: updatedState.email,
-        phone: updatedState.phone,
-        address: updatedState.address,
-        addressEn: updatedState.addressEn,
-        officeAddress: updatedState.officeAddress,
-        officeAddressEn: updatedState.officeAddressEn,
-        workingHours: updatedState.workingHours,
-        workingHoursEn: updatedState.workingHoursEn,
-        contactFields: updatedState.contactFields,
-        registrationOpen: updatedState.registrationOpen,
-        maintenanceMode: updatedState.maintenanceMode,
-        showResults: updatedState.showResults,
-        socialLinks: updatedState.socialLinks,
-        publishedPages: {
-          ...updatedState.publishedPages,
-          home: true,
+  for (const baseUrl of candidates) {
+    try {
+      const res = await fetch(`${baseUrl}/api/site-settings/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        homePageConfig: updatedState.homePageConfig,
-      }),
-    });
+        body: payload,
+      });
 
-    if (res.ok) {
-      await res.json();
-      return true;
-    } else {
-      console.error(
-        "Backend returned error status when saving site settings:",
-        res.status
-      );
-      return false;
+      if (res.ok) {
+        await res.json();
+        return true;
+      }
+    } catch {
+      // Try next candidate base URL
+      continue;
     }
-  } catch (err) {
-    console.error("Error connecting to backend database API:", err);
-    return false;
   }
+
+  console.error("Failed to save site settings to backend database API on all candidate URLs.");
+  return false;
 }
 
 export function SiteSettingsProvider({
@@ -1009,27 +1019,41 @@ export function SiteSettingsProvider({
     const initialCache = getStoredSettings();
     setSettings(initialCache);
 
-    fetchFromBackendApi().then((fresh) => {
-      if (fresh) {
-        setSettings(fresh);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
-          window.dispatchEvent(new Event(SETTINGS_EVENT));
+    const refreshFromBackend = () => {
+      fetchFromBackendApi().then((fresh) => {
+        if (fresh) {
+          setSettings(fresh);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+            window.dispatchEvent(new Event(SETTINGS_EVENT));
+          }
         }
-      }
-    });
+      });
+    };
+
+    refreshFromBackend();
 
     const handleSync = () => {
       const updated = getStoredSettings();
       setSettings(updated);
     };
 
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") {
+        refreshFromBackend();
+      }
+    };
+
     window.addEventListener(SETTINGS_EVENT, handleSync);
     window.addEventListener("storage", handleSync);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
 
     return () => {
       window.removeEventListener(SETTINGS_EVENT, handleSync);
       window.removeEventListener("storage", handleSync);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
     };
   }, []);
 
