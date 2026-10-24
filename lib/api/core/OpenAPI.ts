@@ -19,10 +19,15 @@ export type OpenAPIConfig = {
     ENCODE_PATH?: ((path: string) => string) | undefined;
 };
 
+const rawEnvBase = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+const isLocalEnvBase = rawEnvBase.includes('localhost') || rawEnvBase.includes('127.0.0.1');
+const isRemoteBrowser =
+    typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1';
+
 export const OpenAPI: OpenAPIConfig = {
-    BASE: typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
-        ? ''
-        : (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, ''),
+    BASE: isRemoteBrowser && isLocalEnvBase ? '' : rawEnvBase,
     VERSION: '1.0.0',
     WITH_CREDENTIALS: false,
     CREDENTIALS: 'include',

@@ -634,11 +634,23 @@ const SETTINGS_EVENT = "asu_site_settings_updated";
 
 function getCandidateApiBaseUrls(): string[] {
   const candidates: string[] = [];
+  const envUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+  const isLocalEnvUrl = envUrl.includes("localhost") || envUrl.includes("127.0.0.1");
 
-  // 1. Relative same-origin proxy (works across LAN devices via Next.js rewrites)
+  // 1. If NEXT_PUBLIC_API_URL is a cloud/production URL (e.g. https://asu-back-end.vercel.app), try it first
+  if (envUrl && !isLocalEnvUrl) {
+    candidates.push(envUrl);
+  }
+
+  // 2. Relative same-origin proxy (works across LAN devices & Vercel via Next.js rewrites)
   candidates.push("");
 
-  // 2. Dynamic current hostname with port 8000 (if Django is running on 0.0.0.0:8000)
+  // 3. If running on Vercel frontend, include the production Vercel backend directly as fallback
+  if (typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app")) {
+    candidates.push("https://asu-back-end.vercel.app");
+  }
+
+  // 4. Dynamic current hostname with port 8000 (if Django is running on 0.0.0.0:8000 on LAN)
   if (typeof window !== "undefined" && window.location.hostname) {
     const protocol = window.location.protocol || "http:";
     const host = window.location.hostname;
@@ -647,12 +659,10 @@ function getCandidateApiBaseUrls(): string[] {
     }
   }
 
-  // 3. Configured NEXT_PUBLIC_API_URL
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    candidates.push(process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, ""));
+  // 5. Configured NEXT_PUBLIC_API_URL & Localhost fallback
+  if (envUrl) {
+    candidates.push(envUrl);
   }
-
-  // 4. Localhost fallback
   candidates.push("http://127.0.0.1:8000");
 
   return Array.from(new Set(candidates));
