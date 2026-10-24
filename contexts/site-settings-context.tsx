@@ -636,34 +636,36 @@ function getCandidateApiBaseUrls(): string[] {
   const candidates: string[] = [];
   const envUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
   const isLocalEnvUrl = envUrl.includes("localhost") || envUrl.includes("127.0.0.1");
+  const isVercelHost =
+    typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app");
 
-  // 1. If NEXT_PUBLIC_API_URL is a cloud/production URL (e.g. https://asu-back-end.vercel.app), try it first
+  // 1. If NEXT_PUBLIC_API_URL is a cloud/production URL, try it first
   if (envUrl && !isLocalEnvUrl) {
     candidates.push(envUrl);
   }
 
-  // 2. Relative same-origin proxy (works across LAN devices & Vercel via Next.js rewrites)
-  candidates.push("");
-
-  // 3. If running on Vercel frontend, include the production Vercel backend directly as fallback
-  if (typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app")) {
+  // 2. If running on Vercel frontend, prioritize the production Vercel backend directly
+  if (isVercelHost) {
     candidates.push("https://asu-back-end.vercel.app");
   }
 
-  // 4. Dynamic current hostname with port 8000 (if Django is running on 0.0.0.0:8000 on LAN)
-  if (typeof window !== "undefined" && window.location.hostname) {
-    const protocol = window.location.protocol || "http:";
-    const host = window.location.hostname;
-    if (host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".vercel.app")) {
-      candidates.push(`${protocol}//${host}:8000`);
-    }
-  }
+  // 3. Relative same-origin proxy (works across LAN devices & Vercel via Next.js rewrites)
+  candidates.push("");
 
-  // 5. Configured NEXT_PUBLIC_API_URL & Localhost fallback
-  if (envUrl) {
-    candidates.push(envUrl);
+  // 4. Local/LAN fallbacks (only when NOT running on Vercel production)
+  if (!isVercelHost) {
+    if (typeof window !== "undefined" && window.location.hostname) {
+      const protocol = window.location.protocol || "http:";
+      const host = window.location.hostname;
+      if (host !== "localhost" && host !== "127.0.0.1") {
+        candidates.push(`${protocol}//${host}:8000`);
+      }
+    }
+    if (envUrl) {
+      candidates.push(envUrl);
+    }
+    candidates.push("http://127.0.0.1:8000");
   }
-  candidates.push("http://127.0.0.1:8000");
 
   return Array.from(new Set(candidates));
 }
@@ -911,7 +913,6 @@ async function fetchFromBackendApi(): Promise<SiteSettings | null> {
         method: "GET",
         headers: {
           Accept: "application/json",
-          "Cache-Control": "no-cache",
         },
         cache: "no-store",
       });
