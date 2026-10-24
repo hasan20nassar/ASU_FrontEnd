@@ -35,6 +35,477 @@ export const DEFAULT_PUBLISHED_PAGES: Record<string, boolean> = {
   developer: true,
 };
 
+// ============================================================================
+// ENTERPRISE HOME PAGE BUILDER TYPES & DEFAULT CONFIG
+// ============================================================================
+
+export type HomeSectionId = "hero" | "stats" | "faculties" | "partners" | "news";
+
+export interface HomeHeroConfig {
+  titleAr: string;
+  titleEn: string;
+  subtitleAr: string;
+  subtitleEn: string;
+  backgroundType: "video" | "image" | "gradient";
+  videoUrl: string;
+  posterUrl: string;
+  overlayOpacity: number;
+  backdropBlur: number;
+  alignment: "center" | "start";
+  heightVariant: "full" | "medium" | "compact";
+  animationType: "scale-fade" | "blur-reveal" | "slide-up-stagger" | "typewriter";
+  showScrollIndicator: boolean;
+  showPrimaryCta: boolean;
+  primaryCtaTextAr: string;
+  primaryCtaTextEn: string;
+  primaryCtaLink: string;
+  showSecondaryCta: boolean;
+  secondaryCtaTextAr: string;
+  secondaryCtaTextEn: string;
+  secondaryCtaLink: string;
+}
+
+export interface HomeStatCardItem {
+  id: string;
+  icon: string;
+  valueSource: "auto_faculties" | "auto_programs" | "custom";
+  customValue: number;
+  prefix: string;
+  suffix: string;
+  labelAr: string;
+  labelEn: string;
+  subLabelAr?: string;
+  subLabelEn?: string;
+  cardVariant: "standard" | "featured-split";
+  featuredSystemTitleAr?: string;
+  featuredSystemTitleEn?: string;
+}
+
+export interface HomeStatsConfig {
+  showHeader: boolean;
+  titleAr: string;
+  titleEn: string;
+  subtitleAr: string;
+  subtitleEn: string;
+  columns: 2 | 3 | 4;
+  layoutStyle: "cards-bordered" | "glass-floating" | "minimal-ribbon";
+  animationType: "fade-up" | "zoom-bounce" | "flip-x" | "slide-alternate";
+  counterDuration: number;
+  cards: HomeStatCardItem[];
+}
+
+export interface HomeFacultiesConfig {
+  titleAr: string;
+  titleEn: string;
+  subtitleAr: string;
+  subtitleEn: string;
+  layoutVariant: "tilt-cards-grid" | "carousel-slider" | "bento-showcase" | "compact-directory";
+  animationType: "stagger-up" | "curtain-reveal" | "scale-blur" | "3d-perspective";
+  columns: 3 | 4 | 5;
+  itemLimit: number;
+  enable3DTilt: boolean;
+  showCoverImage: boolean;
+  showProgramsCount: boolean;
+  showCta: boolean;
+  ctaTextAr: string;
+  ctaTextEn: string;
+  ctaLink: string;
+}
+
+export interface HomePartnerItem {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  subtitleAr?: string;
+  subtitleEn?: string;
+  logoUrl: string;
+  fallbackIcon: string;
+  websiteUrl?: string;
+}
+
+export interface HomePartnersConfig {
+  titleAr: string;
+  titleEn: string;
+  subtitleAr: string;
+  subtitleEn: string;
+  displayMode: "infinite-marquee" | "static-grid";
+  hoverRibbonStyle: "floating-pill" | "bottom-slide-bar" | "glow-card";
+  logoColorMode: "grayscale-to-color" | "full-color";
+  marqueeSpeedSeconds: number;
+  marqueeDirection: "auto" | "left" | "right";
+  pauseOnHover: boolean;
+  partners: HomePartnerItem[];
+}
+
+export interface HomeNewsConfig {
+  titleAr: string;
+  titleEn: string;
+  subtitleAr: string;
+  subtitleEn: string;
+  layoutVariant: "center-focus-carousel" | "editorial-magazine" | "modern-grid" | "compact-feed";
+  animationType: "curtain-split" | "stagger-fade-up" | "scale-spring" | "blur-slide";
+  categoryFilter: "all" | "announcement" | "event" | "achievement" | "research";
+  itemLimit: number;
+  showDate: boolean;
+  showCategoryBadge: boolean;
+  showExcerpt: boolean;
+  showCta: boolean;
+  ctaTextAr: string;
+  ctaTextEn: string;
+  ctaLink: string;
+}
+
+export interface HomeSectionSchedule {
+  enabled: boolean;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface HomePageSnapshot {
+  id: string;
+  timestamp: string;
+  labelAr: string;
+  labelEn: string;
+  config: Omit<HomePageConfig, "historySnapshots">;
+}
+
+export interface HomePageConfig {
+  sectionsOrder: HomeSectionId[];
+  enabledSections: Record<HomeSectionId, boolean>;
+  sectionSchedules: Record<string, HomeSectionSchedule>;
+  hero: HomeHeroConfig;
+  stats: HomeStatsConfig;
+  faculties: HomeFacultiesConfig;
+  partners: HomePartnersConfig;
+  news: HomeNewsConfig;
+  historySnapshots?: HomePageSnapshot[];
+}
+
+export const DEFAULT_HOME_PAGE_CONFIG: HomePageConfig = {
+  sectionsOrder: ["hero", "stats", "faculties", "partners", "news"],
+  enabledSections: {
+    hero: true,
+    stats: true,
+    faculties: true,
+    partners: true,
+    news: true,
+  },
+  sectionSchedules: {},
+  hero: {
+    titleAr: "جامعة أنطاكية السورية",
+    titleEn: "Antioch Syrian University",
+    subtitleAr: "مؤسسة تعليمية رائدة تهدف إلى إعداد كوادر علمية متميزة ومؤهلة للمساهمة في بناء المجتمع وتطوره",
+    subtitleEn: "A leading educational institution dedicated to preparing distinguished graduates qualified to contribute to society's development",
+    backgroundType: "video",
+    videoUrl: "/videos/home-video.mp4",
+    posterUrl: "/hero-bg.png",
+    overlayOpacity: 20,
+    backdropBlur: 2,
+    alignment: "center",
+    heightVariant: "full",
+    animationType: "scale-fade",
+    showScrollIndicator: true,
+    showPrimaryCta: false,
+    primaryCtaTextAr: "استكشف الكليات",
+    primaryCtaTextEn: "Explore Faculties",
+    primaryCtaLink: "/academics",
+    showSecondaryCta: false,
+    secondaryCtaTextAr: "القبول والتسجيل",
+    secondaryCtaTextEn: "Admissions",
+    secondaryCtaLink: "/admissions",
+  },
+  stats: {
+    showHeader: false,
+    titleAr: "الجامعة في أرقام",
+    titleEn: "University in Numbers",
+    subtitleAr: "مؤشرات التميز الأكاديمي والبحثي في جامعة أنطاكية السورية",
+    subtitleEn: "Indicators of academic and research excellence at Antioch Syrian University",
+    columns: 3,
+    layoutStyle: "cards-bordered",
+    animationType: "fade-up",
+    counterDuration: 2,
+    cards: [
+      {
+        id: "stat-faculties",
+        icon: "Building2",
+        valueSource: "auto_faculties",
+        customValue: 7,
+        prefix: "",
+        suffix: "",
+        labelAr: "كليات متخصصة",
+        labelEn: "Specialized Faculties",
+        cardVariant: "standard",
+      },
+      {
+        id: "stat-programs",
+        icon: "GraduationCap",
+        valueSource: "auto_programs",
+        customValue: 15,
+        prefix: "",
+        suffix: "+",
+        labelAr: "برنامج أكاديمي",
+        labelEn: "Academic Programs",
+        cardVariant: "standard",
+      },
+      {
+        id: "stat-students",
+        icon: "Users",
+        valueSource: "custom",
+        customValue: 3500,
+        prefix: "",
+        suffix: "+",
+        labelAr: "طالب وطالبة",
+        labelEn: "Students",
+        subLabelAr: "معرة صيدنايا - ريف دمشق",
+        subLabelEn: "Maarat Saidnaya - Damascus Countryside",
+        cardVariant: "featured-split",
+        featuredSystemTitleAr: "نظام الساعات المعتمدة",
+        featuredSystemTitleEn: "Credit Hour System",
+      },
+    ],
+  },
+  faculties: {
+    titleAr: "البرامج والكليات",
+    titleEn: "Programs and Faculties",
+    subtitleAr: "برامج أكاديمية متنوعة تلبي تطلعاتك المهنية",
+    subtitleEn: "Diverse academic programs to meet your career aspirations",
+    layoutVariant: "tilt-cards-grid",
+    animationType: "stagger-up",
+    columns: 4,
+    itemLimit: 0,
+    enable3DTilt: true,
+    showCoverImage: true,
+    showProgramsCount: true,
+    showCta: true,
+    ctaTextAr: "عرض الكل",
+    ctaTextEn: "View All",
+    ctaLink: "/academics",
+  },
+  partners: {
+    titleAr: "شركاء النجاح",
+    titleEn: "Success Partners",
+    subtitleAr: "مؤسسات وشركات شريكة في تحقيق التميز الأكاديمي والعملي",
+    subtitleEn: "Partner organizations contributing to academic and practical excellence",
+    displayMode: "infinite-marquee",
+    hoverRibbonStyle: "floating-pill",
+    logoColorMode: "grayscale-to-color",
+    marqueeSpeedSeconds: 25,
+    marqueeDirection: "auto",
+    pauseOnHover: true,
+    partners: [
+      {
+        id: "partner-1",
+        nameAr: "اتحاد الجامعات العربية",
+        nameEn: "Association of Arab Universities",
+        subtitleAr: "شراكة أكاديمية واعتراف دولي",
+        subtitleEn: "Academic Partnership & Accreditation",
+        logoUrl: "",
+        fallbackIcon: "School",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-2",
+        nameAr: "المراكز الهندسية والاستشارية",
+        nameEn: "Engineering Consulting Centers",
+        subtitleAr: "تدريب عملي ومشاريع تخرج",
+        subtitleEn: "Practical Training & Capstone Projects",
+        logoUrl: "",
+        fallbackIcon: "Building2",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-3",
+        nameAr: "المؤسسات المصرفية والمالية",
+        nameEn: "Banking & Financial Institutions",
+        subtitleAr: "تدريب طلاب العلوم الإدارية والاقتصادية",
+        subtitleEn: "Business & Finance Internships",
+        logoUrl: "",
+        fallbackIcon: "Landmark",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-4",
+        nameAr: "هيئة التميز والإبداع",
+        nameEn: "Distinction and Creativity Agency",
+        subtitleAr: "رعاية المواهب والأولمبياد العلمي",
+        subtitleEn: "Talent Sponsorship & Scientific Olympiad",
+        logoUrl: "",
+        fallbackIcon: "GraduationCap",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-5",
+        nameAr: "هيئة البحث العلمي والابتكار",
+        nameEn: "Scientific Research Commission",
+        subtitleAr: "تمويل وتطوير الأبحاث المشتركة",
+        subtitleEn: "Joint Research Funding & Development",
+        logoUrl: "",
+        fallbackIcon: "Award",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-6",
+        nameAr: "المكتبات الرقمية العالمية",
+        nameEn: "Global Digital Libraries",
+        subtitleAr: "قواعد بيانات ومصادر علمية محكّمة",
+        subtitleEn: "Peer-Reviewed Scientific Databases",
+        logoUrl: "",
+        fallbackIcon: "BookOpen",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-7",
+        nameAr: "شركات التكنولوجيا والبرمجيات",
+        nameEn: "Tech & Software Enterprises",
+        subtitleAr: "حاضنات تقنية وفرص توظيف",
+        subtitleEn: "Tech Incubators & Career Opportunities",
+        logoUrl: "",
+        fallbackIcon: "Briefcase",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-8",
+        nameAr: "نقابة المهندسين والصيادلة",
+        nameEn: "Professional Syndicates",
+        subtitleAr: "تأهيل مهني واعتماد نقابي",
+        subtitleEn: "Professional Qualification & Licensing",
+        logoUrl: "",
+        fallbackIcon: "Library",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-9",
+        nameAr: "شبكة الجامعات الأوروبية المتوسطية",
+        nameEn: "Euro-Mediterranean University Network",
+        subtitleAr: "تبادل طلابي وأكاديمي دولي",
+        subtitleEn: "International Student & Faculty Exchange",
+        logoUrl: "",
+        fallbackIcon: "Globe",
+        websiteUrl: "",
+      },
+      {
+        id: "partner-10",
+        nameAr: "مؤسسات الرعاية الصحية والمشافي التعليمية",
+        nameEn: "Healthcare & Teaching Hospitals",
+        subtitleAr: "تدريب سريري وطبي متقدم",
+        subtitleEn: "Advanced Clinical & Medical Training",
+        logoUrl: "",
+        fallbackIcon: "HeartHandshake",
+        websiteUrl: "",
+      },
+    ],
+  },
+  news: {
+    titleAr: "آخر الأخبار",
+    titleEn: "Latest News",
+    subtitleAr: "تابع آخر المستجدات والإعلانات",
+    subtitleEn: "Stay updated with the latest announcements",
+    layoutVariant: "center-focus-carousel",
+    animationType: "curtain-split",
+    categoryFilter: "all",
+    itemLimit: 0,
+    showDate: true,
+    showCategoryBadge: true,
+    showExcerpt: true,
+    showCta: true,
+    ctaTextAr: "عرض الكل",
+    ctaTextEn: "View All",
+    ctaLink: "/news",
+  },
+  historySnapshots: [],
+};
+
+export function getMergedHomePageConfig(
+  raw?: Partial<HomePageConfig> | Record<string, any>
+): HomePageConfig {
+  if (!raw || typeof raw !== "object") {
+    return DEFAULT_HOME_PAGE_CONFIG;
+  }
+
+  const validSectionIds: HomeSectionId[] = ["hero", "stats", "faculties", "partners", "news"];
+  const rawOrder = Array.isArray(raw.sectionsOrder)
+    ? (raw.sectionsOrder.filter((id: any) => validSectionIds.includes(id)) as HomeSectionId[])
+    : [];
+  const missingIds = validSectionIds.filter((id) => !rawOrder.includes(id));
+  const sectionsOrder: HomeSectionId[] =
+    rawOrder.length > 0 ? [...rawOrder, ...missingIds] : [...DEFAULT_HOME_PAGE_CONFIG.sectionsOrder];
+
+  const enabledSections: Record<HomeSectionId, boolean> = {
+    ...DEFAULT_HOME_PAGE_CONFIG.enabledSections,
+    ...(raw.enabledSections || {}),
+  };
+
+  const hero: HomeHeroConfig = {
+    ...DEFAULT_HOME_PAGE_CONFIG.hero,
+    ...(raw.hero || {}),
+  };
+
+  const stats: HomeStatsConfig = {
+    ...DEFAULT_HOME_PAGE_CONFIG.stats,
+    ...(raw.stats || {}),
+    cards:
+      Array.isArray(raw.stats?.cards) && raw.stats.cards.length > 0
+        ? raw.stats.cards.map((c: any, idx: number) => ({
+            id: c.id || `stat-${idx}`,
+            icon: c.icon || "Building2",
+            valueSource: c.valueSource || "custom",
+            customValue: Number(c.customValue ?? 0),
+            prefix: c.prefix ?? "",
+            suffix: c.suffix ?? "",
+            labelAr: c.labelAr ?? "",
+            labelEn: c.labelEn ?? "",
+            subLabelAr: c.subLabelAr ?? "",
+            subLabelEn: c.subLabelEn ?? "",
+            cardVariant: c.cardVariant || "standard",
+            featuredSystemTitleAr: c.featuredSystemTitleAr ?? "",
+            featuredSystemTitleEn: c.featuredSystemTitleEn ?? "",
+          }))
+        : DEFAULT_HOME_PAGE_CONFIG.stats.cards,
+  };
+
+  const faculties: HomeFacultiesConfig = {
+    ...DEFAULT_HOME_PAGE_CONFIG.faculties,
+    ...(raw.faculties || {}),
+  };
+
+  const partners: HomePartnersConfig = {
+    ...DEFAULT_HOME_PAGE_CONFIG.partners,
+    ...(raw.partners || {}),
+    partners:
+      Array.isArray(raw.partners?.partners) && raw.partners.partners.length > 0
+        ? raw.partners.partners.map((p: any, idx: number) => ({
+            id: p.id || `partner-${idx}`,
+            nameAr: p.nameAr ?? `شريك ${idx + 1}`,
+            nameEn: p.nameEn ?? `Partner ${idx + 1}`,
+            subtitleAr: p.subtitleAr ?? "",
+            subtitleEn: p.subtitleEn ?? "",
+            logoUrl: p.logoUrl ?? "",
+            fallbackIcon: p.fallbackIcon || "Building2",
+            websiteUrl: p.websiteUrl ?? "",
+          }))
+        : DEFAULT_HOME_PAGE_CONFIG.partners.partners,
+  };
+
+  const news: HomeNewsConfig = {
+    ...DEFAULT_HOME_PAGE_CONFIG.news,
+    ...(raw.news || {}),
+  };
+
+  return {
+    sectionsOrder,
+    enabledSections,
+    sectionSchedules: raw.sectionSchedules || {},
+    hero,
+    stats,
+    faculties,
+    partners,
+    news,
+    historySnapshots: Array.isArray(raw.historySnapshots)
+      ? raw.historySnapshots.slice(0, 8)
+      : [],
+  };
+}
+
 export interface SiteSettings {
   email: string;
   phone: string;
@@ -50,6 +521,7 @@ export interface SiteSettings {
   showResults: boolean;
   socialLinks: Record<string, SocialLinkItem>;
   publishedPages: Record<string, boolean>;
+  homePageConfig: HomePageConfig;
 }
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
@@ -142,6 +614,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     },
   },
   publishedPages: { ...DEFAULT_PUBLISHED_PAGES },
+  homePageConfig: DEFAULT_HOME_PAGE_CONFIG,
 };
 
 interface SiteSettingsContextType {
@@ -149,13 +622,14 @@ interface SiteSettingsContextType {
   updateSettings: (newSettings: Partial<SiteSettings>) => Promise<void>;
   updateSocialLink: (key: string, url: string, enabled: boolean) => Promise<void>;
   updatePublishedPages: (newPages: Record<string, boolean>) => Promise<boolean>;
+  updateHomePageConfig: (newConfig: HomePageConfig) => Promise<boolean>;
   isPagePublished: (keyOrPath: string) => boolean;
   resetSettings: () => void;
 }
 
 const SiteSettingsContext = createContext<SiteSettingsContextType | undefined>(undefined);
 
-const STORAGE_KEY = "asu_site_settings_v10";
+const STORAGE_KEY = "asu_site_settings_v11";
 const SETTINGS_EVENT = "asu_site_settings_updated";
 
 function getApiBaseUrl(): string {
@@ -246,7 +720,6 @@ export function checkIsPagePublished(
       return isKeyEnabled("academics") && isKeyEnabled(raw);
     }
     if (raw.startsWith("program:")) {
-      // format: program:<facultySlug>:<programSlug> or program:<programSlug>
       const parts = raw.split(":");
       if (parts.length === 3) {
         const facSlug = parts[1];
@@ -386,6 +859,7 @@ function getStoredSettings(): SiteSettings {
 
     const mergedContactFields = getMergedContactFields(parsed.contactFields);
     const mergedPublishedPages = getMergedPublishedPages(parsed.publishedPages);
+    const mergedHomePageConfig = getMergedHomePageConfig(parsed.homePageConfig);
 
     return {
       ...DEFAULT_SITE_SETTINGS,
@@ -393,6 +867,7 @@ function getStoredSettings(): SiteSettings {
       contactFields: mergedContactFields,
       socialLinks: mergedSocialLinks,
       publishedPages: mergedPublishedPages,
+      homePageConfig: mergedHomePageConfig,
     };
   } catch (err) {
     console.error("Failed to parse site settings from localStorage:", err);
@@ -435,6 +910,7 @@ async function fetchFromBackendApi(): Promise<SiteSettings | null> {
 
     const mergedContactFields = getMergedContactFields(data.contactFields);
     const mergedPublishedPages = getMergedPublishedPages(data.publishedPages);
+    const mergedHomePageConfig = getMergedHomePageConfig(data.homePageConfig);
 
     return {
       email: data.email || DEFAULT_SITE_SETTINGS.email,
@@ -455,6 +931,7 @@ async function fetchFromBackendApi(): Promise<SiteSettings | null> {
       showResults: data.showResults ?? DEFAULT_SITE_SETTINGS.showResults,
       socialLinks: mergedSocialLinks,
       publishedPages: mergedPublishedPages,
+      homePageConfig: mergedHomePageConfig,
     };
   } catch (err) {
     console.warn(
@@ -501,6 +978,7 @@ async function saveToBackendApi(updatedState: SiteSettings): Promise<boolean> {
           ...updatedState.publishedPages,
           home: true,
         },
+        homePageConfig: updatedState.homePageConfig,
       }),
     });
 
@@ -571,12 +1049,17 @@ export function SiteSettingsProvider({
       ...(newSettings.publishedPages || {}),
     });
 
+    const updatedHomePageConfig = newSettings.homePageConfig
+      ? getMergedHomePageConfig(newSettings.homePageConfig)
+      : settings.homePageConfig;
+
     const updatedState: SiteSettings = {
       ...settings,
       ...newSettings,
       contactFields: updatedContactFields,
       socialLinks: updatedSocialLinks,
       publishedPages: updatedPublishedPages,
+      homePageConfig: updatedHomePageConfig,
     };
 
     setSettings(updatedState);
@@ -614,6 +1097,30 @@ export function SiteSettingsProvider({
         window.dispatchEvent(new Event(SETTINGS_EVENT));
       } catch (err) {
         console.error("Failed to save publishedPages to localStorage:", err);
+      }
+    }
+
+    return await saveToBackendApi(updatedState);
+  };
+
+  const updateHomePageConfig = async (
+    newConfig: HomePageConfig
+  ): Promise<boolean> => {
+    const mergedConfig = getMergedHomePageConfig(newConfig);
+
+    const updatedState: SiteSettings = {
+      ...settings,
+      homePageConfig: mergedConfig,
+    };
+
+    setSettings(updatedState);
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
+        window.dispatchEvent(new Event(SETTINGS_EVENT));
+      } catch (err) {
+        console.error("Failed to save homePageConfig to localStorage:", err);
       }
     }
 
@@ -684,6 +1191,7 @@ export function SiteSettingsProvider({
         updateSettings,
         updateSocialLink,
         updatePublishedPages,
+        updateHomePageConfig,
         isPagePublished,
         resetSettings,
       }}
